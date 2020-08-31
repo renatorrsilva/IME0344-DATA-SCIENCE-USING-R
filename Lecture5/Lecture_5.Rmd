@@ -1,0 +1,436 @@
+---
+title: "Lecture 5 - Data Visualization (part II)"
+subtitle: "Presentation based on R for Data Science: Written by Garrett Grolemund and Hadley Wickham"
+author: " Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    
+
+
+---
+class: middle
+##Introduction
+
+- We introduced a ggplot2 package in the last class and have drawn a quite simple scatterplot.
+
+- We define the `ggplot()` as function which creates a coordinate system that you can add layers to.
+
+- Now it's time to go deeper and understand some concepts.
+
+- What are the layers? What are they composed of?
+
+- What are the aesthetics mapping? What are geom objects ?
+What are facets? How to do that? 
+
+- How to define a scale on the graphic?
+
+
+
+---
+class: inverse, center, middle
+#Layers
+
+---
+## Layers
+
+- Layers are all objects that we can realize on the plot. 
+
+##Layers Components
+
+A layer is composed of
+
+- data and aesthetic mapping,
+
+- a statistical transformation (stat),
+
+- a geometric object (geom), and
+
+- a position adjustment
+
+---
+class: inverse, center, middle
+#Aesthetic mapping
+
+---
+##Aesthetic 
+
+- Aesthetics is a visual property of the objects in the graphic.
+
+- Aesthetics include things like the size, the shape, the x-axis, and the y-axis, or the color of the points.
+
+- We can display a point in different ways by changing the values of its aesthetic properties. 
+
+##Aesthetic mapping
+
+- Aesthetic mapping is to associate an aesthetic property to the name of the variable of the data set.
+
+-  Aesthetic mappings can be set in `ggplot()` and in individual layers.
+
+- We will discuss layers later on.
+
+---
+#Simple Scatterplot  - mpg data 
+
+- The aesthetics mapping was set in the layer.
+
+```{r, eval = FALSE}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+- The aesthetics mapping was set in ggplot.  if there were more than one layer,  they would have the same aesthetics mapping.
+
+```{r, eval = FALSE}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + geom_point()
+```
+
+In this case, both scripts result in the same plot. It is not mandatory to write the name of arguments such as `data` and `mapping`. I did because I wanted to keep things more organized.
+
+However, when we have multiple layers might be more advantageous to do an aesthetics mapping in each layer. 
+
+
+
+---
+#Example of mpg data revisited
+
+##Question 
+Do cars with big engines use more fuel than cars with small engines? What about the "type of car"? Is the type of car influence fuel consumption?
+
+```{r, echo=FALSE,message=FALSE,warning=FALSE}
+library(tidyverse)
+data(mpg)
+unique(mpg$class)
+```
+
+
+
+---
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color=class)) + geom_point()
+```
+
+
+---
+class: middle
+#Example of mpg data revisited
+
+
+- The colors reveal that many of the unusual points are two-seater cars. 
+
+- In spite of they have large engines, they are more fuel-efficient than SUV.
+
+- Sports cars have large engines like SUVs and pickup trucks, but small bodies like midsize and compact cars, which improves their gas mileage.
+
+---
+##Other options
+
+```{r, warning=FALSE}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, size=class)) + geom_point()
+```
+
+---
+##Other options
+
+```{r,warning=FALSE}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, shape=class)) + geom_point()
+```
+---
+classe: middle
+#Some details
+
+- Let's suppose for some reason that we want to draw the points with blue color.
+
+- How Can I do that?
+
+---
+##Wrong code
+
+```{r, eval = FALSE}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy, color="blue"))
+```
+
+Please, notice in that case we are not doing the aesthetics mapping, then we have to use color outside of the `aes()` function. Moreover, we have to do the the aesthetics mapping in the layer. Because the color is a property of the `geom_function()`.
+
+##Correct code
+```{r, eval = FALSE}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy),color="blue")
+```
+
+
+
+---
+
+```{r, eval = TRUE}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy, color="blue"))
+```
+
+---
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy),color="blue")
+```
+
+---
+class: inverse, center, middle
+#Facet
+
+
+---
+#Facet
+
+- We can add information about extra variables in the scatterplot using aesthetics. 
+
+- But there is a second option (for categorical variables) that would be the use of facets. 
+
+- Facets mean to do subplots with a subset of the data.
+
+- The function `facet_wrap()` facet the plot by a single variable.
+
+---
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy)) + facet_wrap(~ class, nrow = 2)
+```
+
+---
+class; middle
+###Facet 
+
+- To facet your plot on the combination of two variables, use `facet_grid()`
+- This time the formula should contain two variable names separated by a `~`.
+
+---
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy)) + facet_grid(drv ~ cyl)
+```
+
+---
+class: inverse, center, middle
+#Geometric Objects
+
+---
+#Geometric Objects
+
+
+- A **geom** is the geometrical object that a plot uses to represent data.
+
+- ggplot2 provides over 40 geoms, and extension packages provide even more (see https://www.ggplot2-exts.org for a sampling).
+
+- The name of the plots is associated with the type of geometric objects used. 
+For example, bar charts use `geom_bar`, line charts use `geom_line`, boxplots use `geom_boxplot`; and so on. 
+
+---
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy)) + geom_smooth(mapping = aes(x = displ, y = hwy), se = FALSE)
+```
+
+---
+
+```{r}
+ggplot(data = mpg) + geom_histogram(mapping = aes(x = hwy)) 
+```
+
+---
+```{r}
+ggplot(data = mpg) + geom_bar(mapping = aes(x = class)) 
+```
+
+---
+```{r}
+ggplot(data = mpg) + geom_boxplot(mapping = aes(x = "", y = hwy)) 
+
+```
+
+
+---
+class: inverse, center, middle
+##Statistical transformations
+
+---
+##Statistical transformations
+
+- In some situations, the raw data is enough to make a plot. For example a scatterplot in the previous slides.
+
+- However, for some plots we need to make some statistical transformations before to make a aplot.
+
+- For example, bar charts, histograms, and frequency polygons bin the data and then plot bin counts, the number of points that fall in each bin.
+
+- Smoothers fit a model to the data and then plot predictions from the model.
+
+- boxplots compute a robust summary of the distribution and then display a specially formatted box.
+
+
+---
+####Bar chart - Count
+
+```{r}
+ggplot(data = mpg) + geom_bar(mapping = aes(x = class)) 
+```
+
+
+---
+####Bar chart - Proportion
+
+```{r}
+ggplot(data = mpg) + geom_bar(mapping = aes(x = class, 
+y = (..count..)/sum(..count..)))
+```
+
+---
+####Histogram - Density
+
+```{r}
+ggplot(data = mpg) + geom_histogram(mapping = aes(x = hwy, y = ..density..)) 
+```
+
+
+---
+####Histogram - Density and Sturges's rule
+
+```{r}
+k = nclass.Sturges(mpg$hwy)
+ggplot(data = mpg) + geom_histogram(mapping = aes(x = hwy, y = ..density..), bins = k) 
+```
+
+
+---
+class: inverse, center, middle
+##Position adjustments
+
+
+---
+##Position adjustments
+
+- Position adjustments determine how to arrange
+geoms that would otherwise occupy the same space
+
+- position = "dodge".  Arrange elements side by side 
+
+- position = "fill". Stack elements on top of one another,
+normalize height 
+
+- position = "stack". Stack elements on top of one another 
+
+- position = "jitter". Add random noise to X and Y position
+of each element to avoid overplotting
+
+---
+```{r}
+ggplot(data = mpg) + geom_bar(mapping = aes(x = class, fill=drv), position="dodge") 
+```
+
+
+---
+```{r}
+ggplot(data = mpg) + geom_bar(mapping = aes(x = class, fill=drv), position="fill") 
+```
+
+
+---
+```{r}
+ggplot(data = mpg) + geom_bar(mapping = aes(x = class, fill=drv), position="stack") 
+```
+
+
+---
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy), position="jitter") + geom_smooth(mapping = aes(x = displ, y = hwy), se = FALSE)
+```
+
+---
+class: inverse, center, middle
+##Labels
+
+---
+##Labels
+
+-  We can use the function `ggtitle()` to add a main title above the plot.
+
+- We can use `xlab()` and `ylab()` to change the label on the x-axis and y-axis, respectively.
+
+---
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy), position="jitter") + geom_smooth(mapping = aes(x = displ, y = hwy), se = FALSE) + ggtitle("scatterplot") +xlab("fuel-efficiency") + ylab("engines size")
+```
+
+
+---
+class: inverse, center, middle
+##Scales
+
+---
+##Scales
+
+- Scales control the mapping from data to aesthetics. They take your data and turn it into something that you can see, like size, colour, position or shape. 
+
+- Scales also provide the tools that let you read the plot: the axes and legends.
+
+---
+```{r}
+ggplot(mpg, aes(displ, hwy)) + geom_point(aes(colour = class)) +
+scale_x_continuous(limits=c(0,10)) + scale_y_continuous(limits=c(0,50)) + scale_colour_brewer()
+```
+
+---
+```{r}
+ggplot(mpg ) + geom_point(aes(displ, hwy)) +
+scale_x_continuous(limits=c(0,10)) + scale_y_continuous(limits=c(0,50), breaks=seq(0,44,length=5)) 
+```
+
+---
+```{r}
+ggplot(mpg ) + geom_point(aes(class, hwy)) +
+scale_x_discrete("Cut", labels = c("2seater" = "2","compact" =  "c","midsize" = "m","minivan" = "mi", "pickup" = "pi", "subcompact" ="sb", "SUV" = "suv")) + scale_y_continuous(limits=c(0,50), breaks=seq(0,44,length=5)) 
+```
+
+---
+class: inverse, center, middle
+##A Complex example
+
+---
+```{r, eval = FALSE}
+ggplot(mpg, aes(x = class, y = hwy, fill = drv)) +
+geom_boxplot() + scale_y_continuous(name = "Fuel",breaks = seq(0,40, by=10),limits=c(0, 50)) + scale_x_discrete(name = "type of car") + ggtitle("Distribution of the hwy") + theme_bw() +
+        theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold",hjust = 0.5),
+              legend.text = element_text(face="bold", size=16),
+              axis.title = element_text(face="bold"),
+              axis.text.y=element_text(size = 11),
+              axis.title.y=element_text(size = 14),
+              axis.title.x =element_text(size = 14),
+              axis.text.x=element_text(size = 11)) +
+              scale_fill_brewer()
+              
+```
+
+---
+```{r, echo = FALSE}
+ggplot(mpg, aes(x = class, y = hwy, fill = drv)) +
+geom_boxplot() + scale_y_continuous(name = "Fuel",breaks = seq(0,40, by=10),limits=c(0, 50)) + scale_x_discrete(name = "type of car") + ggtitle("Distribution of the hwy") + theme_bw() +
+        theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold",hjust = 0.5),
+              legend.text = element_text(face="bold", size=16),
+              axis.title = element_text(face="bold"),
+              axis.text.y=element_text(size = 11),
+              axis.title.y=element_text(size = 14),
+              axis.title.x =element_text(size = 14),
+              axis.text.x=element_text(size = 11)) +
+              scale_fill_brewer()
+              
+```
+
+---
+class: middle
+
+Further details can be found at
+
+-[rstudio](https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
+-[book](https://ggplot2-book.org/scales.html#legends)
+
+-[help](https://ggplot2.tidyverse.org/reference/theme.html)

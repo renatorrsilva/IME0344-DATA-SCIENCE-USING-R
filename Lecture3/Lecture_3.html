@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Lecture 3 - An Introduction to Data Science (part II)</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 3 - An Introduction to Data Science (part II)
+### Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-03-09)
+
+---
+
+class: inverse, center, middle
+
+#Section based on
+
+##Notes on R: A Programming Environment for Data Analysis and Graphics (W. N. Venables, D. M. Smith and the R Core Team,2004)
+  
+---
+class: inverse, center, middle
+#Simple manipulations
+
+
+
+---
+
+##Vectors and assignment
+
+- The simplest data structure is the numeric vector, which
+is a single entity consisting of an ordered collection of numbers. 
+- To set up a vector, we procedure as follows
+
+
+```r
+x =  c(10.4, 5.6, 3.1, 6.4, 21.7)
+x
+```
+
+```
+## [1] 10.4  5.6  3.1  6.4 21.7
+```
+
+- This is an **assignment statement** using the function `c()`
+
+---
+
+##Vectors and assignment
+
+- Assignment can also be made using the function `assign()`. 
+
+- An equivalent way of making the same assignment as previous one is with:
+
+
+```r
+assign("x", c(10.4, 5.6, 3.1, 6.4, 21.7))
+x
+```
+
+```
+## [1] 10.4  5.6  3.1  6.4 21.7
+```
+
+---
+
+
+##Recycling of Vectors in R
+
+- R likes to operate on vectors of the same length, 
+
+- So if it encounters two vectors of different lengths in a binary operation, 
+
+- It merely replicates  the smaller vector until it is the same length as the longest vector, then it does the operation.
+
+- If the recycled smaller vector has to be “chopped off” to make it the length of the longer vector, you will get a warning, but it will still return a result:
+
+
+```r
+x &lt;- c(1,2,3)
+y &lt;- c(1,10)
+
+x * y
+```
+
+```
+## Warning in x * y: longer object length is not a multiple of shorter object
+## length
+```
+
+```
+## [1]  1 20  3
+```
+
+[eriqande](https://eriqande.github.io/rep-res-web/lectures/vectorization_recycling_and_indexing.html)
+
+Source: Eric C. Anderson
+---
+
+##We will see Recycling In Many contexts
+
+- You gotta know it! Here are some more examples:
+
+
+```r
+x = 1:20
+
+x * c(1,0)  # turns the even numbers to 0
+```
+
+```
+##  [1]  1  0  3  0  5  0  7  0  9  0 11  0 13  0 15  0 17  0 19  0
+```
+
+
+---
+
+##We will see Recycling In Many contexts
+
+- You gotta know it! Here are some more examples:
+
+
+```r
+x * c(0, 0, 1) 
+```
+
+```
+## Warning in x * c(0, 0, 1): longer object length is not a multiple of
+## shorter object length
+```
+
+```
+##  [1]  0  0  3  0  0  6  0  0  9  0  0 12  0  0 15  0  0 18  0  0
+```
+
+```r
+x &lt; ((1:4)^2) 
+```
+
+```
+##  [1] FALSE  TRUE  TRUE  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE FALSE
+## [12]  TRUE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+```
+
+```r
+1/x
+```
+
+```
+##  [1] 1.00000000 0.50000000 0.33333333 0.25000000 0.20000000 0.16666667
+##  [7] 0.14285714 0.12500000 0.11111111 0.10000000 0.09090909 0.08333333
+## [13] 0.07692308 0.07142857 0.06666667 0.06250000 0.05882353 0.05555556
+## [19] 0.05263158 0.05000000
+```
+
+Source: Eric C. Anderson
+---
+#Generating regular sequences
+
+There are many ways to generate a sequence. For example,
+
+
+```r
+1:10
+```
+
+```
+##  [1]  1  2  3  4  5  6  7  8  9 10
+```
+
+
+```r
+10:1
+```
+
+```
+##  [1] 10  9  8  7  6  5  4  3  2  1
+```
+
+
+```r
+(1/2):5 
+```
+
+```
+## [1] 0.5 1.5 2.5 3.5 4.5
+```
+
+---
+#Generating regular sequences
+
+
+```r
+seq(-5, 5, by=.2) 
+```
+
+```
+##  [1] -5.0 -4.8 -4.6 -4.4 -4.2 -4.0 -3.8 -3.6 -3.4 -3.2 -3.0 -2.8 -2.6 -2.4
+## [15] -2.2 -2.0 -1.8 -1.6 -1.4 -1.2 -1.0 -0.8 -0.6 -0.4 -0.2  0.0  0.2  0.4
+## [29]  0.6  0.8  1.0  1.2  1.4  1.6  1.8  2.0  2.2  2.4  2.6  2.8  3.0  3.2
+## [43]  3.4  3.6  3.8  4.0  4.2  4.4  4.6  4.8  5.0
+```
+
+
+
+```r
+seq(length=20, from=-5, to=5)
+```
+
+```
+##  [1] -5.0000000 -4.4736842 -3.9473684 -3.4210526 -2.8947368 -2.3684211
+##  [7] -1.8421053 -1.3157895 -0.7894737 -0.2631579  0.2631579  0.7894737
+## [13]  1.3157895  1.8421053  2.3684211  2.8947368  3.4210526  3.9473684
+## [19]  4.4736842  5.0000000
+```
+
+---
+#Generating regular sequences
+
+
+```r
+rep(1:5, times=5)
+```
+
+```
+##  [1] 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5
+```
+
+
+
+```r
+rep(1:5, each=5)
+```
+
+```
+##  [1] 1 1 1 1 1 2 2 2 2 2 3 3 3 3 3 4 4 4 4 4 5 5 5 5 5
+```
+
+
+```r
+rep(c(1,4,3), c(2,7,6))
+```
+
+```
+##  [1] 1 1 4 4 4 4 4 4 4 3 3 3 3 3 3
+```
+
+
+---
+#Logical vectors
+
+- As well as numerical vectors, R allows manipulation of logical quantities. 
+
+- The elements of a logical vector can have the values TRUE, FALSE, and NA (for “not available”, see below).
+
+- Logical vectors are generated by conditions. For example,
+
+
+```r
+1:5 &gt; 13
+```
+
+```
+## [1] FALSE FALSE FALSE FALSE FALSE
+```
+
+The logical operators are `\(&lt;, &lt;=, &gt;, &gt;=, ==, !=\)`.
+
+---
+#Missing values
+
+- In some cases the components of a vector may not be completely known.
+
+- When an element or value is “not available” or a “missing value” in the statistical sense, a place within a vector may be reserved for it by assigning it the special value `NA`.
+
+- In general any operation on an `NA` becomes an `NA`.
+
+- The motivation for this rule is simply that if the specification of an operation is incomplete, the result cannot be known and hence is not available.
+
+- The function `is.na(x)` gives a logical vector of the same size as `x` with value `TRUE` if and only if the corresponding element in `x` is `NA`.
+
+---
+#Missing values
+
+- Note that there is a second kind of “missing” values which are produced by numerical computation, the so-called Not a Number, 'NaN', values. Examples are
+
+
+
+```r
+0 / 0
+```
+
+```
+## [1] NaN
+```
+
+
+```r
+Inf - Inf
+```
+
+```
+## [1] NaN
+```
+
+---
+class: inverse, center, middle
+#Arrays and matrices
+
+---
+# Matrices
+
+- Matrix is a two dimensional data structure in R programming.
+
+- Matrix is similar to vector but additionally contains the dimension attribute.
+
+- Further details can be found at [matrix](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/matrix)
+
+.pull-left[
+
+```r
+## Example of setting row and column names
+mdat &lt;- matrix(c(1,2,3, 11,12,13), nrow = 2, ncol = 3, byrow = TRUE,
+               dimnames = list(c("row1", "row2"),
+                               c("C.1", "C.2", "C.3")))
+mdat
+```
+
+```
+##      C.1 C.2 C.3
+## row1   1   2   3
+## row2  11  12  13
+```
+]
+.pull-right[
+
+
+```r
+mdat2 &lt;- matrix(c(1,2,3, 11,12,13), nrow = 2, ncol = 3, byrow = FALSE,
+               dimnames = list(c("row1", "row2"),
+                               c("C.1", "C.2", "C.3")))
+
+mdat2
+```
+
+```
+##      C.1 C.2 C.3
+## row1   1   3  12
+## row2   2  11  13
+```
+]
+
+---
+#Arrays
+
+- Arrays are the R data objects which can store data in more than two dimensions. 
+
+- For example − If we create an array of dimension (2, 3, 4) then it creates 4 rectangular matrices each with 2 rows and 3 columns. 
+
+- Arrays can store only data type. [array](https://www.tutorialspoint.com/r/r_arrays.htm)
+
+- The general representation of the array is the following: 
+`array(data_vector, dim_vector)`
+
+
+
+---
+#Arrays
+
+
+```r
+# Take these vectors as input to the array.
+vector1 = c(5,9,3)
+vector2 = c(10,11,12,13,14,15)
+result = array(c(vector1,vector2),dim = c(3,3,2))
+
+result
+```
+
+```
+## , , 1
+## 
+##      [,1] [,2] [,3]
+## [1,]    5   10   13
+## [2,]    9   11   14
+## [3,]    3   12   15
+## 
+## , , 2
+## 
+##      [,1] [,2] [,3]
+## [1,]    5   10   13
+## [2,]    9   11   14
+## [3,]    3   12   15
+```
+
+---
+#Arrays
+
+
+```r
+# Print the third row of the second matrix of the array.
+print(result[3,,2])
+```
+
+```
+## [1]  3 12 15
+```
+
+```r
+# Print the element in the 1st row and 3rd column of the 1st matrix.
+print(result[1,3,1])
+```
+
+```
+## [1] 13
+```
+
+```r
+# Print the 2nd Matrix.
+print(result[,,2])
+```
+
+```
+##      [,1] [,2] [,3]
+## [1,]    5   10   13
+## [2,]    9   11   14
+## [3,]    3   12   15
+```
+
+---
+class: inverse, center, middle
+#Lists and data frames
+
+---
+#Lists
+
+- An R list is an object consisting of an **ordered collection of objects** known as its components.
+
+- There is no particular need for the components to be of the same mode or type. 
+
+
+
+```r
+Lst &lt;- list(person="Fred", wife="Mary", no.children=3,
+child.ages=c(4,7,9))
+
+Lst
+```
+
+```
+## $person
+## [1] "Fred"
+## 
+## $wife
+## [1] "Mary"
+## 
+## $no.children
+## [1] 3
+## 
+## $child.ages
+## [1] 4 7 9
+```
+
+---
+#Lists
+
+- Components are always numbered and may always be referred to as such. 
+
+- Thus if Lst is the name of a list with four components, these may be individually referred to as `Lst[[1]]`, `Lst[[2]]`,`Lst[[3]]` and `Lst[[4]]`.
+
+- If, further, `Lst[[4]]` is a vector subscripted array then
+`Lst[[4]][1]` is its first entry.
+
+
+
+```r
+Lst[[1]]
+```
+
+```
+## [1] "Fred"
+```
+
+```r
+Lst[[4]] 
+```
+
+```
+## [1] 4 7 9
+```
+
+```r
+Lst[[4]][1]
+```
+
+```
+## [1] 4
+```
+
+---
+#Lists
+
+- Components of lists may also be named,
+
+- And in this case the component may be referred to either by giving the component name as a character string in place of the number in double square brackets, 
+
+
+
+```r
+Lst$person
+```
+
+```
+## [1] "Fred"
+```
+
+```r
+Lst$child.ages[2]
+```
+
+```
+## [1] 7
+```
+
+```r
+Lst[["child.ages"]][2]
+```
+
+```
+## [1] 7
+```
+
+
+---
+#Data frames
+
+A data frame is a list with class "data.frame". There are restrictions on lists that may be made into data frames, namely
+
+- The components must be vectors (numeric, character, or logical), factors, numeric matrices, lists, or other data frames.
+
+- Matrices, lists, and data frames provide as many variables to the new data frame as they have columns, elements, or variables, respectively.
+
+- Numeric vectors, logicals and factors are included as is, and by default character vectors are coerced to be factors, whose levels are the unique values appearing in the vector.
+
+- Vector structures appearing as variables of the data frame must all have the same length, and matrix structures must all have the same row size.
+
+---
+
+#Making data frames
+
+
+```r
+dat = data.frame(student = c("Renato", "Joao", "Pedro", "Maria", "Joana"), grades = c(10,2,4,9,9.5), approved = c(T,F,F,T,T))
+
+dat
+```
+
+```
+##   student grades approved
+## 1  Renato   10.0     TRUE
+## 2    Joao    2.0    FALSE
+## 3   Pedro    4.0    FALSE
+## 4   Maria    9.0     TRUE
+## 5   Joana    9.5     TRUE
+```
+
+---
+class: inverse, center, middle
+#Reading data from files
+
+---
+#Set the Working Directory
+
+- Before reading any data, you must set the R working directory to the location of the data.
+
+- `setwd(“…”)` will set the current working directory to a specific location
+
+- `getwd()` will print out the current directory.
+
+- `&gt; setwd("C:/mydata")` (Windows)
+
+- When specifying the pathname, R reads forward slashes, whereas Windows reads backward slashes.  
+
+[path](https://en.wikipedia.org/wiki/Path_(computing))
+
+- **Setting the working directory properly can eliminate path confusion.**
+
+Source: [SAMHDA](https://www.datafiles.samhsa.gov/faq/how-do-i-read-data-r-nid3445)
+
+---
+#Reading data from files
+
+- Reading data into a statistical system for analysis and exporting the results to some other system for report writing can be frustrating tasks.
+
+- Sometimes it takes far more time than the statistical analysis itself, even though most readers will find the latter far more appealing.
+
+- The function `read.table` is the most convenient way to read in a rectangular grid of data. 
+
+- Because of the many possibilities, there are several other functions that call `read.table` but change a group of default arguments.
+
+- Beware that read.table is an inefficient way to read in very large numerical matrices.
+
+---
+##Reading Delimited Data Files - Space-Delimited
+
+Function: `read.table()`
+
+Common Parameters:
+
+- File: the name of the file which the data are to be read from.
+
+- Header: TRUE when first row includes variable names. The default is FALSE.
+
+- Sep: A string indicating what is separating the data. The default is "  ".
+
+
+'&gt; dataSPACE &lt;-read.table("C:/mydata/survey.dat", header=TRUE, sep= " ")'
+
+or
+
+'&gt; dataSPACE &lt;-read.table("C:/mydata/survey.txt", header=TRUE, sep= " ")'
+
+---
+##Reading Delimited Data Files - Tab-Delimited
+
+Function: `read.table()`
+
+Example:
+
+`&gt; dataTAB &lt;-read.table("survey.dat", header=TRUE, sep= "\t")`
+
+or 
+
+`&gt; dataTAB &lt;-read.table("survey.txt", header=TRUE, sep= "\t")`
+
+- Further details can be found typing `?read.table` on the RStudio console or in [manual](https://cran.r-project.org/doc/manuals/r-release/R-data.html#Variations-on-read_002etable).
+
+- Lecture about how to represent characters in computer memories. [lecture12](https://www.youtube.com/watch?v=kW_vetzPU_I),
+[utf8](https://www.youtube.com/watch?v=sqPTR_v4qFA&amp;t=551s).
+
+- A intersting article about enconding [kunststube](http://kunststube.net/encoding/) 
+
+---
+class: middle
+##Reading comma delimited files
+
+- `read.csv()` reads comma delimited files, 
+
+- `read.csv2()` reads semicolon separated files (common in countries where , is used as the decimal place).
+
+- However, we are going to use tidyverse packages to import data.
+
+---
+class: inverse, center, middle
+#Tidyverse
+
+---
+#Tidyverse
+
+- The tidyverse is a **collection of R packages** designed **for data science**. 
+
+- All packages share an underlying design philosophy, grammar, and data structures.
+
+Install the complete tidyverse with:
+
+
+```r
+install.packages("tidyverse")
+```
+
+- Any help ?? [tidyverse](https://www.tidyverse.org/)
+
+---
+class: inverse, center, middle
+
+#Section based on
+
+##R for Data Science: Written by Garrett Grolemund and Hadley Wickham
+
+---
+class: inverse, center, middle
+
+#Data import with Tidyverse
+
+
+---
+class: middle
+##Data import
+
+- You’ll learn how to read plain-text rectangular files into R.
+
+- Here, we’ll only scratch the surface of data import, but many of the principles will translate to other forms of data.
+
+---
+##Data import
+
+Most of readr’s functions are concerned with turning flat files into data frames:
+
+- `read_csv()` reads comma delimited files, 
+
+- `read_csv2()` reads semicolon separated files (common in countries where , is used as the decimal place), 
+
+- `read_tsv()` reads tab delimited files, and `read_delim()` reads in files with any delimiter.
+
+- `read_fwf()` reads fixed width files. 
+
+- `read_log()` reads Apache style log files.
+
+---
+##Data import
+
+- We’ll focus on `read_csv()`. 
+
+- The first argument to `read_csv()` is the most important: it’s the path to the file to read.
+
+
+```r
+library(tidyverse)
+x = read_csv("teste.csv") 
+head(x)
+```
+
+```
+## # A tibble: 6 x 3
+##   Block Treat  Resp
+##   &lt;chr&gt; &lt;chr&gt; &lt;dbl&gt;
+## 1 T1    B1       73
+## 2 T1    B2       NA
+## 3 T1    B3       73
+## 4 T1    B4       75
+## 5 T2    B1       74
+## 6 T2    B2       75
+```
+
+---
+##Data import
+
+- You can also supply an inline csv file. 
+
+- This is useful for experimenting with readr and for creating reproducible examples to share with others:
+
+
+```r
+read_csv("a,b,c
+1,2,3
+4,5,6")
+```
+
+```
+## # A tibble: 2 x 3
+##       a     b     c
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     1     2     3
+## 2     4     5     6
+```
+
+---
+##Data import
+
+-  Sometimes there are a few lines of metadata at the top of the file. You can use skip = n to skip the first n lines; 
+
+
+```r
+read_csv("The first line of metadata
+  The second line of metadata
+  x,y,z
+  1,2,3", skip = 2)
+```
+
+```
+## # A tibble: 1 x 3
+##       x     y     z
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     1     2     3
+```
+
+---
+##Data import
+
+- Or use comment = "#" to drop all lines that start with (e.g.) #.
+
+
+```r
+read_csv("# A comment I want to skip
+  x,y,z
+  1,2,3", comment = "#")
+```
+
+```
+## # A tibble: 1 x 3
+##       x     y     z
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     1     2     3
+```
+
+---
+##Data import
+
+
+-  The data might not have column names. You can use` col_names = FALSE` to tell `read_csv()` not to treat the first row as headings, and instead label them sequentially from `\(X_1\)` to `\(X_n\)`
+
+
+```r
+read_csv("1,2,3\n 4,5,6", col_names = FALSE)
+```
+
+```
+## # A tibble: 2 x 3
+##      X1    X2    X3
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     1     2     3
+## 2     4     5     6
+```
+
+"\n" is a convenient shortcut for adding a new line.
+
+---
+##Data import
+
+-  Alternatively you can pass col_names a character vector which will be used as the column names:
+
+
+```r
+read_csv("1,2,3\n4,5,6", col_names = c("x", "y", "z"))
+```
+
+```
+## # A tibble: 2 x 3
+##       x     y     z
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     1     2     3
+## 2     4     5     6
+```
+
+---
+##Data import
+
+- Another option that commonly needs tweaking is na: this specifies the value (or values) that are used to represent missing values in your file:
+
+
+```r
+read_csv("a,b,c\n1,2,.", na = ".")
+```
+
+```
+## # A tibble: 1 x 3
+##       a     b c    
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;lgl&gt;
+## 1     1     2 NA
+```
+
+---
+##Exercise
+
+1.  Identify what is wrong with each of the following inline CSV files. What happens when you run the code?
+
+
+```r
+read_csv("a,b\n1,2,3\n4,5,6")
+read_csv("a,b,c\n1,2\n1,2,3,4")
+read_csv("a,b\n\"1")
+read_csv("a,b\n1,2\na,b")
+read_csv("a;b\n1;3")
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

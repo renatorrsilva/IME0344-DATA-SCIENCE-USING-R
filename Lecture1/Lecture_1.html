@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Lecture 1 - An Introduction to Data Science</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 1 - An Introduction to Data Science
+## ‘50 Years of Data Science’ written by David Donoho (2017).
+### Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-03-02)
+
+---
+
+&lt;img src="Lecture_1_files/figure-html/Fig1.png" width="100%" align="center" /&gt;
+
+
+
+---
+#Data Science Initiative - University of Michigan (2015)
+
+## The website for DSI gives us an idea what data science is:
+
+- "This coupling of scientific discovery and practice involves:
+the collection, management, processing, analysis, visualization, and 
+interpretation of vast amounts of heterogeneous data associated with a diverse array of scientific, translational, and inter-disciplinary applications.”
+
+
+## A number of DSI-like initiatives started recently, including:
+
+- Campus-wide initiatives at NYU, Columbia, MIT,
+- New master’s degree programs in data science, for example, at Berkeley, NYU, Stanford, Carnegie Mellon, University of Illinois, ...
+
+---
+class: inverse, center, middle
+#Data Science “Versus” Statistics
+
+---
+#Data Science “Versus” Statistics
+
+##Definition from Data Science Association’s 
+
+“Data Scientist” means a professional who uses scientific methods to liberate and create meaning from raw data.
+
+##Definition of the statistics (Donoho, 2017)
+
+“Statistics” means the practice or science of collecting and analyzing numerical data in large quantities.
+
+---
+#Data Science “Versus” Statistics
+
+- To a statistician, the definition of the data science sounds an awful lot like what applied statisticians do: use methodology to make inferences from data. 
+- To a statistician, this definition of statistics seems already to encompass anything that the definition of data scientist might encompass, 
+- But the definition of statistician seems limiting, since a lot of statistical work is explicitly about inferences to be made from very small samples — this been true for hundreds of years, really. 
+- In fact, statisticians deal with data however it arrives — big or small.
+
+
+---
+class: inverse, center, middle
+#Data Science under the point of view of some statisticians
+
+
+
+---
+background-image: url(https://github.com/yihui/xaringan/releases/download/v0.0.2/karl-moustache.jpg)
+background-position: 50% 50%
+class: center, bottom, inverse
+
+- "Data Science is statistics.
+When physicists do mathematics, they don’t say they’re doing number science. They’re doing math. If you’re analyzing data, you’re doing statistics." (Karl Broman)
+
+---
+#Andrew Gelman and Jeff Leek
+
+- "Statistics is the least important part of data science." (**Andrew Gelman**)
+[url](https://statmodeling.stat.columbia.edu/2013/11/14/statistics-least-important-part-data-science/)
+
+- I would rephrase as: “Statistics, properly defined, is a key part of data science”. Statistics should incorporate statistical software development, data munging, reproducibility, visualization, and report writing. That is most of the data science pipeline. Just my 2 cents. (**Jeff Leek**) [url](https://simplystatistics.org/)
+
+- "Interesting point on expanding the boundaries of statistics. To me, “statistics” already includes visualization and software development. Maybe also data munging too, but I’m not quite sure what that is!" (**Andrew Gelman**)
+
+- "For example, suppose a researcher writes a program to scrape some data off the web. I don’t know how to do this, and I’ve not thought about it as a statistical skill, but maybe it is, and my views have just been too limited." (**Andrew Gelman**)
+
+- "Certainly I feel very strongly that visualization and software development are part of statistics, and I get annoyed when people don’t want to count it as statistics." (**Andrew Gelman**)
+
+---
+#Andrew Gelman and Jeff Leek
+
+- "Data munging is just another way to say data cleaning. I think that is a critical part of statistics since it helps you understand many sources of hidden variation/bias you might miss if you only have the cleaned data." (**Jeff Leek**)
+
+- "I think scraping data from the web is now a necessary/default skill we should be teaching statisticians, much the way software development wasn’t considered “core” but now is." (**Jeff Leek**)
+
+- "I think we agree that if we define our field narrowly then of course it is less important and that may cause us to become obsolete." (**Jeff Leek**)
+
+
+---
+class: inverse, center, middle
+#The Future of Data Analysis, 1962 (John Tukey)
+
+##The Annals of Mathematical Statistics
+
+---
+#John Tukey
+
+- "For a long time I have thought I was a statistician, interested in inferences from the particular to the general."
+- "But as I have watched mathematical statistics evolve, I have had cause to wonder and to doubt."
+
+- "...All in all I have come to feel that my central interest is in data analysis, which I take to include, among other things: 
+
+- "Procedures for analyzing data, techniques for interpreting the results, ways of planning the gathering of data and all the machinery and results of (mathematical) statistics which apply to analyzing data".
+
+---
+#The Future of Data Analysis, 1962 (John, Tukey)
+
+- John’s article was published in 1962 in The Annals of Mathematical Statistics, the central venue for mathematically advanced statistical research of the day.
+- Other articles appearing in that journal at the time were mathematically precise and would present definitions, theorems, and proofs. 
+- John’s article was instead a kind of public confession.
+- Explaining why he thought such research was too narrowly focused, possibly useless or harmful, and the research scope of statistics needed to be dramatically enlarged and redirected.
+
+---
+#The Future of Data Analysis, 1962 (John, Tukey)
+
+## Tukey identified four driving forces in the new science:
+
+1. The formal theories of statistics
+2. Accelerating developments in computers and display devices 
+3. The challenge, in many fields, of more and ever larger bodies
+of data
+4. The emphasis on quantification in an ever wider variety of
+disciplines
+
+---
+class: inverse, center, middle
+
+#“Greater or Lesser Statistics, A Choice for Future Research.” (John Chambers)
+
+---
+#“Greater or Lesser Statistics, A Choice for Future Research.” (John Chambers)
+
+- "The statistics profession faces a choice in its future research between continuing concentration on traditional topics — based largely on data analysis supported by mathematical statistics — and a broader viewpoint — based on an inclusive concept of learning from data".
+
+- "The latter course presents severe challenges as well as exciting opportunities." 
+- "The former risks seeing statistics become increasingly marginal ..."
+
+- Chambers stated explicitly that the enlarged field would be larger even than data analysis. Specifically, it is larger than Tukey’s 1962 vision.
+
+
+---
+
+class: inverse, center, middle
+#Breiman’s “Two Cultures,” 2001
+
+##“Statistical Modeling: The Two Cultures,”  (Statistical Science)
+
+---
+##“Statistical Modeling: The Two Cultures,”  (Leo Breiman)
+
+- "Statistics starts with data".
+
+- "Think of the data as being generated by a black box in which a vector of input variables x (independent variables) go in one side, and on the other side the response variables y come out". 
+
+- "There are two goals in analyzing the data:"
+
+- Prediction: To be able to predict what the responses are going to be to future input variables.
+
+- Inference: To infer how nature is associating the response variables to the input variables.
+
+---
+#Breiman’s “Two Cultures,” 2001 - Generative Modeling
+
+
+- The “generative modeling”  culture seeks to develop stochastic models which fit the data, and then make inferences about the data-generating mechanism based on the structure of those models. 
+- Implicit in their viewpoint is the notion that there is a true model generating the data, and often a truly “best” way to analyze the data. 
+- Breiman thought that this culture encompassed 98% of all academic statisticians.
+
+---
+#Breiman’s “Two Cultures,” 2001 - Predictive Modeling
+
+- The “predictive modeling” culture prioritizes prediction and is estimated by Breiman to encompass 2% of academic statisticians—including Breiman.
+- But also many computer scientists and, as the discussion of his article shows, important industrial statisticians. 
+- Predictive modeling is effectively silent about the underlying mechanism generating the data, and allows for many different predictive algorithms, preferring to discuss only accuracy of prediction made by different algorithm on various datasets. 
+- The relatively recent discipline of machine learning, often sitting within computer science departments, is identified by Breiman as the epicenter of the predictive modeling culture.
+
+---
+#Comments : Sir. David Cox and Bradley Efron
+
+- Sir. David Cox states that in his view, “predictive success ...is not the primary basis for model choice” and that “formal methods of model choice that take no account of the broader objectives are suspect ..."
+
+- Efron stated that “Prediction is certainly an interesting subject but Leo’s article overstates both its role and our profession’s lack of interest in it.”
+
+---
+class: inverse, center, middle
+
+#The Full Scope of Data Science
+
+---
+#The Full Scope of Data Science
+
+- Following Chambers, let us call the collection of activities mentioned until now “lesser data science” (LDS) and the larger would-be field greater data science (GDS). 
+
+- The activities of Greater Data Science are classified into six divisions: 
+
+1. Data Gathering, Preparation and Exploration 
+2. Data Representation and Transformation
+3. Computing with Data
+4. Data Modeling
+5. Data Visualization and Presentation
+6. Science about Data Science
+
+---
+
+#Data Gathering, Preparation and Exploration 
+
+- Some say that 80% of the effort devoted to data science is expended by diving into or becoming one with one’s messy data to learn the basics of what’s in them, so that data can be made ready for further exploitation. 
+
+- **Gathering**: This includes traditional experimental design as practiced by statisticians for well over a century, but also a variety of modern data gathering techniques and data resources. 
+
+- We have new data-making technologies like next generation sequencing in computational biology, GPS location fixes, supermarket scanner data,  web scraping, Pubmed scraping, image processing. 
+
+
+---
+
+#Data Gathering, Preparation and Exploration 
+
+
+- **Preparation**. Many datasets contain anomalies and artifacts. Any data-driven project requires mindfully identifying and addressing such issues.
+
+- Responses range from reformatting and recoding the values themselves, to more ambitious preprocessing, such as grouping, smoothing and subsetting.
+
+- Often today, one speaks colorfully of **data cleaning** and **data wrangling**.
+
+- **Exploration**: or “exploratory data analysis”. Data scientist should devotes serious time and effort to exploring data to sanity-check and to expose unexpected features. Such detective work adds crucial insights to every data-driven endeavor.
+---
+
+#Data Representation and Transformation
+
+- A data scientist works with many different data sources during a career. 
+
+- **Modern Databases**. The scope of today’s data representation includes everything from homely text files and spreadsheets to SQL and noSQL databases, distributed databases, and live data streams. Data scientists need to know the structures, transformations, and algorithms involved in using all these different representations.
+
+- **Mathematical Representations** These are interesting and useful mathematical structures for representing data of special types, including acoustic, image, sensor, and network data. 
+- For example, to get features with acoustic data, they often use the Fourier transform. Data scientists develop facility with such tools and mature judgment about deploying them.
+
+
+---
+#Computing with Data.
+
+- Every data scientist should know and use several languages for data analysis and data processing. These can include popular languages like **R** and Python.
+
+- Cluster and cloud computing and the ability to run massive numbers of jobs on such clusters has become an overwhelmingly powerful ingredient of the modern computational landscape.
+
+- To exploit this opportunity, data scientists develop workflows which organize work to be split up across many jobs to be run sequentially or else across many machines.
+
+- Data scientists also develop workflows that document the steps of an individual data analysis or research project.
+
+- **Unfortunately, we won't cover cluster and cloud computing in this course**.
+
+---
+# Quantitative Programming Environments: R
+
+- The general topic of “computing with data” may sound at first as if it is stretchable to cover lots of mainstream academic computer science; 
+- suggesting that perhaps there is no real difference between data science and computer science. 
+- To the contrary, “computing with data” has a distinct core, and an identity separate from academic computer science.
+- The author argued that the R system transformed the practice of data analysis by creating a standard language which different analysts can all use to communicate and share algorithms and workflows. 
+
+---
+# Data Wrangling: Tidy Data
+
+- Hadley Wickham is a well-known contributor to the world of statistical computing, as the author of numerous packages becoming popular with R users everywhere; these include ggplot2, reshape2, plyr, tidyr, dplyr; 
+- Wickham (2011), Wickham et al. (2007), and Wickham et al. (2011). These packages abstractify and attack certain common issues in data science subfield “GDS 2: Data Representation and Transformation” and also subfield “GDS 4: Data Visualization and Presentation,” and Wickham’s tools have gained acceptance as indispensable to many.
+
+---
+#Research Presentation: Knitr
+
+- Yihui Xie’s work on the knitr package in R helps data analysts authoring source documents that blend running R code together with text, and then compiling those documents by running the R code, extracting results from the live computation, and inserting them in a high-quality PDF file, HTML web page, or other output product.
+- In effect, the entire workflow of a data analysis is intertwined with the interpretation of the results, saving a huge amount of error-prone manual cut-and-paste moving computational outputs and their place in the document.
+
+---
+#Data Visualization and Presentation.
+
+
+- Data visualization at one extreme overlaps with the very simple plots of EDA—histograms, scatterplots, time series plots - but in modern practice it can be taken to much more elaborate extremes. 
+
+- Data scientists often spend a great deal of time decorating simple plots with additional color or symbols to bring in an important new factor, and they often crystallize their understanding of a dataset by developing a new plot which codifies it. 
+
+- Data scientists also create dashboards for monitoring data processing pipelines that access streaming or widely distributed data. Finally, they develop visualizations to present conclusions from a modeling exercise.
+
+---
+#Data Visualization and Presentation.
+
+- **Generative modeling**: in which one proposes a stochastic model that could have generated the data, and derives methods to infer properties of the underlying generative mechanism. This roughly speaking coincides with traditional academic statistics and its offshoots.
+
+- **Predictive modeling**: in which one constructs methods which predict well over some given data universe that is, some very specific concrete dataset. This roughly coincides with modern Machine Learning, and its industrial offshoots.
+
+
+---
+#Science about Data Science.
+
+- Data scientists are doing **science about data science** when they identify commonly occurring analysis/processing workflows, for example, using data about their frequency of occurrence in some scholarly or business domain; 
+- When they measure the effectiveness of standard workflows in terms of the human time, the computing resource, the analysis validity, or other performance metric, and when they uncover emergent phenomena in data analysis, for example, new patterns arising in data analysis workflows, or disturbing artifacts in published analysis results.
+- The scope here also includes foundational work to make future such science possible—such as encoding documentation of individual analyses and conclusions in a standard digital format for future harvesting and meta-analysis.
+- As data analysis and predictive modeling becomes an ever more widely distributed global enterprise, “science about data science” will grow dramatically in significance.
+
+---
+#Conclusion of the paper
+
+- Is Data Science equal to Statistics?
+- The answer is no. The author have argued here that data science is not a mere rebranding of statistics. Today’s consensus data science includes statistics as a subset. He thinks data science ought to be even larger, for example, include "Science about Data Science".
+- Each proposed notion of data science involves some enlargement of academic statistics and machine learning. 
+- The “GDS” variant specifically discussed in this article derives from insights about data analysis and modeling stretching back decades.
+- In this variant, the core motivation for the expansion to data sci- ence is intellectual. 
+
+
+---
+#Conclusion of the paper
+
+- In the future, there may be great industrial demand for the skills inculcated by GDS; however, the core questions which drive the field are scientific, not industrial.
+- GDS proposes that data science is the science of learning from data; it studies the methods involved in the analysis and processing of data and proposes technology to improve methods in an evidence-based manner. 
+- The scope and impact of this science will expand enormously in coming decades as scientific data and data about science itself become ubiquitously available.
+
+
+---
+background-image: url("Lecture_1_files/figure-html/Fig6.png")
+background-size: 85%
+class: center, middle, bottom
+
+#Typical data science project ! (Hadley Wickham)
+
+
+---
+#Glossary of the data science project (Hadley Wickham)
+
+- **Import** means that you take data stored in a file, database, or web API, and load it into a data frame in R.
+
+- **Tidying** your data means storing it in a consistent form that matches the semantics of the dataset with the way it is stored. 
+- In brief, when your data is tidy, each column is a variable, and each row is an observation.
+
+- **Transformation**  includes narrowing in on observations of interest (like all people in one city, or all data from the last year), creating new variables that are functions of existing variables (like computing speed from distance and time), and calculating a set of summary statistics (like counts or means).
+
+- Together, **tidying** and **transforming** are called **wrangling**, because getting your data in a form that’s natural to work with often feels like a fight!
+
+---
+#Glossary of the data science project (Hadley Wickham)
+
+
+- **Visualisation** is a fundamentally human activity. A good visualisation will show you things that you did not expect, or raise new questions about the data.
+- A good visualisation might also hint that you’re asking the wrong question, or you need to collect different data. Visualisations can surprise you, but don’t scale particularly well because they require a human to interpret them.
+
+- **Models** are complementary tools to visualisation. Once you have made your questions sufficiently precise, you can use a model to answer them. 
+- Models are a fundamentally mathematical or computational tool, so they generally scale well. 
+
+- The last step of data science is **communication**, an absolutely critical part of any data analysis project. It doesn’t matter how well your models and visualisation have led you to understand the data unless you can also communicate your results to others.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

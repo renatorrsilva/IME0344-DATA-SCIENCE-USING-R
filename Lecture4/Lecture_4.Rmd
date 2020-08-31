@@ -1,0 +1,278 @@
+---
+title: "Lecture 4 - Tibbles and Data Visualization (part I)"
+subtitle: "Presentation based on R for Data Science: Written by Garrett Grolemund and Hadley Wickham"
+author: " Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      
+
+---
+class: inverse, center, middle
+#Sample data
+
+---
+class: middle 
+##Sample data
+
+- For learning and testing purposes, R base and its packages provide several data sets.
+
+- If you want to load a specified data set, type `data("name of the dataset")`
+
+##Example:
+
+```{r, echo = TRUE, message = FALSE, warning = FALSE}
+library(nycflights13)
+
+data("flights")
+
+```
+
+Ps: If you do not have the package already installed, please do it before loading the library.
+
+
+
+---
+class: inverse, center, middle
+#Tibbles
+
+---
+class: middle
+
+##Tibbles
+
+- Tibbles are data frames, but they tweak some older behaviours to make life a little easier. 
+
+- Most other R packages use regular data frames, however we can coerce a data frame to a tibble using `as_tibble()`:
+
+```{r, eval = FALSE, warning=FALSE, message = FALSE}
+
+library(tidyverse)
+
+data(iris)
+
+as_tibble(iris)
+
+```
+
+
+---
+
+##Tibbles - Iris data
+
+```{r, echo = FALSE, warning=FALSE, message = FALSE}
+
+library(tidyverse)
+
+data(iris)
+
+as_tibble(iris)
+
+```
+
+---
+## Tibbles
+
+We can create a new tibble from individual vectors with `tibble()`
+
+
+```{r}
+tibble(
+  x = 1:5, 
+  y = 1, 
+  z = x ^ 2 + y
+)
+```
+
+---
+
+##Tibbles versus data.frame
+
+- Tibbles never changes the type of the inputs (e.g. it never converts strings to factors!)
+
+- Tibbles never changes the names of variables, and it never creates row names.
+
+- Tibbles have a refined print method that shows only the first 10 rows, and all the columns that fit on screen. 
+
+- We can use `print()` to control the number of rows `(n)` and the width of the display. Using `width = Inf` will display all columns:
+
+```{r}
+print(as_tibble(iris), n = 2, width=Inf)
+```
+
+---
+
+##Subsetting
+
+
+```{r}
+df = tibble(
+  x = runif(5),
+  y = rnorm(5)
+)
+
+# Extract by name
+df$x
+
+df[["x"]]
+
+# Extract by position
+df[[1]]
+
+
+```
+
+---
+class: inverse, center, middle
+#Data visualisation
+
+
+---
+class: middle
+##ggplot 2
+
+
+- R has several systems for making graphs, but ggplot2 is one of the most elegant and most versatile. 
+-  ggplot2 implements the **grammar of graphics** a coherent system for describing and building graphs.
+- Further details about the **grammar of graphics** can be found at [The Layered Grammar of Graphics](http://vita.had.co.nz/papers/layered-grammar.pdf.) 
+
+_ Here we will learn by examples.
+
+
+---
+##Example: mpg data set
+
+.pull-left[
+
+- Let’s use our first graph to answer a question: 
+- Do cars with big engines use more fuel than cars with small engines? 
+- What does the relationship between engine size and fuel efficiency look like? Is it positive? Negative? Linear? Nonlinear?
+]
+
+.pull-right[
+<img src="Lecture_4_files/figure-html/Fig1.jpeg" width="100%" align="center" />   
+]
+
+---
+##Example: mpg data set
+
+- `mpg` data frame found in `ggplot2` is a rectangular collection of variables (in the columns) and observations (in the rows).
+
+- `mpg` contains observations collected by the US Environmental Protection Agency on 38 models of car.
+
+Among the variables in mpg are:
+
+- `displ`, a car’s engine size, in litres.
+
+- `hwy`, a car’s fuel efficiency on the highway, in miles per gallon (mpg).
+
+A car with a low fuel efficiency consumes more fuel than a car with a high fuel efficiency when they travel the same distance.
+
+---
+##How to answer the question ?
+
+- We cannot answer the question only observing the raw data because there a lot of observations and variables.
+
+- We need to summarize the information and, one alternative is to use data visualization.
+
+- For this particular case, we have two numerical variables car’s engine size and fuel efficiency.
+
+- Therefore, an alternative is to make a scatter plot.
+
+
+---
+class: middle
+
+## Scatter plot
+
+- A scatter plot is a type of data display that shows the relationship between two numerical variables. 
+
+-  A scatter plot  is a type of plot or mathematical diagram using Cartesian coordinates to display values for typically two variables for a set of data. 
+
+
+---
+###Creating a scatter plot using ggplot
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+
+---
+class: middle
+
+###Interpretation of the plot
+
+- The plot shows a negative relationship between engine size (displ) and fuel efficiency (hwy). 
+
+- In other words, cars with big engines use more fuel. 
+
+- Does this confirm or refute your hypothesis about fuel efficiency and engine size?
+
+---
+##Some details
+
+- We began a plot with the function `ggplot()`.
+
+- `ggplot()` creates a coordinate system that you can add layers to.
+
+- The first argument of `ggplot()` is the dataset to use in the graph. 
+
+- Therefore `ggplot(data = mpg)` creates an empty graph.
+
+
+---
+
+```{r}
+ggplot(data = mpg)
+```
+
+---
+##Some details
+
+- We can complete our graph by adding one or more layers to `ggplot()`. 
+
+- The function  `geom_point()` adds a layer of points to our plot, which creates a scatterplot. 
+
+- `ggplot2` comes with many geom functions that each add a different type of layer to a plot. 
+
+- Each geom function in `ggplot2` takes a mapping argument. 
+
+- This defines how variables in your dataset are mapped to visual properties. 
+
+- The mapping argument is always paired with `aes()`, and the x and y arguments of `aes()` specify which variables to map to the x and y axes.
+
+- `ggplot2` looks for the mapped variables in the data argument, in this case, mpg.
+
+
+---
+class: middle
+##Reusable templat
+
+
+To make a graph, replace the bracketed sections in the code below with a dataset, a geom function, or a collection of mappings.
+
+
+```{r, eval=FALSE}
+ggplot(data = <DATA>) + <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>))
+```
+
+
+---
+###Exercises
+
+a. Run `ggplot(data = mpg)`. What do you see?
+
+b. How many rows are in `mpg`? How many columns?
+
+c.  What does the `drv` variable describe? Read the help for `?mpg` to find out.
+
+d. Make a scatterplot of `hwy` vs `cyl`.
+
+e.  What happens if you make a scatterplot of `class` vs `drv`? Why is the plot not useful?
