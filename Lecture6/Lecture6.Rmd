@@ -27,7 +27,7 @@ This tutorial will help you set up your computer to use R. It is for you if you 
 * Install the RStudio IDE
 * Install the `tidyverse` R package
 
-You can skip this tutorial if you've already done these things.
+This material is available at https://learnr-examples.shinyapps.io/ex-setup-r/
 
 
 ## Install R

@@ -1,5 +1,5 @@
 ---
-title: "Lecture 6 - Set Up"
+title: "Lecture 7 - An Introduction to R"
 output:
   learnr::tutorial:
     progressive: true
@@ -13,120 +13,452 @@ description: >
 ```{r setup, include=FALSE}
 library(learnr)
 tutorial_options(exercise.timelimit = 60)
+knitr::opts_chunk$set(error = TRUE)
 ```
 
-## Welcome
-
-This is a demo tutorial. Compare it to the [source code](https://github.com/rstudio/learnr/tree/master/inst/tutorials/ex-setup-r/ex-setup-r.Rmd) that made it.
-
+## Lecture Objectives
+ 
+- Learn how to: import, visualize and organize data.
+ 
 ### Outline
 
-This tutorial will help you set up your computer to use R. It is for you if you need to:
+* Importing and or Loading Data
+      * Setting Working Directory;
+      * Reading Comma and Delimited Data Files.
+  
+* Data Visualization: An Introduction to `ggplot2`.
+    * Layers;
+    * Statistical transformations.
+    
+* Data Transformation: An Introduction to `dplyr`.
+    * Filter rows;
+    * Arrange rows;
+    * Select columns;
+    * Add new variables;
+    * Grouped summaries.
+  
 
-* Install R on your computer
-* Install the RStudio IDE
-* Install the `tidyverse` R package
+## Importing and or Loading Data
 
-You can skip this tutorial if you've already done these things.
+### Setting Working
+
+- Before reading any data, you must set the R working directory to the location of the data.
+
+- `setwd(“…”)` will set the current working directory to a specific location
+
+- `getwd()` will print out the current directory.
+
+- `> setwd("C:/mydata")` (Windows)
+
+- When specifying the pathname, R reads forward slashes, whereas Windows reads backward slashes. Definition of the path can be found at [path](https://en.wikipedia.org/wiki/Path_(computing))
+
+- **Setting the working directory properly can eliminate path confusion.**
+
+Source: [SAMHDA](https://www.datafiles.samhsa.gov/faq/how-do-i-read-data-r-nid3445)
 
 
-## Install R
+### Reading Delimited Data Files 
 
-### How to install R
+Space-Delimited or Tab - Delimited
 
-![](https://vimeo.com/203516510)
+Function: `read.table()`
+
+Common Parameters:
+
+- File: the name of the file which the data are to be read from.
+
+- Header: TRUE when first row includes variable names. The default is FALSE.
+
+- Sep: A string indicating what is separating the data. The default is "  ".
+
+
+'> dataSPACE <-read.table("C:/mydata/survey.dat", header=TRUE, sep= " ")'
+
+or
+
+'> dataSPACE <-read.table("C:/mydata/survey.txt", header=TRUE, sep= " ")'
+
+### Reading comma delimited files
+
+- `read.csv()` reads comma delimited files, 
+
+- `read.csv2()` reads semicolon separated files (common in countries where , is used as the decimal place).
+
+- However, we are going to use tidyverse packages to import data.
+
+
+###Data import with Tidyverse
+
+Most of readr’s functions are concerned with turning flat files into data frames:
+
+- `read_csv()` reads comma delimited files, 
+
+- `read_csv2()` reads semicolon separated files (common in countries where , is used as the decimal place), 
+
+- `read_tsv()` reads tab delimited files, and `read_delim()` reads in files with any delimiter.
+
+- There are other functions such as: `read_fwf()`, `read_log()`, however we are going focus on `read_csv()`.
+
+###Example
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+x = read_csv("teste.csv") 
+head(x)
+```
+
 
 ### Test your knowledge
 
 ```{r quiz2, echo=FALSE}
-quiz(caption = "Quiz - Install R",
-  question("Is R free to download and use?",
-    answer("Yes!", correct = TRUE, message = "R is free _and_ open source, which means that anyone can read, use, and copy the source code of the R language."),
-    answer("No.")
+quiz(caption = "Quiz - Importing and or Loading Data",
+  question("What command do you use to set the working directory?",
+    answer("setwd()", correct = TRUE, message = "Congrats!"),
+    answer("library()", message="library and require load and attach add-on packages"),
+    answer("getwd()", message="getwd returns an absolute filepath representing the current working directory of the R process"), allow_retry = TRUE
   ),
-  question("Where do you download R?",
-    answer("www.rstudio.com/download"),
-    answer("[cloud.r-project.org](http://cloud.r-project.org)", correct = TRUE, message = "You can also download R from [cran.r-project.org](http://cran.r-project.org)"),
-    answer("www.r-project.org", message = "Good try, but not exactly. www.r-project.org doesn't provide a download link, but it does provide a link to one the websites above."),
-    answer("www.r.com"),
+  question("What command do you use to read space delimited files?",
+    answer("read.tsv()"),
+    answer("read.table()", correct = TRUE, message = "Congrats!"),
+    answer("read.csv()"),
     allow_retry = TRUE
   ),
-  question("How often should you update R?",
-    answer("Everytime you use it", message = "This will be too often unless you use R very rarely!"),
-    answer("About once a year", correct = TRUE, "A new version of R is released about once a year. Update sooner if you encounter a bug that you cannot explain."),
-    answer("Never", message = "A new version of R is released about once a year. I'll assume that you are using the newest version of R, which will be the fastest version with the fewest unexpected behaviors." ),
+  question("What command do you use to import comma delimited files?",
+    answer("read.csv()", correct=TRUE, message = "You can also read comma delimited files using the function read_csv() or read.table() with sep=',' "),
+    answer("read_tsv()"),
+    answer("read.spss()" ),
     allow_retry = TRUE
   )
 )
 ```
 
-## Install RStudio
+## Data Visualization:
 
-### How to install RStudio
+### How to visualize data using R
 
-RStudio is an Integrated Development Environment for R. What does that mean? Well, if you think of R as a language, which it is, you can think of RStudio as a program that helps you write and work in the language. RStudio makes programming in R much easier and I suggest that you use it!
+This section is based on R for Data Science, section 5.6.
 
-![](https://vimeo.com/203516968)
+R has several systems for making graphs, but `ggplot2` is one of the most elegant, efficient and versatile.
 
-### Test your knowledge
+There are many ways to make a data visualization, here we are going to focus on 4 basic representation types:
 
-```{r quiz3, echo=FALSE}
-quiz(caption = "Quiz - Install RStudio",
-  question("What is the RStudio IDE?",
-    answer("An application that makes it easier to use R.", correct = TRUE, message = "RStudio organizes your workspace and makes it easier to write, use, debug, and save R code. I highly recommend it and will rely on the RStudio IDE in several tutorials."),
-    answer("An application that let's you use R without writing any code", message = "And thank goodness! Code provides a reproducible record of your work, which is essential for data science."),
-    answer("A spreadsheet program like Microsoft Excel."),
-    answer("Another name for R", message = "R and RStudio are two separate things. R is a language, like English. Think of RStudio as a program that helps you use the language, kind of like how a word processing program helps you write in English."),
-    allow_retry = TRUE
-  ),
-  question("Is the RStudio IDE free to download and use?",
-    answer("Yes!", correct = TRUE, message = "Like R, RStudio is free and open-source. There do exist professional versions of RStudio with enhanced features, but we will not rely on those features in these tutorials."),
-    answer("No.", message = "Like R, RStudio is free and open-source. There do exist professional versions of RStudio with enhanced features, but we will not rely on those features in these tutorials.")
-  ),
-  question("Where do you download RStudio?",
-    answer("www.rstudio.com/download", correct = TRUE, message = "For these tutorials, download and install the RStudio Desktop Open Source License."),
-    answer("[cloud.r-project.org](http://cloud.r-project.org)", message = "This is where you download R, not RStudio."),
-    answer("www.r-project.org"),
-    answer("[cran.rstudio.org](http://cran.rstudio.org)"),
-    allow_retry = TRUE
-  ),
-  question("Do you need to install R if you already have RStudio?",
-    answer("Yes.", correct = TRUE),
-    answer("No.", message = "R does not come with RStudio; you need to install R separately.")
-  )
-)
+- Relationship.
+- Comparison;
+- Composition;
+- Distribution.
+
+Source: [Rbloggers](https://www.r-bloggers.com/7-visualizations-you-should-learn-in-r/).
+
+### How to visualize relationship between variables: Scatter Plot
+
+We use the scatter Plot to see the relationship between two continuous variables. 
+
+Continuous variables are numeric variables that can assume values on an uncountable set.
+
+####Example  - Prostate Cancer
+
+The data came from a study by Stamey et al. (1989). They examined the correlation between the level of prostate-specific antigen and a number of clinical measures in men who were about to receive a radical prostatectomy. 
+
+Here, we are going to analyze **the relationship between the logarithm of prostate weight and logarithm of prostate-specific antigen..**
+
+
+### Scatter Plot - Prostate Cancer
+
+
+```{r}
+library(Brq) 
+data("Prostate")
+ggplot(Prostate, aes(x=lweight, y=lpsa)) + geom_point() + 
+  scale_x_continuous("The logarithm of prostate weight", breaks = seq(0,6,by = 0.5))+     
+  scale_y_continuous("The logarithm of prostate-specific antigen.", breaks = seq(0,6,by = 0.5))+
+  theme_bw()
+
 ```
 
-## Install Packages
+### Scatter Plot - Prostate Cancer (colors according to age)
 
-### How to install R packages
 
-![](https://vimeo.com/203516241)
+```{r}
+library(Brq) 
+data("Prostate")
+ggplot(Prostate, aes(x=lweight, y=lpsa, color=age)) + geom_point() + 
+  scale_x_continuous("The logarithm of prostate weight", breaks = seq(0,6,by = 0.5))+     
+  scale_y_continuous("The logarithm of prostate-specific antigen.", breaks = seq(0,6,by = 0.5))+  theme(legend.position="top")
+```
 
-### Test your knowledge
 
-```{r names, echo = FALSE}
-quiz(caption = "Quiz - Working with Packages",
-  question("What command do you use to install packages?",
-    answer("`library()`", message = "We will see what `library()` does later."),
-    answer("`install.packages()`", correct = TRUE),
-    answer("`install_packages()`"),
-    answer("There is no command. You must visit [cran.r-project.org](http://cran.r-project.org) and download packages manually.", message = "R makes it easy to download packages. You connect to the internet and then run one of the commands above."),
-    allow_retry = TRUE
-  ),
-  question("How often do you need to install a package on your computer?",
-    answer("Every time you restart R"),
-    answer("Every time you restart your computer"),
-    answer("Only once. Afterwards, R can find it on your hard drive as needed.", correct = TRUE),
-    answer("Never, as long as you are connected to the internet.", message = "This could be true if you are using R over a cloud service. However, if you are using R locally on your own computer, you will need to install each package that you use on your computer."),
-    allow_retry = TRUE
-  ),
-  question("What is the tidyverse?",
-    answer("A collection of packages that work well together and provide tools for common data science tasks.", correct = TRUE, message = 'You can install all of the tidyverse packages at once with `install.packages("tidyverse")`.'),
-    answer("A word processing program for R"),
-    answer("A code style that reads like poetry"),
-    answer("An alternate universe where everyone is an R programmer."),
-    allow_retry = TRUE
-  )
+### How to visualize the frequency distribution of a continuous variables: Histogram
+
+The histogram consists of breaks the data into bins and computes the frequency distribution of them. We can modify the bin size and see what happens. 
+
+There are some rules to define the number of bins available in the literature. 
+
+By default, `geom_histogram()` will divide your data into 30 equal bins or intervals.
+
+However, usually, the solution is ad hoc based on the experience of the statistician. Here, we are going to use the Sturges's Rule [references](https://en.wikipedia.org/wiki/Histogram#Sturges'_formula.)
+
+
+
+### Histogram - Logarithm of prostate-specific antigen
+
+
+```{r}
+
+nbins = nclass.Sturges(Prostate$lpsa)
+
+ggplot(Prostate, aes(lpsa)) + geom_histogram(bins=nbins, aes(y=..density..))+labs(title = "Histogram - log PSA") +xlab("The logarithm of prostate-specific antigen.") + theme_bw()
+```
+
+
+### How to visualize the frequency distribution of a discrete / categorical variables: Bar plot
+
+####Exemple - South African Heart Disease
+
+The data is a subset of the Coronary Risk-Factor Study (CORIS) baseline survey, carried
+out in three rural areas of the Western Cape, South Africa (Rousseauw et
+al., 1983). 
+
+The aim of the study was to establish the intensity of ischemic
+heart disease risk factors in that high-incidence region. 
+
+Here we are going to investigate the frequency distribution of the variable coronary heart disease (CHD).
+
+```{r, warning = FALSE, message=FALSE}
+#install.packages("MCMCpack")
+#install.packages("tmvtnorm")
+#install.packages("MixCluster", repos="http://R-Forge.R-project.org")
+library(MixCluster)
+data("saheart")
+
+
+ggplot(data=as.data.frame(saheart), aes(x=CHD)) +
+  geom_bar(aes(y = ..count../ sum(..count..))) + labs(title="Bar Plot") +
+  ylab("Relative Frequency")
+
+
+
+```
+
+More details can be found at [STDHA](http://www.sthda.com/english/wiki/ggplot2-barplots-quick-start-guide-r-software-and-data-visualization).
+
+
+### Stacked Bar chart: Analyzing association between the presence or not of heart disease in the family history and CHD clinic outcome
+
+```{r, warning = FALSE, message=FALSE}
+
+saheart = as.data.frame(saheart) %>% mutate(
+  Famhist = factor(Famhist),
+  CHD = factor(CHD)
 )
+
+ggplot(data=saheart, aes(x=CHD, fill = Famhist)) +
+  geom_bar() + 
+  labs(title="Stacked Bar Plot", x = "CHD", y="Absolute Frequency") +
+  scale_fill_discrete(name = "Family history", labels = c("0", "1"))
+
+
+```
+
+
+### How to visualize the spread of the data and detect outlier: Box Plot
+
+We use Box Plot to visualize the spread of the data and detect outliers. Also, we can use the Box Plot to make comparisons. Here we are going to compare the Obesity between groups with the presence of the CHD against the group with individuals who never had CHD.
+
+```{r, warning = FALSE, message=FALSE}
+
+ggplot(saheart, aes(CHD, Obesity)) + geom_boxplot(fill = "red")+
+scale_y_continuous("Obesity Index", breaks= seq(0,50, by=5))+
+labs(title = "Box Plot", x = "CHD")
+
+
+```
+
+
+## Data Transformation
+
+This section is strongly based on [_R for Data Science_](http://r4ds.had.co.nz/)
+
+### Filter rows
+
+`filter()` lets you use a logical test to extract specific rows from a data frame. To use `filter()`, pass it the data frame followed by one or more logical tests. `filter()` will return every row that passes each logical test.
+
+So we can use `filter()` to select every individual which has a coronary heart disease. Click Submit Answer to give it a try:
+
+```{r filter1, exercise = TRUE, exercise.eval = FALSE}
+filter(saheart, CHD == 1)
+```
+
+    
+### Arrange rows
+
+`arrange()` works similarly to `filter()` except that instead of selecting rows, it changes their order. It takes a data frame and a set of column names (or more complicated expressions) to order by. If you provide more than one column name, each additional column will be used to break ties in the values of preceding columns:
+
+So we can use `arrange()` to order the Prostate dataset by lcavol, lweight ,and age. Click Submit Answer to give it a try:
+
+```{r arrange1, exercise = TRUE, exercise.eval = FALSE}
+arrange(Prostate, lcavol, lweight, age)
+```
+  
+Use desc to re-order by a column in descending order:  
+   
+```{r arrange2, exercise = TRUE, exercise.eval = FALSE}
+arrange(Prostate,  desc(age))
+```   
+    
+
+
+    
+### Select columns
+
+`select()` allows you to rapidly zoom in on a useful subset using operations based on the names of the variables.
+
+For example, we can use `select()` to select the columns lcavol, lweight, age
+
+```{r select1, exercise = TRUE, exercise.eval = FALSE}
+arrange(Prostate, lcavol, lweight, age)
+```
+  
+The function `select()` have many arguments:
+
+everything(): Matches all variables.
+
+last_col(): Select last variable, possibly with an offset.
+
+These helpers select variables by matching patterns in their names:
+
+- starts_with(): Starts with a prefix.
+
+- ends_with(): Ends with a suffix.
+
+- contains(): Contains a literal string.
+
+- matches(): Matches a regular expression.
+
+Further details can be found at documentation of the function.
+
+
+### Add new variables
+
+Besides selecting sets of existing columns, it’s often useful to add new columns that are functions of existing columns. That’s the job of mutate().
+
+We can use `mutate()` to compute the level of the prostate-specific antigen.
+
+```{r mutate1, exercise = TRUE, exercise.eval = FALSE}
+mutate(Prostate, psa = exp(lpsa))
+```
+    
+### Grouped summaries
+
+`summarise()` collapses a data frame to a single row of summaries. You get to choose how many summaries appear in the row and how they are computed:
+
+`summarise()` is not terribly useful unless you pair it with `group_by()`.
+
+`group_by()` assigns groups by grouping together observations that have the same combinations of values for the variables that you pass to `group_by()`.
+
+
+####Exemple 1 - Compute the average and sum of the lpsa for the entire data set.
+
+```{r summarise1, exercise = TRUE, exercise.eval = FALSE}
+
+Prostate %>%  summarise( lpsa_ave = mean(lpsa, na.rm=TRUE), 
+                         lpsa_sum = sum(lpsa, na.rm=TRUE))
+
+```
+
+
+####Exemple 2 - Compute the average and sum of all variables for the entire data set.
+
+```{r summarise2, exercise = TRUE, exercise.eval = FALSE}
+
+Prostate %>% summarise_all(list(sum, mean))
+
+```
+
+####Exemple 3 - Compute the average for low-density lipoprotein cholesterol grouped by coronary heart disease event.
+
+```{r summarise_groupedby1, exercise = TRUE, exercise.eval = FALSE, warning=FALSE, message=FALSE}
+
+saheart %>% group_by(CHD) %>% summarise(mean(Ldl), n=n())
+
+```
+
+####Exemple 4 - Compute the absolute frequency for family history and  coronary heart disease event.
+
+```{r summarise_groupedby2, exercise = TRUE, exercise.eval = FALSE,warning=FALSE, message=FALSE}
+
+saheart %>% group_by(CHD,Famhist) %>% summarise(n())
+
+```
+
+
+Further details can be found at documentation.
+
+##Exercises
+
+To practice these skills, we will use the `flights` data set from the nycflights13 package. This data frame comes from the US [Bureau of Transportation Statistics](http://www.transtats.bts.gov/DatabaseInfo.asp?DB_ID=120&Link=0) and contains all `r format(nrow(nycflights13::flights), big.mark = ",")` flights that departed from New York City in 2013. It is documented in `?flights`.
+
+Sort flights to find the most delayed flights.
+
+```{r}
+library(nycflights13)
+```
+
+```{r exerciseA, exercise = TRUE}
+
+
+```
+
+```{r exerciseA-solution}
+
+arrange(flights, -arr_delay) 
+
+```
+
+Find the flights that left earliest.
+
+```{r exerciseB, exercise = TRUE}
+
+
+```
+
+```{r exerciseB-solution}
+
+arrange(flights, dep_delay) 
+
+```
+
+Add a new variable called `speed` (in seconds) in the dataset `flight`.
+
+```{r exerciseC, exercise = TRUE}
+
+
+```
+
+```{r exerciseC-solution}
+flights %>% mutate(speed = distance / (air_time * 60))
+
+```
+
+When do the first and last flights leave each day?
+You must use the object `not_cancelled` to do th exercise.
+
+```{r}
+not_cancelled = flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+```
+
+```{r exerciseD, exercise = TRUE}
+
+
+```
+
+```{r exerciseD-solution}
+
+ not_cancelled %>%
+  group_by(year, month, day) %>% 
+  summarise(
+    first = min(dep_time),
+    last = max(dep_time)
+  )
+
 ```
