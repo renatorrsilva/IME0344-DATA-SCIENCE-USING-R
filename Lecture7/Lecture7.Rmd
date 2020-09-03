@@ -12,6 +12,12 @@ description: >
 
 ```{r setup, include=FALSE}
 library(learnr)
+library(Brq) 
+data("Prostate")
+library(MixCluster) 
+data("saheart") 
+saheart = as.data.frame(saheart)
+library(tidyverse)
 tutorial_options(exercise.timelimit = 60)
 knitr::opts_chunk$set(error = TRUE)
 ```
@@ -102,7 +108,6 @@ Most of readr’s functions are concerned with turning flat files into data fram
 ###Example
 
 ```{r, warning=FALSE, message=FALSE}
-library(tidyverse)
 x = read_csv("teste.csv") 
 head(x)
 ```
@@ -147,7 +152,7 @@ There are many ways to make a data visualization, here we are going to focus on 
 - Composition;
 - Distribution.
 
-Source: [Rbloggers](https://www.r-bloggers.com/7-visualizations-you-should-learn-in-r/).
+Source: [Rbloggers](https://www.r-bloggers.com/7-visualizations-you-should-learn-in-r/)
 
 ### How to visualize relationship between variables: Scatter Plot
 
@@ -166,8 +171,6 @@ Here, we are going to analyze **the relationship between the logarithm of prosta
 
 
 ```{r}
-library(Brq) 
-data("Prostate")
 ggplot(Prostate, aes(x=lweight, y=lpsa)) + geom_point() + 
   scale_x_continuous("The logarithm of prostate weight", breaks = seq(0,6,by = 0.5))+     
   scale_y_continuous("The logarithm of prostate-specific antigen.", breaks = seq(0,6,by = 0.5))+
@@ -179,8 +182,6 @@ ggplot(Prostate, aes(x=lweight, y=lpsa)) + geom_point() +
 
 
 ```{r}
-library(Brq) 
-data("Prostate")
 ggplot(Prostate, aes(x=lweight, y=lpsa, color=age)) + geom_point() + 
   scale_x_continuous("The logarithm of prostate weight", breaks = seq(0,6,by = 0.5))+     
   scale_y_continuous("The logarithm of prostate-specific antigen.", breaks = seq(0,6,by = 0.5))+  theme(legend.position="top")
@@ -226,12 +227,10 @@ Here we are going to investigate the frequency distribution of the variable coro
 ```{r, warning = FALSE, message=FALSE}
 #install.packages("MCMCpack")
 #install.packages("tmvtnorm")
-#install.packages("MixCluster", repos="http://R-Forge.R-project.org")
-library(MixCluster)
-data("saheart")
+#install.packages("MixCluster",repos="http://R-Forge.R-project.org")
 
 
-ggplot(data=as.data.frame(saheart), aes(x=CHD)) +
+ggplot(data=saheart, aes(x=CHD)) +
   geom_bar(aes(y = ..count../ sum(..count..))) + labs(title="Bar Plot") +
   ylab("Relative Frequency")
 
@@ -246,7 +245,7 @@ More details can be found at [STDHA](http://www.sthda.com/english/wiki/ggplot2-b
 
 ```{r, warning = FALSE, message=FALSE}
 
-saheart = as.data.frame(saheart) %>% mutate(
+saheart %>% mutate(saheart,
   Famhist = factor(Famhist),
   CHD = factor(CHD)
 )
@@ -315,7 +314,7 @@ arrange(Prostate,  desc(age))
 For example, we can use `select()` to select the columns lcavol, lweight, age
 
 ```{r select1, exercise = TRUE, exercise.eval = FALSE}
-arrange(Prostate, lcavol, lweight, age)
+select(Prostate, lcavol, lweight, age)
 ```
   
 The function `select()` have many arguments:
