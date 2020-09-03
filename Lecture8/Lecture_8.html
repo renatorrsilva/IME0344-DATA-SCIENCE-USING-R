@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 8 - Simple Linear Regression part I</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 8 - Simple Linear Regression part I
+### Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-09-03)
+
+---
+
+###Some advices before start (Julian J.Faraway)
+
+- Do not begin a complex statistical analysis without observing the objectives, or even whether the data are appropriate for the model proposed.
+
+
+###Formulation of the problem
+
+a. Understand the "physical background".
+
+b. Understand the objective.
+
+c. Make sure you know what the client wants: Keep it as simple as possible.
+
+d. Put the problem into statistical terms.
+
+
+
+"The formulation of a problem is often more essential than its solution which
+may be merely a matter of mathematical or experimental skill". (Albert Einstein)
+
+
+---
+##When to Use Regression Analysis (Julian J.Faraway)
+
+-  Regression models are used for explaining or modeling the relationship between a single variable, called the response, output or dependent variable; and one or more predictors, inputs, or explanatory variables.
+
+- The response variable must be a continuous, but the predictors can be
+continuous, discrete or categorical.
+
+- Simple Linear Regression is a case particular when we have only one predictor.
+
+
+##Potential Goals of a Regression analysis:
+
+1. Prediction of future observations;
+2. Assessment of the effect of, or relationship between, explanatory variables and the
+response;
+3. A general description of data structure.
+
+
+---
+class: middle
+##Simple Linear Regression - Intuiton
+
+
+####Example  - Prostate Cancer
+
+The data came from a study by Stamey et al. (1989). They examined the correlation between the level of prostate-specific antigen and a number of clinical measures in men who were about to receive a radical prostatectomy. 
+
+The data frame has the following components:
+
+- lcavol : The logarithm of cancer volume.
+- lweight : The logarithm of prostate weight.
+- age : Age
+- lbph : The logarithm of the amount of benign prostatic hyperplasia.
+- svi : Seminal vesicle invasion.
+- lcp : The logarithm of capsular penetration.
+- gleason : Gleason score.
+- pgg45 : Percentage Gleason scores 4 or 5.
+- lpsa : The logarithm of prostate-specific antigen.
+
+Today, our objective is study **the relationship the logarithm of cancer volume and logarithm of prostate-specific antigen.**
+
+---
+### Scatter Plot - Prostate Cancer
+
+
+![](Lecture_8_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+
+
+---
+## Questions
+
+- What is the relationship between the logarithm of cancer volume and the logarithm of prostate-specific antigen?
+- Is it reasonable to assume a straight line?
+- If yes, what are the values of the intercept and the slope?
+- How to fit a straight line to the data?
+
+##Simple Linear Regression
+
+`$$y = \beta_0 + \beta_1 x + \epsilon$$`
+where `\(y\)` is the response variable, `\(x\)` is the explanatory variable, `\(\epsilon_i\)` is the random error.
+
+The simple regression model is linear in the `\(\beta_0\)` and `\(\beta_1\)` parameters. However, it is not necessarily linear in the `\(x\)` variables. Thus models such as `\(y = \beta_0 + \beta_1 \log{x} + \epsilon\)` are still designed as simple linear regression.
+
+---
+
+##Simple Linear Regression for n observations
+
+Given `\((x_1, y_1), \ldots, (x_n, y_n)\)`, we have
+
+`$$y_i = \beta_0 +  \beta_1 x_i + \epsilon_i,$$`
+
+##Assumptions
+
+1.  `\(E(\epsilon_i) = 0, \phantom{11} \forall i = 1, 2, \ldots, ...\)`
+2.  `\(Var(\epsilon_i) = 0, \phantom{11} \forall i = 1, 2, \ldots, ...\)`
+3.  `\(Cov(\epsilon_i,\epsilon_j) = 0, \phantom{11} \forall i \neq j\)`.
+4.  `\(x_i\)` are known constants
+
+---
+class: middle
+##Estimation  
+
+Let's get started this section watching this [video](https://www.youtube.com/watch?v=PaFPbb66DxQ&amp;feature=youtu.be) 
+
+
+###Least Square Approach
+
+Considering the error sum of squares given by  `\(Q = \sum_{i=1}^n (y_i - \beta_0 - \beta_1 x_i)^2\)`, the least square solution is obtained solving the following minimization problem:
+
+`$$(\hat{\beta}_0, \hat{\beta}_1) = \mbox{arg min}_{(\beta_0, \beta_1)} \sum_{i=1}^n (y_i - \beta_0 - \beta_1 x_i)^2.$$`
+
+---
+
+###How to obtain the estimators ?
+
+Taking deritatives of `\(Q\)` with respect to  `\(\beta_0\)` and `\(\beta_1\)`, we have
+
+
+--
+ `$$\frac{\partial Q}{\partial \beta_0} = -2\sum_{i=1}^n (y_i - \beta_0 - \beta_1 x_i) = -2\left[ \sum_{i=1}^n y_i - n \beta_0 - \beta_1 \sum_{i=1}^n x_i\right]$$`
+
+--
+
+`$$\frac{\partial Q}{\partial \beta_1} = -2\sum_{i=1}^n (y_i - \beta_0 - \beta_1 x_i)x_i = -2\left[ \sum_{i=1}^n y_ix_i -  \beta_0\sum_{i=1}^nx_i - \beta_1 \sum_{i=1}^n x_i^2\right]$$`
+
+Now, making `\(\frac{\partial Q}{\partial \beta_0} =0\)` and `\(\frac{\partial Q}{\partial \beta_1} =0\)`, we obtain the normal equations, i.e,
+
+`\begin{align}
+\sum_{i=1}^n y_i - n \beta_0 - \beta_1 \sum_{i=1}^n x_i =&amp; 0 \\
+\sum_{i=1}^n y_ix_i -  \beta_0\sum_{i=1}^nx_i - \beta_1 \sum_{i=1}^n x_i^2 =&amp;0.
+\end{align}`
+
+---
+
+###Normal Equations
+
+`\begin{align}
+\sum_{i=1}^n y_i - n \hat{\beta}_0 - \hat{\beta}_1 \sum_{i=1}^n x_i =&amp; 0 \\
+\sum_{i=1}^n y_ix_i -  \hat{\beta}_0\sum_{i=1}^nx_i - \hat{\beta}_1 \sum_{i=1}^n x_i^2 =&amp;0.
+\end{align}`
+
+####First line
+
+--
+`$$n \hat{\beta}_0  = \sum_{i=1}^n y_i - \hat{\beta}_1 \sum_{i=1}^n x_i$$`
+--
+`$$\hat{\beta}_0 = \bar{y} -  \hat{\beta}_1 \bar{x}.$$`
+
+---
+####Second line
+
+--
+`$$\hat{\beta}_1 \sum_{i=1}^n x_i^2 = \sum_{i=1}^n y_ix_i -  \hat{\beta}_0\sum_{i=1}^nx_i$$`
+--
+`$$\hat{\beta}_1 \sum_{i=1}^n x_i^2 = \sum_{i=1}^n y_ix_i -  (\bar{y} -  \hat{\beta}_1 \bar{x})\sum_{i=1}^nx_i$$`
+--
+`$$\hat{\beta}_1 \sum_{i=1}^n x_i^2 -  \hat{\beta}_1 \bar{x}\sum_{i=1}^nx_i = \sum_{i=1}^n y_ix_i -  \bar{y}\sum_{i=1}^nx_i$$`
+--
+`$$\hat{\beta}_1 (\sum_{i=1}^n x_i^2 -   \frac{(\sum_{i=1}^nx_i)^2}{n}) = \sum_{i=1}^n x_iy_i -   \frac{(\sum_{i=1}^nx_i\sum_{i=1}^{n}y_i)}{n}$$`
+--
+`$$\hat{\beta}_1 = \frac{\sum_{i=1}^n x_iy_i -   \frac{(\sum_{i=1}^nx_i\sum_{i=1}^{n}y_i)}{n}}{(\sum_{i=1}^n x_i^2 -   \frac{(\sum_{i=1}^nx_i)^2}{n})}.$$`
+
+
+---
+class: middle
+
+##Properties of Estimators
+
+- Least Square Approach provides unbiased estimators.
+
+- Gauss Markov Theorem states that Ordinary Least Square Estimator have a lowest variance among all linear unbiased estimators.
+
+
+---
+class: middle
+
+
+##Hypothesis Testing 
+
+ - A statistical hypothesis is a statement about the **population parameter**.
+ - Based on a sample from the population, Hypothesis Testing is a procedure used to reject or not a statistical hypothesis called the null hypothesis.
+
+
+##Regression Slope Test
+
+ - Assuming that random error follows normal distribution, we can demonstrate that
+ 
+ `$$y_i \sim N(\beta_0 + \beta_1 x_i, \sigma^2).$$`
+- Under `\(H_0\)`, 
+ 
+ `$$\frac{\hat{\beta}_1 - \beta_1}{\hat{\sigma^2}}\sqrt{\sum_{i=1}^n(x_i-\bar{x})^2} \sim t_{(n-2)}$$`
+where `\(n-2\)` is the degree of the freedom.
+
+ - From these results, we can test `\(H_0: \beta_1 = 0.\)`
+
+
+---
+class: middle
+
+##Type of the Errors
+
+When we performs a hypothesis test we can comete two type of errors.
+
+- Type I error is the rejection of a true null hypothesis.
+- Type II error is the non-rejection of a false null hypothesis.
+
+Unfortunately, it is not possible to minimize both errors simultaneously, hence, we fix
+a type I error and minimize Type II.
+
+**Significance level**: the probability of rejecting the null hypothesis when it is true.
+
+---
+class: middle
+
+##P-value
+
+**Definition**: probability of observing the given value of the test statistic, or greater, under the null hypothesis [(FERREIRA \&amp; PATINO)](https://www.scielo.br/scielo.php?script=sci_arttext&amp;pid=S1806-37132015000500485).
+
+Let's watch the videos [1](https://www.youtube.com/watch?v=HTZ8YKgD0MI) and [2](https://www.youtube.com/watch?v=RVxHlsIw_Do)  
+about p-values.
+
+I prefer the second one.
+
+I highly recommend this [article](https://link.springer.com/content/pdf/10.1007/s10654-016-0149-3.pdf).
+
+
+---
+class: middle
+
+##Example in R
+
+
+
+```r
+mod = lm(lpsa ~lcavol, data= Prostate)
+tidy(mod)
+```
+
+```
+## # A tibble: 2 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)    1.51     0.122       12.4 1.72e-21
+## 2 lcavol         0.719    0.0682      10.5 1.12e-17
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

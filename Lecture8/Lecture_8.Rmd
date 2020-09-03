@@ -1,0 +1,265 @@
+---
+title: "Lecture 8 - Simple Linear Regression part I"
+author: " Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+
+---
+###Some advices before start (Julian J.Faraway)
+
+- Do not begin a complex statistical analysis without observing the objectives, or even whether the data are appropriate for the model proposed.
+
+
+###Formulation of the problem
+
+a. Understand the "physical background".
+
+b. Understand the objective.
+
+c. Make sure you know what the client wants: Keep it as simple as possible.
+
+d. Put the problem into statistical terms.
+
+
+
+"The formulation of a problem is often more essential than its solution which
+may be merely a matter of mathematical or experimental skill". (Albert Einstein)
+
+
+---
+##When to Use Regression Analysis (Julian J.Faraway)
+
+-  Regression models are used for explaining or modeling the relationship between a single variable, called the response, output or dependent variable; and one or more predictors, inputs, or explanatory variables.
+
+- The response variable must be a continuous, but the predictors can be
+continuous, discrete or categorical.
+
+- Simple Linear Regression is a case particular when we have only one predictor.
+
+
+##Potential Goals of a Regression analysis:
+
+1. Prediction of future observations;
+2. Assessment of the effect of, or relationship between, explanatory variables and the
+response;
+3. A general description of data structure.
+
+
+---
+class: middle
+##Simple Linear Regression - Intuiton
+
+
+####Example  - Prostate Cancer
+
+The data came from a study by Stamey et al. (1989). They examined the correlation between the level of prostate-specific antigen and a number of clinical measures in men who were about to receive a radical prostatectomy. 
+
+The data frame has the following components:
+
+- lcavol : The logarithm of cancer volume.
+- lweight : The logarithm of prostate weight.
+- age : Age
+- lbph : The logarithm of the amount of benign prostatic hyperplasia.
+- svi : Seminal vesicle invasion.
+- lcp : The logarithm of capsular penetration.
+- gleason : Gleason score.
+- pgg45 : Percentage Gleason scores 4 or 5.
+- lpsa : The logarithm of prostate-specific antigen.
+
+Today, our objective is study **the relationship the logarithm of cancer volume and logarithm of prostate-specific antigen.**
+
+---
+### Scatter Plot - Prostate Cancer
+
+
+```{r, warning=FALSE, message=FALSE,echo=FALSE}
+library(Brq)
+library(tidyverse)
+library(broom)
+data("Prostate")
+ggplot(Prostate, aes(x=lcavol, y=lpsa)) + geom_point() + 
+  #scale_x_continuous("The logarithm of cancer volume", breaks = seq(0,6,by = 0.5))+     
+  #scale_y_continuous("The logarithm of prostate-specific antigen.", breaks = seq(0,6,by = 0.5))+
+  theme_bw()
+
+```
+
+
+---
+## Questions
+
+- What is the relationship between the logarithm of cancer volume and the logarithm of prostate-specific antigen?
+- Is it reasonable to assume a straight line?
+- If yes, what are the values of the intercept and the slope?
+- How to fit a straight line to the data?
+
+##Simple Linear Regression
+
+$$y = \beta_0 + \beta_1 x + \epsilon$$
+where $y$ is the response variable, $x$ is the explanatory variable, $\epsilon_i$ is the random error.
+
+The simple regression model is linear in the $\beta_0$ and $\beta_1$ parameters. However, it is not necessarily linear in the $x$ variables. Thus models such as $y = \beta_0 + \beta_1 \log{x} + \epsilon$ are still designed as simple linear regression.
+
+---
+
+##Simple Linear Regression for n observations
+
+Given $(x_1, y_1), \ldots, (x_n, y_n)$, we have
+
+$$y_i = \beta_0 +  \beta_1 x_i + \epsilon_i,$$
+
+##Assumptions
+
+1.  $E(\epsilon_i) = 0, \phantom{11} \forall i = 1, 2, \ldots, ...$
+2.  $Var(\epsilon_i) = 0, \phantom{11} \forall i = 1, 2, \ldots, ...$
+3.  $Cov(\epsilon_i,\epsilon_j) = 0, \phantom{11} \forall i \neq j$.
+4.  $x_i$ are known constants
+
+---
+class: middle
+##Estimation  
+
+Let's get started this section watching this [video](https://www.youtube.com/watch?v=PaFPbb66DxQ&feature=youtu.be) 
+
+
+###Least Square Approach
+
+Considering the error sum of squares given by  $Q = \sum_{i=1}^n (y_i - \beta_0 - \beta_1 x_i)^2$, the least square solution is obtained solving the following minimization problem:
+
+$$(\hat{\beta}_0, \hat{\beta}_1) = \mbox{arg min}_{(\beta_0, \beta_1)} \sum_{i=1}^n (y_i - \beta_0 - \beta_1 x_i)^2.$$
+
+---
+
+###How to obtain the estimators ?
+
+Taking deritatives of $Q$ with respect to  $\beta_0$ and $\beta_1$, we have
+
+
+--
+ $$\frac{\partial Q}{\partial \beta_0} = -2\sum_{i=1}^n (y_i - \beta_0 - \beta_1 x_i) = -2\left[ \sum_{i=1}^n y_i - n \beta_0 - \beta_1 \sum_{i=1}^n x_i\right]$$
+
+--
+
+$$\frac{\partial Q}{\partial \beta_1} = -2\sum_{i=1}^n (y_i - \beta_0 - \beta_1 x_i)x_i = -2\left[ \sum_{i=1}^n y_ix_i -  \beta_0\sum_{i=1}^nx_i - \beta_1 \sum_{i=1}^n x_i^2\right]$$
+
+Now, making $\frac{\partial Q}{\partial \beta_0} =0$ and $\frac{\partial Q}{\partial \beta_1} =0$, we obtain the normal equations, i.e,
+
+\begin{align}
+\sum_{i=1}^n y_i - n \beta_0 - \beta_1 \sum_{i=1}^n x_i =& 0 \\
+\sum_{i=1}^n y_ix_i -  \beta_0\sum_{i=1}^nx_i - \beta_1 \sum_{i=1}^n x_i^2 =&0.
+\end{align}
+
+---
+
+###Normal Equations
+
+\begin{align}
+\sum_{i=1}^n y_i - n \hat{\beta}_0 - \hat{\beta}_1 \sum_{i=1}^n x_i =& 0 \\
+\sum_{i=1}^n y_ix_i -  \hat{\beta}_0\sum_{i=1}^nx_i - \hat{\beta}_1 \sum_{i=1}^n x_i^2 =&0.
+\end{align}
+
+####First line
+
+--
+$$n \hat{\beta}_0  = \sum_{i=1}^n y_i - \hat{\beta}_1 \sum_{i=1}^n x_i$$
+--
+$$\hat{\beta}_0 = \bar{y} -  \hat{\beta}_1 \bar{x}.$$
+
+---
+####Second line
+
+--
+$$\hat{\beta}_1 \sum_{i=1}^n x_i^2 = \sum_{i=1}^n y_ix_i -  \hat{\beta}_0\sum_{i=1}^nx_i$$
+--
+$$\hat{\beta}_1 \sum_{i=1}^n x_i^2 = \sum_{i=1}^n y_ix_i -  (\bar{y} -  \hat{\beta}_1 \bar{x})\sum_{i=1}^nx_i$$
+--
+$$\hat{\beta}_1 \sum_{i=1}^n x_i^2 -  \hat{\beta}_1 \bar{x}\sum_{i=1}^nx_i = \sum_{i=1}^n y_ix_i -  \bar{y}\sum_{i=1}^nx_i$$
+--
+$$\hat{\beta}_1 (\sum_{i=1}^n x_i^2 -   \frac{(\sum_{i=1}^nx_i)^2}{n}) = \sum_{i=1}^n x_iy_i -   \frac{(\sum_{i=1}^nx_i\sum_{i=1}^{n}y_i)}{n}$$
+--
+$$\hat{\beta}_1 = \frac{\sum_{i=1}^n x_iy_i -   \frac{(\sum_{i=1}^nx_i\sum_{i=1}^{n}y_i)}{n}}{(\sum_{i=1}^n x_i^2 -   \frac{(\sum_{i=1}^nx_i)^2}{n})}.$$
+
+
+---
+class: middle
+
+##Properties of Estimators
+
+- Least Square Approach provides unbiased estimators.
+
+- Gauss Markov Theorem states that Ordinary Least Square Estimator have a lowest variance among all linear unbiased estimators.
+
+
+---
+class: middle
+
+
+##Hypothesis Testing 
+
+ - A statistical hypothesis is a statement about the **population parameter**.
+ - Based on a sample from the population, Hypothesis Testing is a procedure used to reject or not a statistical hypothesis called the null hypothesis.
+
+
+##Regression Slope Test
+
+ - Assuming that random error follows normal distribution, we can demonstrate that
+ 
+ $$y_i \sim N(\beta_0 + \beta_1 x_i, \sigma^2).$$
+- Under $H_0$, 
+ 
+ $$\frac{\hat{\beta}_1 - \beta_1}{\hat{\sigma^2}}\sqrt{\sum_{i=1}^n(x_i-\bar{x})^2} \sim t_{(n-2)}$$
+where $n-2$ is the degree of the freedom.
+
+ - From these results, we can test $H_0: \beta_1 = 0.$
+
+
+---
+class: middle
+
+##Type of the Errors
+
+When we performs a hypothesis test we can comete two type of errors.
+
+- Type I error is the rejection of a true null hypothesis.
+- Type II error is the non-rejection of a false null hypothesis.
+
+Unfortunately, it is not possible to minimize both errors simultaneously, hence, we fix
+a type I error and minimize Type II.
+
+**Significance level**: the probability of rejecting the null hypothesis when it is true.
+
+---
+class: middle
+
+##P-value
+
+**Definition**: probability of observing the given value of the test statistic, or greater, under the null hypothesis [(FERREIRA \& PATINO)](https://www.scielo.br/scielo.php?script=sci_arttext&pid=S1806-37132015000500485).
+
+Let's watch the videos [1](https://www.youtube.com/watch?v=HTZ8YKgD0MI) and [2](https://www.youtube.com/watch?v=RVxHlsIw_Do)  
+about p-values.
+
+I prefer the second one.
+
+I highly recommend this [article](https://link.springer.com/content/pdf/10.1007/s10654-016-0149-3.pdf).
+
+
+---
+class: middle
+
+##Example in R
+
+
+```{r, warning=FALSE, message=FALSE}
+
+mod = lm(lpsa ~lcavol, data= Prostate)
+tidy(mod)
+
+```
