@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 9 - Multiple Linear Regression part I</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Hastie, Tibshirani and Friedman) and Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 9 - Multiple Linear Regression part I
+### Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Hastie, Tibshirani and Friedman) and Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-09-10)
+
+---
+
+class: middle
+## Introduction
+
+- A linear regression model assumes that the regression function `\(E(Y |X)\)` is linear in the inputs `\(X_1,... ,X_p\)`. 
+
+- They are simple and often provide an adequate and interpretable description of how the inputs affect the output. 
+
+- For prediction purposes they can sometimes outperform fancier
+nonlinear models, especially in situations with small numbers of training
+cases, low signal-to-noise ratio or sparse data. 
+
+
+---
+class: middle
+##Linear Regression Models and Least Squares
+
+Given a vector od inputs `\(X^{T} = \left(X_1, X_2, \ldots, X_p\right)\)`, we want to predict a real-valued output `\(Y\)`.
+
+The linear regression model has the form:
+
+`$$E[Y|X] = f(X) = \beta_0 + \sum_{j=1}^p X_j \beta_j.$$`
+
+The linear model either assumes that the regression function `\(E(Y|X)\)` is linear, or that the linear model is a reasonable approximation.
+
+
+---
+class: middle
+##Linear Regression Models and Least Squares
+
+
+Here `\(\beta_j^{'}\)`s are unknown parameters or coefficients, and the variables `\(X_j\)` can come from different sources:
+
+- Quantitative Inputs;
+
+- Transformations of quantitative inputs, such as log, square-root or square;
+
+- Basis expansions, such as `\(X_2 = X_1^2,\)` `\(X_3 = X_1^3,\)` leading to a polynomial representation;
+
+- Numeric or "dummy" coding of the levels of qualitative inputs. For example, if `\(G\)` is a five-level factor input, we might create `\(X_j, \phantom{1} j = 1, \ldots, 5.\)` such that `\(X_j = I(G = j).\)`
+
+- Together this group of `\(X_j\)` represents the effect of `\(G\)` by a set of level-dependent constants, since in `\(\sum_{j=1}^5 X_j\beta_j,\)` one of the `\(X_j\)`s is one, and the others are zero. 
+
+- Interactions between variables, for example, `\(X_3 = X_1 X_2.\)`
+
+No matter the source of the `\(X_j\)`, the model is linear in the parameters.
+
+---
+class: middle
+##Linear Regression Models and Least Squares
+
+Given a set of training data `\((x_1, y_1), \ldots, (x_N, y_N)\)` we are going to estimate the parameters `\(\beta\)`.
+
+The least square methods consists of estimate the regression coefficients minimizing the residual sum of squares
+
+`\begin{align}
+RSS(\beta) =&amp; \sum_{i=1}^{N}(y_i - f(x_i))^2 \\
+           =&amp; \sum_{i=1}^{N}(y_i - \beta_0 - \sum_{j=1}^p x_{ij}\beta_j)^2.
+\end{align}`
+
+From a statistical point of view, this criterion is reasonable if the training observations `\((x_i, y_i)\)` represent independent random draws from their population.
+
+Even if the `\(x_i^{'}\)`s were not drawn randomly, the criterion is still valid if the  `\(y_i^{'}\)`s are conditionally independent given the inputs `\(x_i\)`.
+
+
+---
+class: middle
+##Linear Regression Models and Least Squares
+
+How to minimize the  residual sum of squares ?
+
+--
+`$$RSS(\boldsymbol{\beta}) = (\mathbf{y} - \mathbf{X}\beta)^{'} (\mathbf{y} - \mathbf{X}\boldsymbol{\beta}).$$`
+
+--
+`$$\frac{\partial RSS}{\partial\boldsymbol{\beta}} = -2 \mathbf{X}^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}).$$`
+
+--
+`$$\frac{\partial RSS}{\partial \boldsymbol{\beta}\boldsymbol{\beta}^{'}} = -2 \mathbf{X}^{'}\mathbf{X}.$$`
+--
+Assuming that `\(\mathbf{X}\)` has full column rank, and hence `\(\mathbf{X}^{'}\mathbf{X}\)` is positive definite, we set the first derivative to zero
+
+--
+`$$\mathbf{X}^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) = \mathbf{0} \Rightarrow \mathbf{X}^{'}\mathbf{y} -\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} = \mathbf{0} \Rightarrow \mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} = \mathbf{X}^{'}\mathbf{y}.$$`
+--
+to obtain the unique solution
+
+`$$\hat{\boldsymbol{\beta}} = \left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{y}.$$`
+
+---
+##Properties of Estimator - Expectation
+
+Assuming `\(\boldsymbol{\epsilon} \sim N(\mathbf{0}, \sigma^2\mathbf{I})\)` and
+`\(\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon},\)` we have
+
+--
+`$$E[\hat{\boldsymbol{\beta}}] = E\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{y}\right]$$`
+--
+`$$E[\hat{\boldsymbol{\beta}}]=E\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}[\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}]\right]$$`
+--
+`$$E[\hat{\boldsymbol{\beta}}]=E\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta}+  \left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\boldsymbol{\epsilon}\right]$$`
+--
+`$$E[\hat{\boldsymbol{\beta}}]=E\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta}\right]+   E\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\boldsymbol{\epsilon}\right]$$`
+--
+`$$E[\hat{\boldsymbol{\beta}}]=\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{X}E\left[\boldsymbol{\beta}\right]+   \left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}E\left[\boldsymbol{\epsilon}\right]=\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta}+   \left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}E\left[\boldsymbol{\epsilon}\right] = \boldsymbol{\beta}.$$`
+
+---
+##Properties of Estimator - Variance
+
+--
+`$$Var[\hat{\boldsymbol{\beta}}] = Var\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{y}\right]$$`
+
+--
+`$$Var[\hat{\boldsymbol{\beta}}]=Var\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}[\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}]\right]$$`
+
+
+--
+`$$Var[\hat{\boldsymbol{\beta}}]=Var\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta}+\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\boldsymbol{\epsilon}\right]$$`
+--
+`$$Var[\hat{\boldsymbol{\beta}}]=Var\left[\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\boldsymbol{\epsilon} \right]$$`
+
+
+--
+`$$Var[\hat{\boldsymbol{\beta}}]= \left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}Var\left[\boldsymbol{\epsilon}\right]\mathbf{X}\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}$$`
+
+--
+`$$Var[\hat{\boldsymbol{\beta}}]= \left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}(\sigma^2\mathbf{I})\mathbf{X}\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}$$`
+
+
+--
+`$$Var[\hat{\boldsymbol{\beta}}]= \sigma^2\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}.$$`
+
+
+---
+##Inference
+
+`$$\hat{\boldsymbol{\beta}} \sim N(\boldsymbol{\beta},\sigma^2\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1} )$$`
+It is easy to show that
+
+`$$(N - p  - 1 )\hat{\sigma}^2 \sim \sigma^2 \chi^2_{(N-p-1)}.$$`
+where `\(\hat{\sigma}^2 = \frac{1}{N-p-1}\sum_{i=1}^N(y_i - \hat{y}_i)^2.\)`
+
+---
+##Hypothesis Testing
+
+
+To test the hypothesis that a particular coefficient βj = 0, we form the
+standardized coefficient or Z-score
+
+`$$z_j = \frac{\hat{\beta}_j}{\hat{\sigma}\sqrt{\nu_j}}.$$`
+where `\(\nu_j\)` is the j-th diagonal element of `\(\left(\mathbf{X}^{'}\mathbf{X}\right)^{-1} )\)`.
+
+Under the null hypothesis that `\(\beta_j = 0\)`, `\(z_j\)` 
+is distributed as `\(t_{N-p-1}\)` (a t distribution with `\(N - p -1\)` degrees of freedom)
+
+Hence large absolute values of `\(z_j\)` will lead to rejection of this null hypothesis.
+
+
+
+---
+class: middle
+
+
+##F-test:  test for the significance of groups of coefficients simultaneously. 
+
+
+`$$F = \frac{\frac{RSS_0 - RSS_1}{p_1-p_0}}{\frac{RSS_1}{N-p_1-1}}.$$`
+
+where `\(RSS_1\)` is the residual sum-of-squares for the least squares fit of the bigger model with p1+1 parameters, and `\(RSS_0\)` the same for the nested smaller model with `\(p_0 +1\)` parameters, having `\(p_1 −p_0\)` parameters constrained to be zero.
+
+
+---
+class: middle
+##F-test - Overall significance
+
+
+The F-test for overall significance has the following two hypotheses:
+
+- The null hypothesis states that the model with no independent variables fits the data as well as your model.
+- The alternative hypothesis says that your model fits the data better than the intercept-only model.
+
+`$$F = \frac{ MSM}{MSE},$$`
+
+where MSM is the Mean fo Squares for Model and MSE is the Mean of Squares for Error.
+
+
+
+---
+class: middle
+##Example Prostate - Cancer
+
+
+
+```r
+library(tidyverse)
+library(broom)
+
+dat = read.table("http://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/prostate.data")
+
+nam = c("lcavol","lweight", "age", "lbph", "svi", "lcp","gleason", "pgg45")
+
+dat.X = select(dat,one_of(nam))
+
+round(cor(dat.X),3)
+```
+
+```
+##         lcavol lweight   age   lbph    svi    lcp gleason pgg45
+## lcavol   1.000   0.281 0.225  0.027  0.539  0.675   0.432 0.434
+## lweight  0.281   1.000 0.348  0.442  0.155  0.165   0.057 0.107
+## age      0.225   0.348 1.000  0.350  0.118  0.128   0.269 0.276
+## lbph     0.027   0.442 0.350  1.000 -0.086 -0.007   0.078 0.078
+## svi      0.539   0.155 0.118 -0.086  1.000  0.673   0.320 0.458
+## lcp      0.675   0.165 0.128 -0.007  0.673  1.000   0.515 0.632
+## gleason  0.432   0.057 0.269  0.078  0.320  0.515   1.000 0.752
+## pgg45    0.434   0.107 0.276  0.078  0.458  0.632   0.752 1.000
+```
+
+
+---
+class: middle
+##Example Prostate - Cancer
+
+
+
+```r
+mod = lm(lpsa ~ ., data = dat)
+tidy(mod)
+```
+
+```
+## # A tibble: 10 x 5
+##    term        estimate std.error statistic       p.value
+##    &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;
+##  1 (Intercept)  0.177     1.34       0.132  0.895        
+##  2 lcavol       0.564     0.0884     6.39   0.00000000808
+##  3 lweight      0.622     0.202      3.08   0.00279      
+##  4 age         -0.0213    0.0114    -1.87   0.0646       
+##  5 lbph         0.0968    0.0584     1.66   0.101        
+##  6 svi          0.761     0.243      3.14   0.00233      
+##  7 lcp         -0.106     0.0907    -1.17   0.246        
+##  8 gleason      0.0500    0.159      0.314  0.754        
+##  9 pgg45        0.00443   0.00449    0.989  0.326        
+## 10 trainTRUE    0.00410   0.163      0.0252 0.980
+```
+
+
+
+
+---
+class: middle
+##Example Prostate - Cancer: Test for Overall significance
+
+
+
+```r
+X =  as.matrix(dat.X)
+mod = lm(lpsa ~ X, data = dat)
+anova(mod)
+```
+
+```
+## Analysis of Variance Table
+## 
+## Response: lpsa
+##           Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## X          8 84.859 10.6074  21.679 &lt; 2.2e-16 ***
+## Residuals 88 43.058  0.4893                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+
+---
+class: middle
+##Example Prostate - Cancer: Test for the significance of groups of coefficients simultaneously. 
+
+
+
+```r
+mod = lm(lpsa ~ lcavol + lweight + age + lbph, data = dat)
+anova(mod)
+```
+
+```
+## Analysis of Variance Table
+## 
+## Response: lpsa
+##           Df Sum Sq Mean Sq  F value    Pr(&gt;F)    
+## lcavol     1 69.003  69.003 126.2392 &lt; 2.2e-16 ***
+## lweight    1  7.173   7.173  13.1221 0.0004776 ***
+## age        1  0.646   0.646   1.1812 0.2799538    
+## lbph       1  0.809   0.809   1.4800 0.2268877    
+## Residuals 92 50.288   0.547                       
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+
+---
+class: middle
+##Example Prostate - Cancer: Test for the significance of groups of coefficients simultaneously. 
+
+
+
+```r
+mod = lm(lpsa ~ lcavol + lweight + age + lbph, data = dat)
+mod2 =  lm(lpsa ~ ., data = dat)
+anova(mod, mod2)
+```
+
+```
+## Analysis of Variance Table
+## 
+## Model 1: lpsa ~ lcavol + lweight + age + lbph
+## Model 2: lpsa ~ lcavol + lweight + age + lbph + svi + lcp + gleason + 
+##     pgg45 + train
+##   Res.Df    RSS Df Sum of Sq      F  Pr(&gt;F)  
+## 1     92 50.288                              
+## 2     87 43.058  5    7.2295 2.9215 0.01741 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+---
+class: middle
+
+## Subset Selection
+
+There are two reasons why we are often not satisfied with the least squares
+estimates 
+
+- The first is prediction accuracy: the least squares estimates often have
+low bias but large variance.
+
+- Prediction accuracy can sometimes be improved by shrinking or setting some coefficients to zero. By doing so we sacrifice a little bit of bias to reduce the variance of the predicted
+values, and hence may improve the overall prediction accuracy.
+
+- The second reason is interpretation. With a large number of predictors, we often would like to determine a smaller subset that exhibit the strongest effects. 
+
+---
+class: middle
+
+
+##Forward- and Backward-Stepwise Selection
+
+
+- Rather than search through all possible subsets (which becomes infeasible
+for `\(p\)` much larger than 40), we can seek a good path through them. 
+
+- Forward stepwise selection starts with the intercept, and then sequentially adds into
+the model the predictor that most improves the fit. 
+
+- With many candidate predictors, this might seem like a lot of computation; however, clever updating algorithms can exploit the QR decomposition for the current fit to
+rapidly establish the next candidate. 
+
+
+- Backward-stepwise selection starts with the full model, and sequentially
+deletes the predictor that has the least impact on the fit. The candidate for
+dropping is the variable with the smallest Z-score.
+
+
+---
+class: middle
+
+##Forward- and Backward-Stepwise Selection
+
+
+
+- Some software packages implement hybrid stepwise-selection strategies
+that consider both forward and backward moves at each step, and select
+the “best” of the two. 
+
+- For example in the R package the step function uses the AIC criterion for weighing the choices, which takes proper account of the number of parameters fit; at each step an add or drop will be performed that minimizes the AIC score.
+
+
+- Other more traditional packages base the selection on F-statistics, adding
+“significant” terms, and dropping “non-significant” terms.These are out of fashion, since they do not take proper account of the multiple testing
+issues. 
+
+- Finally, we note that often variables come in groups (such as the dummy
+variables that code a multi-level categorical predictor). Smart stepwise procedures (such as step in R) will add or drop whole groups at a time, taking proper account of their degrees-of-freedom.
+
+
+---
+####Forward Regression
+
+
+
+```r
+minimal.model = lm(lpsa ~ 1, data = dat)
+forward.model = MASS::stepAIC(minimal.model,
+                               scope = list(upper = ~ train+lcavol+ lweight+age+lbph+svi+lcp+gleason+pgg45,  lower = ~1),
+                              direction="forward",trace = FALSE)  
+  
+tidy(forward.model) 
+```
+
+
+
+####Backward Regression
+
+
+
+```r
+full.model = lm(lpsa ~ ., data = dat)
+backward.model = MASS::stepAIC(full.model, 
+                                scope = list(upper = ~ train+lcavol+ lweight+age+lbph+svi+lcp+gleason+pgg45,  lower = ~1),
+                               direction="backward",trace = FALSE)  
+  
+tidy(backward.model) 
+```
+
+####Stepwise Regression
+
+
+
+```r
+initial.model = lm(lpsa ~ 1, data = dat)
+stepwise.model = MASS::stepAIC(initial.model, 
+                                scope = list(upper = ~ train+lcavol+ lweight+age+lbph+svi+lcp+gleason+pgg45,  lower = ~1),
+                               direction="both",trace = FALSE)  
+tidy(stepwise.model)
+```
+
+
+---
+class:middle
+##Forward Regression
+
+
+```
+## # A tibble: 6 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   0.495     0.877      0.564 5.74e- 1
+## 2 lcavol        0.544     0.0746     7.29  1.11e-10
+## 3 lweight       0.588     0.198      2.97  3.78e- 3
+## 4 svi           0.715     0.207      3.46  8.20e- 4
+## 5 lbph          0.101     0.0576     1.76  8.22e- 2
+## 6 age          -0.0164    0.0107    -1.54  1.27e- 1
+```
+
+---
+class: middle
+##Backward Regression
+
+
+
+```
+## # A tibble: 6 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   0.495     0.877      0.564 5.74e- 1
+## 2 lcavol        0.544     0.0746     7.29  1.11e-10
+## 3 lweight       0.588     0.198      2.97  3.78e- 3
+## 4 age          -0.0164    0.0107    -1.54  1.27e- 1
+## 5 lbph          0.101     0.0576     1.76  8.22e- 2
+## 6 svi           0.715     0.207      3.46  8.20e- 4
+```
+
+---
+class: middle
+##Stepwise Regression
+
+
+
+```
+## # A tibble: 6 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   0.495     0.877      0.564 5.74e- 1
+## 2 lcavol        0.544     0.0746     7.29  1.11e-10
+## 3 lweight       0.588     0.198      2.97  3.78e- 3
+## 4 svi           0.715     0.207      3.46  8.20e- 4
+## 5 lbph          0.101     0.0576     1.76  8.22e- 2
+## 6 age          -0.0164    0.0107    -1.54  1.27e- 1
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
