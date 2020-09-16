@@ -14,7 +14,7 @@ class: center, middle, inverse, title-slide
 # Lecture 9 - Multiple Linear Regression part I
 ### Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Hastie, Tibshirani and Friedman) and Presented by Renato Rodrigues Silva
 ### Federal University of Goias.
-### (updated: 2020-09-10)
+### (updated: 2020-09-14)
 
 ---
 
@@ -323,6 +323,32 @@ class: middle
 
 
 ```r
+mod = lm(lpsa ~    lbph+ age +lweight +lcavol  , data = dat)
+anova(mod)
+```
+
+```
+## Analysis of Variance Table
+## 
+## Response: lpsa
+##           Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## lbph       1  4.136   4.136  7.5663  0.007161 ** 
+## age        1  1.658   1.658  3.0325  0.084954 .  
+## lweight    1 18.320  18.320 33.5159 9.723e-08 ***
+## lcavol     1 53.517  53.517 97.9078 3.800e-16 ***
+## Residuals 92 50.288   0.547                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+
+---
+class: middle
+##Example Prostate - Cancer: Test for the significance of groups of coefficients simultaneously. 
+
+
+
+```r
 mod = lm(lpsa ~ lcavol + lweight + age + lbph, data = dat)
 mod2 =  lm(lpsa ~ ., data = dat)
 anova(mod, mod2)
@@ -367,24 +393,19 @@ class: middle
 - Rather than search through all possible subsets (which becomes infeasible
 for `\(p\)` much larger than 40), we can seek a good path through them. 
 
-- Forward stepwise selection starts with the intercept, and then sequentially adds into
-the model the predictor that most improves the fit. 
+- Forward stepwise selection starts with the intercept, and then sequentially adds into the model the predictor that most improves the fit. 
 
-- With many candidate predictors, this might seem like a lot of computation; however, clever updating algorithms can exploit the QR decomposition for the current fit to
-rapidly establish the next candidate. 
+- With many candidate predictors, this might seem like a lot of computation; however, clever updating algorithms can exploit the QR decomposition for the current fit to rapidly establish the next candidate. 
 
 
 - Backward-stepwise selection starts with the full model, and sequentially
-deletes the predictor that has the least impact on the fit. The candidate for
-dropping is the variable with the smallest Z-score.
+deletes the predictor that has the least impact on the fit. The candidate for dropping is the variable with the smallest Z-score.
 
 
 ---
 class: middle
 
 ##Forward- and Backward-Stepwise Selection
-
-
 
 - Some software packages implement hybrid stepwise-selection strategies
 that consider both forward and backward moves at each step, and select
@@ -400,7 +421,21 @@ issues.
 - Finally, we note that often variables come in groups (such as the dummy
 variables that code a multi-level categorical predictor). Smart stepwise procedures (such as step in R) will add or drop whole groups at a time, taking proper account of their degrees-of-freedom.
 
+---
+###Akaike information criterion
 
+The Akaike information criterion (AIC) is an estimator of in-sample prediction error and thereby relative quality of statistical models for a given set of data.
+
+In-sample prediction error is the expected error in predicting the resampled response to a training sample. 
+
+Given a collection of models for the data, AIC estimates the quality of each model, relative to each of the other models. 
+
+Thus, AIC provides a means for model selection. If out-of-sample prediction error is expected to differ from in-sample prediction error, cross-validation is a better estimate of model quality.
+
+`$$\displaystyle \mathrm {AIC} \,=\,2k-2\ln({\hat {L}})$$`
+
+
+[Source:](https://en.wikipedia.org/wiki/Akaike_information_criterion)
 ---
 ####Forward Regression
 

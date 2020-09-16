@@ -1,0 +1,511 @@
+---
+title: "Lecture 10 - Logistic Regression"
+author: "Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Hastie, Tibshirani and Friedman) and Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+
+---
+class: middle
+###Classification - Definition
+
+- In statistics, classification is the problem of identifying to which of a set of categories (sub-populations) a new observation belongs, on the basis of a training set of data containing observations (or instances) whose category membership is known.
+
+###Difference between Discrimination and classification
+
+- Discrimination attempts to **separate** distinct sets of objects.
+
+- Classification attempts to **allocate** new objects to predefined groups.
+
+[Source:](http://users.stat.umn.edu/~helwig/notes/discla-Notes.pdf.)
+
+
+---
+class: middle
+###Classification - Examples
+
+
+- Assigning a given email to the "spam" or "non-spam" class, 
+- Assigning a diagnosis to a given patient based on some characteristics of the patient.
+
+####Terminology
+
+- In statistics, where classification is often done with logistic regression or a similar procedure, the properties of observations are termed explanatory variables and the categories to be predicted are known as outcomes, which are considered to be possible values of the dependent variable.
+
+
+- In machine learning, the observations are often known as instances, the explanatory variables are termed features (grouped into a feature vector), and the possible categories to be predicted are classes.
+
+
+
+[Source:](https://en.wikipedia.org/wiki/Statistical_classification)
+
+---
+class: middle
+###Simple Linear Regression - Dichotomous Outcome
+
+```{r, warning = FALSE, message = FALSE,echo=FALSE}
+
+library(tidyverse)
+library(ggpubr)
+library(broom)
+library(foreign)
+library(nnet)
+library(reshape2)
+
+dados = data.frame(IsCancer = c(0,0,0,0,1,1,1,1,1,1), 
+                   Tumor_Size = c(1,1.5,2,3.6,4.2, 4.6,4.5,4.3,6.5,7) )
+                   #Tumor_Size = c(1,1.5,2,4.5,4.2, 4.6,4.5,4.3,6.5,7) )
+
+p1 = ggplot(dados, aes(x=Tumor_Size, y=IsCancer)) +geom_point()+theme_bw()+xlab('Tumor Size')+
+  geom_hline(yintercept=0.5,col="green")+
+  geom_vline(xintercept=3.45,col="black")+
+  geom_smooth(method = "lm", se = FALSE)
+
+p1
+
+```
+
+---
+class: middle
+###Logistic regression — modeling the probability of success using the sigmoid function $P(Y=1|X=x) = \frac{1}{1+ e^{-(\beta_0 +\beta_1 x)}}$
+
+```{r, warning = FALSE, message = FALSE,echo=FALSE}
+
+
+sigmoid = function(x){1 / (1+exp(+10  -4*x))}
+plot(seq(1,5,l=100), sigmoid(seq(1,5,l=100)),type="l",
+     xlab="Tumor Size", ylab="P(Y=1|X=x)")
+
+
+```
+
+
+---
+class: middle
+###Simple Logistic Regression Versus Simple Linear Regression 
+
+```{r, warning = FALSE, message = FALSE,echo=FALSE}
+
+
+p1 = ggplot(dados, aes(x=Tumor_Size, y=IsCancer)) +geom_point()+theme_bw()+xlab('Tumor Size')+
+  geom_smooth(method = "lm", se = FALSE)
+
+
+p2 = ggplot(dados, aes(x=Tumor_Size, y=IsCancer)) + 
+  geom_point(alpha=.5) +
+  stat_smooth(method="glm", se=FALSE, fullrange=TRUE, 
+              method.args = list(family=binomial)) + 
+  ylab("Pr(Y|X=x)") + xlim(0,8)+theme_bw()
+
+ggarrange(p1,p2, 
+          labels = c("Linear Regression", "Logistic Regression"),
+          ncol = 1, nrow = 2)
+
+
+```
+
+---
+class: middle
+###Simple Logistic Regression Versus Simple Linear Regression (Example 2)
+
+```{r, warning = FALSE, message = FALSE,echo=FALSE}
+
+dados = data.frame(IsCancer = c(0,0,0,0,1,1,1,1,1,1), 
+                   Tumor_Size = c(1,1.5,2,4.5,4.2, 4.6,4.5,4.3,6.5,7) )
+
+
+p1 = ggplot(dados, aes(x=Tumor_Size, y=IsCancer)) +geom_point()+theme_bw()+xlab('Tumor Size')+
+  geom_smooth(method = "lm", se = FALSE)
+
+
+p2 = ggplot(dados, aes(x=Tumor_Size, y=IsCancer)) + 
+  geom_point(alpha=.5) +
+  stat_smooth(method="glm", se=FALSE, fullrange=TRUE, 
+              method.args = list(family=binomial)) + 
+  ylab("Pr(Y|X=x)") + xlim(0,8)+theme_bw()
+
+ggarrange(p1,p2, 
+          labels = c("Linear Regression", "Logistic Regression"),
+          ncol = 1, nrow = 2)
+
+
+```
+
+
+
+---
+class: middle
+###Logistic Regression - Binary Categories
+
+- Logistic regression is a classification algorithm that works by trying to learn a function that approximates $P(Y |X)$. 
+
+- It makes the central assumption that $P(Y |X)$ can be approximated as a sigmoid function applied to a linear combination of input features. 
+
+- It is particularly important to learn because logistic regression is the basic building block of artificial neural networks ([Source:](https://web.stanford.edu/class/archive/cs/cs109/cs109.1178/lectureHandouts/220-logistic-regression.pdf))
+
+$$\log\left\{\frac{Pr(G=1|X=\mathbf{x})}{Pr(G=0|X=\mathbf{x})}\right\} = \log\left\{\frac{Pr(G=1|X=\mathbf{x})}{1 - Pr(G=1|X=\mathbf{x})}\right\} = \beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}.$$
+
+---
+class: middle
+###Logistic Regression - Binary Categories
+
+--
+$$\log\left\{\frac{Pr(G=1|X=\mathbf{x})}{1 - Pr(G=1|X=\mathbf{x})}\right\} = \beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}.$$
+
+--
+$$\frac{Pr(G=1|X=\mathbf{x})}{1 - Pr(G=1|X=\mathbf{x})} = \exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}.$$
+
+--
+$$Pr(G=1|X=\mathbf{x}) = \left(1 - Pr(G=1|X=\mathbf{x})\right)\exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}.$$
+
+--
+$$Pr(G=1|X=\mathbf{x})\left[1+ \exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}\right] = \exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}.$$
+
+--
+$$Pr(G=1|X=\mathbf{x}) = \frac{\exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}}{1+ \exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}}.$$
+
+--
+$$Pr(G=1|X=\mathbf{x}) = \frac{1}{1+ \exp\left\{-\left(\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right)\right\}}.$$
+
+
+---
+class: middle
+###Fitting Logistic Regression Models
+
+- Logistic regression models are usually fit by maximum likelihood, using the conditional likelihood of $G$ given $X$. Since $Pr(G|X)$ completely specifies the conditional distribution, the multinomial distribution is appropriate.
+
+- The log-likelihood for $N$ observations is
+
+$$l(\theta) = \sum_{i=1}^N \log p_{g_i}(x_i;\theta),$$
+where  $p_{k}(x_i;\theta) = Pr(G = k|X = x_i;\theta).$
+
+
+---
+class: middle
+###Fitting Logistic Regression Models - Two class
+
+- It is convenient to code the two-class $g_i$, via a $0/1$ response $y_i$,
+where $y_i = 1$ when $g_i = 1$, and $y_i = 0$ when $g_i = 2$.
+
+- Let $p_1(x;\theta) = p(x;\theta),$ and $p_2(x;\theta) = 1 -  p(x;\theta).$
+
+#####Bernoulli Model
+
+$$p(y_i) =  p(x;\theta)^{y_i} (1-  p(x;\theta))^{1-y_i}.$$
+
+
+The log likelihood can be written
+
+--
+$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i \log p(x_i;\boldsymbol{\beta}) + (1 - y_i) \log(1 - p(x_i;\boldsymbol{\beta})) \right\},$$
+
+--
+Here $\boldsymbol{\beta} = \left\{ \beta_{10}, \boldsymbol{\beta}_1 \right\}$ and we assume that the vector of inputs $x_i$ includes the constant term 1 to accommodate the intercept.
+
+---
+class: middle
+###Fitting Logistic Regression Models - Two class
+
+--
+$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i \log p(x_i;\boldsymbol{\beta}) + (1 - y_i) \log(1 - p(x_i;\boldsymbol{\beta})) \right\},$$
+
+--
+$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i \log\left(\frac{e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}{1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}\right) + (1 - y_i) \log\left(
+1 - \frac{e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}{1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}\right) \right\},$$
+
+--
+$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i \log\left(\frac{e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}{1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}\right) + (1 - y_i) \log\left(
+\frac{1}{1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}\right) \right\},$$
+
+--
+\begin{align}
+l(\boldsymbol{\beta}) =& \sum_{i=1}^N\left\{y_i \log\left(e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}\right) -
+y_i\log\left(1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}\right)+
+y_i\log\left(1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}\right) \right.\\
+& \left.-\log\left(1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}\right)
+\right\},
+\end{align}
+
+
+
+--
+$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i\boldsymbol{\beta}^{'}\mathbf{x}_i - \log(1 + e^{\boldsymbol{\beta}^{'}\mathbf{x}_i}) \right\},$$
+
+
+---
+class: middle
+###Fitting Logistic Regression Models - Two class
+
+To maximize the log-likelihood, we set its derivatives to zero. In matrix form we have
+
+\begin{align}
+\frac{\partial l(\boldsymbol{\beta})}{\partial\boldsymbol{\beta}} =& \mathbf{X}^{'}(\mathbf{y} - \mathbf{p}) \\
+\frac{\partial^2 l(\boldsymbol{\beta})}{\partial\boldsymbol{\beta}\partial\boldsymbol{\beta}^{'}} =& - \mathbf{X}^{'}\mathbf{W}\mathbf{X}.
+\end{align}
+where $\mathbf{W} = \mbox{diag}\left( p(x_1;\boldsymbol{\beta})(1 -  p(x_1;\boldsymbol{\beta}) ), \ldots,  p(x_N;\boldsymbol{\beta})(1 -  p(x_N;\boldsymbol{\beta}) ) \right)$; $\mathbf{p} = \left[ p(x_1;\boldsymbol{\beta}), \ldots,  p(x_N;\boldsymbol{\beta}) \right]$.
+
+To solve the score equations $\frac{\partial l(\boldsymbol{\beta})}{\partial\boldsymbol{\beta}}$, we use numerical methods.
+
+The Newton Step
+
+--
+$$\boldsymbol{\beta}^{New} = \boldsymbol{\beta}^{Old} +  ( \mathbf{X}^{'}\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^{'}(\mathbf{y} - \mathbf{p})$$ 
+--
+$$\boldsymbol{\beta}^{New} = (\mathbf{X}^{'}\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^{'}\mathbf{W}(\mathbf{X}\boldsymbol{\beta}^{Old} +  \mathbf{W}^{-1}(\mathbf{y} - \mathbf{p}))$$ 
+--
+$$\boldsymbol{\beta}^{New} = (\mathbf{X}^{'}\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^{'}\mathbf{W}\mathbf{z}$$ 
+
+
+---
+class: middle
+####Interpreting Regression Coefficients - Simple Logistic Regression
+
+Let's assume that $x$ is a dichotomous variable.
+
+For $x = 1$, we have
+
+--
+$$\frac{Pr(G=1|X=1)}{1 - Pr(G=1|X=1)} = \exp\left\{\beta_{0} + \beta_1 \right\}.$$
+
+Likewise, for $x = 0$, we have
+
+--
+$$\frac{Pr(G=1|X=0)}{1 - Pr(G=1|X=0)} = \exp\left\{\beta_{0}  \right\}.$$
+
+--
+$$\phi = \frac{\frac{Pr(G=1|X=1)}{1 - Pr(G=1|X=1)}}{\frac{Pr(G=1|X=0)}{1 - Pr(G=1|X=0)} } = \frac{exp\left\{\beta_{0} + \beta_1 \right\}}{\exp\left\{\beta_{0}  \right\}}$$
+--
+$$\phi = \frac{Pr(G=1|X=1)(1 - Pr(G=1|X=0))}{(1 - Pr(G=1|X=1))Pr(G=1|X=0)} = \exp\left\{\beta_{1}  \right\}$$
+This result indicates that a unit increase in $x$ is associated with a $\exp{\beta_1}$ percent increase in the odds of $G.$
+
+---
+class: middle
+###Logistic Regression - Example 
+
+- Here we present an analysis of binary data to illustrate the traditional statistical use of the logistic regression model. 
+
+- A retrospective sample of males in a heart-disease high-risk region
+of the Western Cape, South Africa. There are roughly two controls per
+case of CHD.
+
+
+- The data represent white males between 15 and 64, and the response variable is the presence or absence of myocardial infarction (MI) at the time of the survey
+
+The variables
+
+- sbp:  systolic blood pressure
+- tobacco:  cumulative tobacco (kg)
+- ldl:  low densiity lipoprotein cholesterol adiposity
+- famhist:  family history of heart disease (Present, Absent)
+- typea:  type-A behavior
+- obesity:
+- alcohol:  current alcohol consumption
+- age: age at onset
+- chd: response, coronary heart disease
+
+
+
+
+
+
+
+
+---
+class: middle
+###Fitting Simple Logistic Regression - Example 
+
+
+```{r, warning = FALSE, message = FALSE,echo=FALSE}
+
+dados = read.table("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/SAheart.data", sep=",",head=T,row.names=1)
+
+mod_simple = glm(chd~ tobacco, data = dados)
+tidy(mod_simple)
+
+```
+
+
+---
+class: middle
+##Stepwise Logistic Regression
+
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+initial.model = glm(chd ~ 1, data = dados, family=binomial(link="logit"))
+stepwise.model = MASS::stepAIC(initial.model, 
+                               scope = list(upper = ~sbp +
+                                            tobacco+ ldl+adiposity+
+                                            famhist+typea+obesity+
+                                            alcohol+ age,  lower = ~1),
+                               direction="both",trace = FALSE)  
+
+tidy(stepwise.model)
+  
+
+```
+
+---
+class: middle
+
+###Multiclass classification
+
+- Email foldering/tagging: Work, Friends, Family, Hobby $(G=1,G=2,G=3,G=4).$
+
+- Medical diagnosis: Not ill, Cold, Flu $(G=1,G=2,G=3)$
+
+- Weather: Sunny, Cloudy, Rain, Snow $(G=1,G=2,G=3,G=4).$
+    
+
+---
+class: middle
+###Multinomial Logistic Regression - Multiple Categories
+
+
+
+The multinomial logistic regression model arises from the desire to model the posterior
+probabilities of the $K$ classes via linear functions in $x$, while at the same time ensuring that they sum to one and remain in $[0, 1]$. 
+
+The model has the form
+
+$$\log\left\{\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})}\right\} = \beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x},\phantom{111} k = 1, \ldots, K-1.$$
+where $G$ is categorical random variable, $\mathbf{x}$ is the realizations of the explanatory variables.
+
+---
+###Multinomial Logistic Regression - Multiple Categories
+
+--
+
+$$\log\left\{\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})}\right\} = \beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x},\phantom{111} k = 1, \ldots, K-1.$$
+where $Pr(G=K|X=\mathbf{x}) = 1 - \sum_{l=1}^{K-1}Pr(G=l|X=\mathbf{x}).$
+
+
+--
+
+$$\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})} = \exp\left\{\beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x}\right\}$$
+
+--
+
+$$Pr(G=k|X=\mathbf{x}) = Pr(G=K|X=\mathbf{x})\exp\left\{\beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x}\right\},$$
+
+--
+$$Pr(G=K|X=\mathbf{x}) = 1 - \sum_{l=1}^{K-1}Pr(G=K|X=\mathbf{x})\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}$$
+
+
+
+--
+$$Pr(G=K|X=\mathbf{x}) + Pr(G=K|X=\mathbf{x})\sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}  = 1$$
+
+
+--
+$$Pr(G=K|X=\mathbf{x})(1  + \sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\})  = 1$$
+
+---
+###Multinomial Logistic Regression - Multiple Categories
+
+
+--
+$$Pr(G=K|X=\mathbf{x}) = \frac{1}{(1  +\sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}) }$$
+--
+$$\frac{Pr(G=k|X=\mathbf{x})}{\frac{1}{(1  +\sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}) }} = \exp\left\{\beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x}\right\}.$$
+
+
+--
+$$Pr(G=k|X=\mathbf{x}) = \frac{\exp\left\{\beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x}\right\}}{(1  +\sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}) }$$
+and they clearly sum to one.
+
+--
+- To emphasize the dependence on the entire parameter set 
+$\theta = \left\{\beta_{10}, \boldsymbol{\beta}_1^{'}, \ldots, \beta_{(K-1)0}, \boldsymbol{\beta}_{(K-1)0}^{'} \right\}$, we denote the probabilities $Pr(G = k|X = \mathbf{x}) = p_k(\mathbf{x}, \theta).$
+
+
+---
+class: middle
+
+##Multinomial Logistic Regression - Example
+
+
+- Entering high school students make program choices among general program, vocational program and academic program. 
+
+- Their choice might be modeled using their writing score and their social economic status.
+
+- The data set contains variables on 200 students. The outcome variable is **prog**, program type. 
+
+- The predictor variables are social economic status, **ses**, a three-level categorical variable and writing score, **write**, a continuous variable. 
+
+- The statistical model is as follows:
+
+$$prog = ses + write$$
+
+
+[Source:](https://stats.idre.ucla.edu/r/dae/multinomial-logistic-regression/)
+
+
+---
+class: middle
+##Multinomial Logistic Regression
+
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+ml <- read.dta("https://stats.idre.ucla.edu/stat/data/hsbdemo.dta")
+
+ml$prog2 <- relevel(ml$prog, ref = "academic")
+test <- multinom(prog2 ~ ses + write, data = ml)
+
+summary(test)
+
+```
+
+
+---
+class: middle
+##Multinomial Logistic Regression
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+z <- summary(test)$coefficients/summary(test)$standard.errors
+# 2-tailed z test
+p <- (1 - pnorm(abs(z), 0, 1)) * 2
+p
+```
+
+---
+class: middle
+##Multinomial Logistic Regression - Interpreting the results
+
+$$\log\left(\frac{P(G = 1|X=x)}{P(G = 3|X=x)}\right)= \beta_{10} + \beta_{11}x_1 + \beta_{12} x_2 + \beta_{13}x_3$$
+
+$$\log\left(\frac{P(G = 1|X=x)}{P(G = 3|X=x)}\right)= \beta_{20} + \beta_{21}x_1 + \beta_{22} x_2 + \beta_{23}x_3$$
+
+where $x_1$ is a variable that assumes 1 to ses = 2 and 0, otherwise;
+$x_2$ is a variable that assumes 1 to ses = 3 and 0, otherwise;
+$x_3$ is the write
+
+
+
+---
+class: middle
+##Multinomial Logistic Regression - Interpreting the results
+
+
+-  $\beta_{13}$: A one-unit increase in the variable write is associated with the decrease in the log odds of being in general program vs. academic program in the amount of .058 .
+
+-  $\beta_{23}$: A one-unit increase in the variable write is associated with the decrease in the log odds of being in vocation program vs. academic program. in the amount of .1136 .
+
+
+-  $\beta_{12}$: The log odds of being in general program vs. in academic program will decrease by 1.163 if moving from ses="low" to ses="high".
+
+-  $\beta_{22}$: The log odds of being in vocation program vs. in academic program will decrease by 0.983 if moving from ses="low" to ses="high".
+
+-  $\beta_{11}$: The log odds of being in general program vs. in academic program will decrease by 0.533 if moving from ses="low"to ses="middle", although this coefficient is not significant.
+
+-  $\beta_{21}$: The log odds of being in vocation program vs. in academic program will increase by 0.291 if moving from ses="low" to ses="middle", although this coefficient is not significant.
+

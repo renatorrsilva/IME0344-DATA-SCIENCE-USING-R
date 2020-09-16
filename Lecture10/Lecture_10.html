@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 10 - Logistic Regression</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Hastie, Tibshirani and Friedman) and Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 10 - Logistic Regression
+### Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Hastie, Tibshirani and Friedman) and Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-09-16)
+
+---
+
+class: middle
+###Classification - Definition
+
+- In statistics, classification is the problem of identifying to which of a set of categories (sub-populations) a new observation belongs, on the basis of a training set of data containing observations (or instances) whose category membership is known.
+
+###Difference between Discrimination and classification
+
+- Discrimination attempts to **separate** distinct sets of objects.
+
+- Classification attempts to **allocate** new objects to predefined groups.
+
+[Source:](http://users.stat.umn.edu/~helwig/notes/discla-Notes.pdf.)
+
+
+---
+class: middle
+###Classification - Examples
+
+
+- Assigning a given email to the "spam" or "non-spam" class, 
+- Assigning a diagnosis to a given patient based on some characteristics of the patient.
+
+####Terminology
+
+- In statistics, where classification is often done with logistic regression or a similar procedure, the properties of observations are termed explanatory variables and the categories to be predicted are known as outcomes, which are considered to be possible values of the dependent variable.
+
+
+- In machine learning, the observations are often known as instances, the explanatory variables are termed features (grouped into a feature vector), and the possible categories to be predicted are classes.
+
+
+
+[Source:](https://en.wikipedia.org/wiki/Statistical_classification)
+
+---
+class: middle
+###Simple Linear Regression - Dichotomous Outcome
+
+![](Lecture_10_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Logistic regression — modeling the probability of success using the sigmoid function `\(P(Y=1|X=x) = \frac{1}{1+ e^{-(\beta_0 +\beta_1 x)}}\)`
+
+![](Lecture_10_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Simple Logistic Regression Versus Simple Linear Regression 
+
+![](Lecture_10_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Simple Logistic Regression Versus Simple Linear Regression (Example 2)
+
+![](Lecture_10_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+###Logistic Regression - Binary Categories
+
+- Logistic regression is a classification algorithm that works by trying to learn a function that approximates `\(P(Y |X)\)`. 
+
+- It makes the central assumption that `\(P(Y |X)\)` can be approximated as a sigmoid function applied to a linear combination of input features. 
+
+- It is particularly important to learn because logistic regression is the basic building block of artificial neural networks ([Source:](https://web.stanford.edu/class/archive/cs/cs109/cs109.1178/lectureHandouts/220-logistic-regression.pdf))
+
+`$$\log\left\{\frac{Pr(G=1|X=\mathbf{x})}{Pr(G=0|X=\mathbf{x})}\right\} = \log\left\{\frac{Pr(G=1|X=\mathbf{x})}{1 - Pr(G=1|X=\mathbf{x})}\right\} = \beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}.$$`
+
+---
+class: middle
+###Logistic Regression - Binary Categories
+
+--
+`$$\log\left\{\frac{Pr(G=1|X=\mathbf{x})}{1 - Pr(G=1|X=\mathbf{x})}\right\} = \beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}.$$`
+
+--
+`$$\frac{Pr(G=1|X=\mathbf{x})}{1 - Pr(G=1|X=\mathbf{x})} = \exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}.$$`
+
+--
+`$$Pr(G=1|X=\mathbf{x}) = \left(1 - Pr(G=1|X=\mathbf{x})\right)\exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}.$$`
+
+--
+`$$Pr(G=1|X=\mathbf{x})\left[1+ \exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}\right] = \exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}.$$`
+
+--
+`$$Pr(G=1|X=\mathbf{x}) = \frac{\exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}}{1+ \exp\left\{\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right\}}.$$`
+
+--
+`$$Pr(G=1|X=\mathbf{x}) = \frac{1}{1+ \exp\left\{-\left(\beta_{0} + \boldsymbol{\beta}_{1}^{'}\mathbf{x}\right)\right\}}.$$`
+
+
+---
+class: middle
+###Fitting Logistic Regression Models
+
+- Logistic regression models are usually fit by maximum likelihood, using the conditional likelihood of `\(G\)` given `\(X\)`. Since `\(Pr(G|X)\)` completely specifies the conditional distribution, the multinomial distribution is appropriate.
+
+- The log-likelihood for `\(N\)` observations is
+
+`$$l(\theta) = \sum_{i=1}^N \log p_{g_i}(x_i;\theta),$$`
+where  `\(p_{k}(x_i;\theta) = Pr(G = k|X = x_i;\theta).\)`
+
+
+---
+class: middle
+###Fitting Logistic Regression Models - Two class
+
+- It is convenient to code the two-class `\(g_i\)`, via a `\(0/1\)` response `\(y_i\)`,
+where `\(y_i = 1\)` when `\(g_i = 1\)`, and `\(y_i = 0\)` when `\(g_i = 2\)`.
+
+- Let `\(p_1(x;\theta) = p(x;\theta),\)` and `\(p_2(x;\theta) = 1 -  p(x;\theta).\)`
+
+#####Bernoulli Model
+
+`$$p(y_i) =  p(x;\theta)^{y_i} (1-  p(x;\theta))^{1-y_i}.$$`
+
+
+The log likelihood can be written
+
+--
+`$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i \log p(x_i;\boldsymbol{\beta}) + (1 - y_i) \log(1 - p(x_i;\boldsymbol{\beta})) \right\},$$`
+
+--
+Here `\(\boldsymbol{\beta} = \left\{ \beta_{10}, \boldsymbol{\beta}_1 \right\}\)` and we assume that the vector of inputs `\(x_i\)` includes the constant term 1 to accommodate the intercept.
+
+---
+class: middle
+###Fitting Logistic Regression Models - Two class
+
+--
+`$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i \log p(x_i;\boldsymbol{\beta}) + (1 - y_i) \log(1 - p(x_i;\boldsymbol{\beta})) \right\},$$`
+
+--
+`$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i \log\left(\frac{e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}{1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}\right) + (1 - y_i) \log\left(
+1 - \frac{e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}{1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}\right) \right\},$$`
+
+--
+`$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i \log\left(\frac{e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}{1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}\right) + (1 - y_i) \log\left(
+\frac{1}{1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}}\right) \right\},$$`
+
+--
+`\begin{align}
+l(\boldsymbol{\beta}) =&amp; \sum_{i=1}^N\left\{y_i \log\left(e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}\right) -
+y_i\log\left(1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}\right)+
+y_i\log\left(1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}\right) \right.\\
+&amp; \left.-\log\left(1+e^{\beta_0+\boldsymbol{\beta}_1^{'}\mathbf{x}_i}\right)
+\right\},
+\end{align}`
+
+
+
+--
+`$$l(\boldsymbol{\beta}) = \sum_{i=1}^N\left\{y_i\boldsymbol{\beta}^{'}\mathbf{x}_i - \log(1 + e^{\boldsymbol{\beta}^{'}\mathbf{x}_i}) \right\},$$`
+
+
+---
+class: middle
+###Fitting Logistic Regression Models - Two class
+
+To maximize the log-likelihood, we set its derivatives to zero. In matrix form we have
+
+`\begin{align}
+\frac{\partial l(\boldsymbol{\beta})}{\partial\boldsymbol{\beta}} =&amp; \mathbf{X}^{'}(\mathbf{y} - \mathbf{p}) \\
+\frac{\partial^2 l(\boldsymbol{\beta})}{\partial\boldsymbol{\beta}\partial\boldsymbol{\beta}^{'}} =&amp; - \mathbf{X}^{'}\mathbf{W}\mathbf{X}.
+\end{align}`
+where `\(\mathbf{W} = \mbox{diag}\left( p(x_1;\boldsymbol{\beta})(1 -  p(x_1;\boldsymbol{\beta}) ), \ldots,  p(x_N;\boldsymbol{\beta})(1 -  p(x_N;\boldsymbol{\beta}) ) \right)\)`; `\(\mathbf{p} = \left[ p(x_1;\boldsymbol{\beta}), \ldots,  p(x_N;\boldsymbol{\beta}) \right]\)`.
+
+To solve the score equations `\(\frac{\partial l(\boldsymbol{\beta})}{\partial\boldsymbol{\beta}}\)`, we use numerical methods.
+
+The Newton Step
+
+--
+`$$\boldsymbol{\beta}^{New} = \boldsymbol{\beta}^{Old} +  ( \mathbf{X}^{'}\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^{'}(\mathbf{y} - \mathbf{p})$$` 
+--
+`$$\boldsymbol{\beta}^{New} = (\mathbf{X}^{'}\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^{'}\mathbf{W}(\mathbf{X}\boldsymbol{\beta}^{Old} +  \mathbf{W}^{-1}(\mathbf{y} - \mathbf{p}))$$` 
+--
+`$$\boldsymbol{\beta}^{New} = (\mathbf{X}^{'}\mathbf{W}\mathbf{X})^{-1}\mathbf{X}^{'}\mathbf{W}\mathbf{z}$$` 
+
+
+---
+class: middle
+####Interpreting Regression Coefficients - Simple Logistic Regression
+
+Let's assume that `\(x\)` is a dichotomous variable.
+
+For `\(x = 1\)`, we have
+
+--
+`$$\frac{Pr(G=1|X=1)}{1 - Pr(G=1|X=1)} = \exp\left\{\beta_{0} + \beta_1 \right\}.$$`
+
+Likewise, for `\(x = 0\)`, we have
+
+--
+`$$\frac{Pr(G=1|X=0)}{1 - Pr(G=1|X=0)} = \exp\left\{\beta_{0}  \right\}.$$`
+
+--
+`$$\phi = \frac{\frac{Pr(G=1|X=1)}{1 - Pr(G=1|X=1)}}{\frac{Pr(G=1|X=0)}{1 - Pr(G=1|X=0)} } = \frac{exp\left\{\beta_{0} + \beta_1 \right\}}{\exp\left\{\beta_{0}  \right\}}$$`
+--
+`$$\phi = \frac{Pr(G=1|X=1)(1 - Pr(G=1|X=0))}{(1 - Pr(G=1|X=1))Pr(G=1|X=0)} = \exp\left\{\beta_{1}  \right\}$$`
+This result indicates that a unit increase in `\(x\)` is associated with a `\(\exp{\beta_1}\)` percent increase in the odds of `\(G.\)`
+
+---
+class: middle
+###Logistic Regression - Example 
+
+- Here we present an analysis of binary data to illustrate the traditional statistical use of the logistic regression model. 
+
+- A retrospective sample of males in a heart-disease high-risk region
+of the Western Cape, South Africa. There are roughly two controls per
+case of CHD.
+
+
+- The data represent white males between 15 and 64, and the response variable is the presence or absence of myocardial infarction (MI) at the time of the survey
+
+The variables
+
+- sbp:  systolic blood pressure
+- tobacco:  cumulative tobacco (kg)
+- ldl:  low densiity lipoprotein cholesterol adiposity
+- famhist:  family history of heart disease (Present, Absent)
+- typea:  type-A behavior
+- obesity:
+- alcohol:  current alcohol consumption
+- age: age at onset
+- chd: response, coronary heart disease
+
+
+
+
+
+
+
+
+---
+class: middle
+###Fitting Simple Logistic Regression - Example 
+
+
+
+```
+## # A tibble: 2 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   0.233    0.0270       8.64 9.33e-17
+## 2 tobacco       0.0311   0.00461      6.74 4.82e-11
+```
+
+
+---
+class: middle
+##Stepwise Logistic Regression
+
+
+
+```
+## # A tibble: 6 x 5
+##   term           estimate std.error statistic  p.value
+##   &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)     -6.45      0.921      -7.00 2.55e-12
+## 2 age              0.0505    0.0102      4.94 7.65e- 7
+## 3 famhistPresent   0.908     0.226       4.02 5.75e- 5
+## 4 tobacco          0.0804    0.0259      3.11 1.90e- 3
+## 5 typea            0.0371    0.0122      3.05 2.28e- 3
+## 6 ldl              0.162     0.0550      2.95 3.21e- 3
+```
+
+---
+class: middle
+
+###Multiclass classification
+
+- Email foldering/tagging: Work, Friends, Family, Hobby `\((G=1,G=2,G=3,G=4).\)`
+
+- Medical diagnosis: Not ill, Cold, Flu `\((G=1,G=2,G=3)\)`
+
+- Weather: Sunny, Cloudy, Rain, Snow `\((G=1,G=2,G=3,G=4).\)`
+    
+
+---
+class: middle
+###Multinomial Logistic Regression - Multiple Categories
+
+
+
+The multinomial logistic regression model arises from the desire to model the posterior
+probabilities of the `\(K\)` classes via linear functions in `\(x\)`, while at the same time ensuring that they sum to one and remain in `\([0, 1]\)`. 
+
+The model has the form
+
+`$$\log\left\{\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})}\right\} = \beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x},\phantom{111} k = 1, \ldots, K-1.$$`
+where `\(G\)` is categorical random variable, `\(\mathbf{x}\)` is the realizations of the explanatory variables.
+
+---
+###Multinomial Logistic Regression - Multiple Categories
+
+--
+
+`$$\log\left\{\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})}\right\} = \beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x},\phantom{111} k = 1, \ldots, K-1.$$`
+where `\(Pr(G=K|X=\mathbf{x}) = 1 - \sum_{l=1}^{K-1}Pr(G=l|X=\mathbf{x}).\)`
+
+
+--
+
+`$$\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})} = \exp\left\{\beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x}\right\}$$`
+
+--
+
+`$$Pr(G=k|X=\mathbf{x}) = Pr(G=K|X=\mathbf{x})\exp\left\{\beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x}\right\},$$`
+
+--
+`$$Pr(G=K|X=\mathbf{x}) = 1 - \sum_{l=1}^{K-1}Pr(G=K|X=\mathbf{x})\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}$$`
+
+
+
+--
+`$$Pr(G=K|X=\mathbf{x}) + Pr(G=K|X=\mathbf{x})\sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}  = 1$$`
+
+
+--
+`$$Pr(G=K|X=\mathbf{x})(1  + \sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\})  = 1$$`
+
+---
+###Multinomial Logistic Regression - Multiple Categories
+
+
+--
+`$$Pr(G=K|X=\mathbf{x}) = \frac{1}{(1  +\sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}) }$$`
+--
+`$$\frac{Pr(G=k|X=\mathbf{x})}{\frac{1}{(1  +\sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}) }} = \exp\left\{\beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x}\right\}.$$`
+
+
+--
+`$$Pr(G=k|X=\mathbf{x}) = \frac{\exp\left\{\beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x}\right\}}{(1  +\sum_{l=1}^{K-1}\exp\left\{\beta_{l0} + \boldsymbol{\beta}_{l}^{'}\mathbf{x}\right\}) }$$`
+and they clearly sum to one.
+
+--
+- To emphasize the dependence on the entire parameter set 
+`\(\theta = \left\{\beta_{10}, \boldsymbol{\beta}_1^{'}, \ldots, \beta_{(K-1)0}, \boldsymbol{\beta}_{(K-1)0}^{'} \right\}\)`, we denote the probabilities `\(Pr(G = k|X = \mathbf{x}) = p_k(\mathbf{x}, \theta).\)`
+
+
+---
+class: middle
+
+##Multinomial Logistic Regression - Example
+
+
+- Entering high school students make program choices among general program, vocational program and academic program. 
+
+- Their choice might be modeled using their writing score and their social economic status.
+
+- The data set contains variables on 200 students. The outcome variable is **prog**, program type. 
+
+- The predictor variables are social economic status, **ses**, a three-level categorical variable and writing score, **write**, a continuous variable. 
+
+- The statistical model is as follows:
+
+`$$prog = ses + write$$`
+
+
+[Source:](https://stats.idre.ucla.edu/r/dae/multinomial-logistic-regression/)
+
+
+---
+class: middle
+##Multinomial Logistic Regression
+
+
+
+```
+## # weights:  15 (8 variable)
+## initial  value 219.722458 
+## iter  10 value 179.982880
+## final  value 179.981726 
+## converged
+```
+
+```
+## Call:
+## multinom(formula = prog2 ~ ses + write, data = ml)
+## 
+## Coefficients:
+##          (Intercept)  sesmiddle    seshigh      write
+## general     2.852198 -0.5332810 -1.1628226 -0.0579287
+## vocation    5.218260  0.2913859 -0.9826649 -0.1136037
+## 
+## Std. Errors:
+##          (Intercept) sesmiddle   seshigh      write
+## general     1.166441 0.4437323 0.5142196 0.02141097
+## vocation    1.163552 0.4763739 0.5955665 0.02221996
+## 
+## Residual Deviance: 359.9635 
+## AIC: 375.9635
+```
+
+
+---
+class: middle
+##Multinomial Logistic Regression
+
+
+```
+##           (Intercept) sesmiddle    seshigh        write
+## general  0.0144766100 0.2294379 0.02373856 6.818902e-03
+## vocation 0.0000072993 0.5407530 0.09894976 3.176045e-07
+```
+
+---
+class: middle
+##Multinomial Logistic Regression - Interpreting the results
+
+`$$\log\left(\frac{P(G = 1|X=x)}{P(G = 3|X=x)}\right)= \beta_{10} + \beta_{11}x_1 + \beta_{12} x_2 + \beta_{13}x_3$$`
+
+`$$\log\left(\frac{P(G = 1|X=x)}{P(G = 3|X=x)}\right)= \beta_{20} + \beta_{21}x_1 + \beta_{22} x_2 + \beta_{23}x_3$$`
+
+where `\(x_1\)` is a variable that assumes 1 to ses = 2 and 0, otherwise;
+`\(x_2\)` is a variable that assumes 1 to ses = 3 and 0, otherwise;
+`\(x_3\)` is the write
+
+
+
+---
+class: middle
+##Multinomial Logistic Regression - Interpreting the results
+
+
+-  `\(\beta_{13}\)`: A one-unit increase in the variable write is associated with the decrease in the log odds of being in general program vs. academic program in the amount of .058 .
+
+-  `\(\beta_{23}\)`: A one-unit increase in the variable write is associated with the decrease in the log odds of being in vocation program vs. academic program. in the amount of .1136 .
+
+
+-  `\(\beta_{12}\)`: The log odds of being in general program vs. in academic program will decrease by 1.163 if moving from ses="low" to ses="high".
+
+-  `\(\beta_{22}\)`: The log odds of being in vocation program vs. in academic program will decrease by 0.983 if moving from ses="low" to ses="high".
+
+-  `\(\beta_{11}\)`: The log odds of being in general program vs. in academic program will decrease by 0.533 if moving from ses="low"to ses="middle", although this coefficient is not significant.
+
+-  `\(\beta_{21}\)`: The log odds of being in vocation program vs. in academic program will increase by 0.291 if moving from ses="low" to ses="middle", although this coefficient is not significant.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
