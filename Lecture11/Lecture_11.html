@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 11 - The overfitting problem</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 11 - The overfitting problem
+### Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-09-17)
+
+---
+
+class: middle
+##The problem of overfitting 
+
+- Let's consider a model such as: `\(\mathbf{y} = f(\mathbf{x}) + \boldsymbol{\epsilon}.\)`
+
+- The overfitting phenomenon occurs when the statistical learning model learns the training data set so well that it performs poorly on unseen datasets.
+
+- Overfitting happens when a statistical learning model learns the systematic and noise (random fluctuations) parts in the training data to the extent that it negatively impacts the performance of the statistical learning model on new data.
+
+- This means that the statistical learning model adapts very well to the noise as well as to the signal that is present in the training data.
+
+- The problem is that affect the model’s ability to be generalized.
+
+- Overfitting is more common when learning a loss function from a complex statistical learning model (with more flexibility).
+
+**Source**: Material based on Mini-course: Machine Learning methods for genomic prediction written by Dr. Osval Antonio Montesinos López.
+
+---
+class: middle
+##The problem of  underfitting
+
+- On the other hand, the underfitted model occurs when few predictors are included in the statistical learning model (simple model) that poorly represents the complete picture of the predominant data pattern.
+
+- This problem also arises when the training dataset is too small or not representative of the population data.
+
+- An underfitted model does not do a good job for fitting the training data and for predicting new data points.
+
+**Source**: Material based on Mini-course: Machine Learning methods for genomic prediction written by Dr. Osval Antonio Montesinos López.
+
+
+---
+class: middle
+##The Bias-Variance Tradeoff
+
+- Sometimes, we choose a model that is too simple to represent the underlying data generation process. 
+
+- Other times, we choose a model that is too complex—it fits the noise in the data rather than the data's overall pattern.
+
+- To understand why this happens, we analyze our models using the tools of probability and statistics. 
+
+- These tools allow us to generalize beyond a few isolated examples to describe fundamental phenomena in modeling. In particular, we will use the tools of expectation and variance to uncover the bias-variance tradeoff.
+
+[Reference:](https://www.textbook.ds100.org/ch/15/bias_intro.html)
+
+
+---
+class: middle
+###Bias and Variance
+
+&lt;img src="Lecture_11_files/figure-html/Fig1.jpeg" width="120%" align="center" /&gt;
+
+
+**Source**: Material based on Mini-course: Machine Learning methods for genomic prediction written by Dr. Osval Antonio Montesinos López.
+
+---
+class: middle
+###Bias 
+
+Now, let's consider is the following model
+
+`$$\mathbf{y} = f(\mathbf{x}) + \boldsymbol{\epsilon}.$$`
+
+The bias of an estimator `\(\hat{\boldsymbol{\theta}}\)`  is given by
+
+--
+`$$\mbox{Bias}(\hat{\boldsymbol{\theta}}) = E[\hat{\boldsymbol{\theta}}] - \boldsymbol{\theta}.$$`
+
+The bias of `\({\hat{f}(\mathbf{x})}\)` is the following
+
+`$$\mbox{Bias}(\hat{f}(\mathbf{x})) = E[\hat{f}(\mathbf{x})] - f(\mathbf{x}).$$`
+
+Note that `\(E[Y|X=x] = f(\mathbf{x})\)` and `\(\hat{f}(\mathbf{x})\)` is a function of `\(\hat{\theta}.\)`
+
+[Source:](https://daviddalpiaz.github.io/r4sl/biasvariance-tradeoff.html)
+---
+class: middle
+##Variance
+
+The variance of an estimator `\(\hat{\theta}\)` is
+
+--
+`$$\mbox{Var}(\hat{\boldsymbol{\theta}}) = E[\hat{\boldsymbol{\theta}} -E[\hat{\boldsymbol{\theta}}]]^2.$$`
+
+The variance of an estimator `\(\hat{f}(\mathbf{x})\)` is
+
+--
+`$$\mbox{Var}(\hat{f}(\mathbf{x})) = E[\hat{f}(\mathbf{x}) -E[\hat{f}(\mathbf{x})]]^2.$$`
+
+[Source:](https://daviddalpiaz.github.io/r4sl/biasvariance-tradeoff.html)
+---
+class: middle
+##Expected Prediction Error
+
+--
+`$$\mbox{EPE}[Y, \hat{f}(\mathbf{x})]  = E[(Y - \hat{f}(\mathbf{x}))^2|\mathbf{X}=\mathbf{x}]$$`
+
+--
+`$$\mbox{EPE}[Y, \hat{f}(\mathbf{x})]= E[(Y - \hat{f}(\mathbf{x})  + f(\mathbf{x})  - f(\mathbf{x}) )^2|\mathbf{X}=\mathbf{x}]$$` 
+
+Assuming `\(E[Y] = f(\mathbf{x}),\)`
+
+
+
+
+--
+`$$\mbox{EPE}[Y, \hat{f}(\mathbf{x})]=E[(Y - f(\mathbf{x}))^2 |\mathbf{X}=\mathbf{x}] + E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2|\mathbf{X}=\mathbf{x}]$$` 
+
+--
+`$$\mbox{EPE}[Y, \hat{f}(\mathbf{x})]=Var[Y  |\mathbf{X}=\mathbf{x}] + E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2|\mathbf{X}=\mathbf{x}]$$` 
+where `\(E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2|\mathbf{X}=\mathbf{x}]\)` is called mean squared error of estimating `\(\hat{f}(\mathbf{x}\)` or reducible error.
+
+From this point, let's denotate mean squared error by `\(E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2]\)` without loss of the generality.
+
+And let's assume `\(\mbox{Var}(Y|\mathbf{X}=\mathbf{x}) = \sigma^2\)`, sometimes called irreducible error.
+
+
+
+[Source:](https://daviddalpiaz.github.io/r4sl/biasvariance-tradeoff.html)
+---
+class: middle
+##Expected Prediction Error and Bias Variance Decompostion of mean squared error.
+
+
+However,
+
+--
+`$$E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2] = E[(f(\mathbf{x})  - E[\hat{f}(\mathbf{x})] + E[\hat{f}(\mathbf{x})] - \hat{f}(\mathbf{x}) )^2]$$` 
+
+--
+`$$E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2] = E[(f(\mathbf{x})  - E[\hat{f}(\mathbf{x})]]^2 + E[(E[\hat{f}(\mathbf{x})] - \hat{f}(\mathbf{x}) )^2]$$` 
+
+--
+$$E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2] = (E[\hat{f}(\mathbf{x})] - \hat{f}(\mathbf{x}) )^2 +  E[\hat{f}(\mathbf{x})  - E[\hat{f}(\mathbf{x})]]^2 $$ 
+
+
+
+--
+`$$MSE(f(\mathbf{x}) , \hat{f}(\mathbf{x}) ) = Bias(\hat{f}(\mathbf{x}))^2 + Var(\hat{f}(\mathbf{x}))$$`
+
+Therefore,
+
+--
+`$$EPE(Y,\hat{f}(\mathbf{x})  ) = Bias(\hat{f}(\mathbf{x}))^2 + Var(\hat{f}(\mathbf{x})) + Var(Y|\mathbf{X}=\mathbf{x})$$`
+
+[Source:](https://daviddalpiaz.github.io/r4sl/biasvariance-tradeoff.html)
+
+---
+class: middle
+##Bias and Variance in Pratice
+
+
+- In an ideal world, we would minimize the expected prediction error for our model over all input-output points in the population. 
+
+- However, in practice, we do not know the population data generation process and thus are unable to precisely determine a model's bias, variance, or irreducible error. 
+
+- Instead, we use our observed dataset as an approximation to the population.
+
+- As we have seen, however, achieving a low training error does not necessarily mean that our model will have a low test error as well. 
+
+[Reference:](https://www.textbook.ds100.org/ch/15/bias_intro.html)
+
+---
+class: middle
+##Simulation
+
+We will illustrate the bias-variance tradeoff, through simulation. Suppose we would like to train a model to learn the true regression function `\(f(x) =  x^2.\)`
+
+
+The true model will be `\(Y|X \sim N(f(x),\sigma^2)\)`
+
+And we are going to fit two models
+
+- `$$\hat{f}_1(x) = \beta_0$$`
+
+- `$$\hat{f}_1(x) = \beta_0 + \beta_1 x + \beta_2 x^2 + \ldots + \beta_9 x^9$$`.
+
+Let's assume `\(\sigma^2=0.3\)`
+
+---
+class: middle
+##Simulation
+
+
+![](Lecture_11_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Simulation
+
+
+- We will now complete a simulation study to understand the relationship between the bias, variance, and mean squared error for the estimates for `\(f(x)\)` given by these four models at the point `\(x=0.90\)`
+
+- We use simulation to complete this task, as performing the analytical calculations would prove to be rather tedious and difficult.
+
+---
+class: middle
+##Simulation
+
+
+![](Lecture_11_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Bias and Variance in Pratice
+
+
+
+- It is easy to obtain a model with extremely low bias and therefore low training error by fitting a curve that passes through every training observation. 
+
+- However, this model will have high variance which typically leads to high test error. 
+
+- Conversely, a model that predicts a constant has low variance but high bias. Fundamentally, this occurs because training error reflects the bias of our model but not the variance; the test error reflects both. 
+
+- In order to minimize test error, our model needs to simultaneously achieve low bias and low variance. To account for this, we need a way to simulate test error without using the test set. This is generally done using cross validation.
+
+[Reference:](https://www.textbook.ds100.org/ch/15/bias_intro.html)
+
+---
+class: middle
+##Takeaways 
+
+- The bias-variance tradeoff allows us to more precisely describe the modeling phenomena that we have seen thus far.
+
+- Underfitting is typically caused by too much bias; overfitting is typically caused by too much model variance.
+
+- Collecting more data reduces variance. For example, the model variance of linear regression goes down by a factor of  `\(\frac{1}{n}\)`, where `\(n\)`�  is the number of data points. 
+
+- Thus, doubling the dataset size halves the model variance, and collecting many data points will cause the variance to approach 0. 
+
+[Reference:](https://www.textbook.ds100.org/ch/15/bias_intro.html)
+
+
+---
+class: middle
+##Takeaways 
+
+
+- One recent trend is to select a model with low bias and high intrinsic variance (e.g. a neural network) and collect many data points so that the model variance is low enough to make accurate predictions. 
+
+- While effective in practice, collecting enough data for these models tends to require large amounts of time and money.
+
+- Collecting more data reduces bias if the model can fit the population process exactly. If the model is inherently incapable of modeling the population (as in the example above), even infinite data cannot get rid of model bias.
+
+- Adding a useful feature to the data, such as a quadratic feature when the underlying process is quadratic, reduces bias. Adding a useless feature rarely increases bias.
+
+[Reference:](https://www.textbook.ds100.org/ch/15/bias_intro.html)
+
+
+---
+class: middle
+###The trade-off between prediction accuracy and model interpretability
+
+- Accuracy: It is the ability of a statistical learning model to make correct predictions of unseen data.
+
+- Flexible models: These are complex models (SVM, ANN, etc.) which are better in terms of prediction accuracy, but are not interpretable. 
+
+- Inflexible models. These are simple models (linear regression) are very interpretable but worse in terms of accuracy.
+
+**Source**: Material based on Mini-course: Machine Learning methods for genomic prediction written by Dr. Osval Antonio Montesinos López.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

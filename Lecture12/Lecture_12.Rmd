@@ -1,0 +1,358 @@
+---
+title: "Lecture 12 -  Shrinkage Methods part I"
+author: "Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Trevor Hastie, Robert Tibshirani and Jerome Friedman) - Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+
+---
+class: middle
+##Introduction
+
+- The subset selection produces a model that is interpretable and has possibly lower prediction error than the full model. 
+
+- However, because it is a discrete process variables are either retained or discarded—it often exhibits high variance.
+
+- Shrinkage methods are more continuous, and don’t suffer as much from high
+variability.
+
+---
+class: middle
+##Gradient Descent Method
+
+- Before presenting the shrinkage methods itself, we are going to show another way to estimate parameter in a regression model.
+
+- The method is called gradient descent.
+
+- It can be useful for large datasets.
+
+---
+class: middle
+##Unconstrained Gradient Descent Method
+
+- Let's consider a convex differentiable $f: \mathbb{R} \Rightarrow \mathbb{R}^p.$
+
+- In this case, assuming that a global minimum is achieved, then a necessary and sufficient condition for optimally of $\boldsymbol{\beta} \in \mathbb{R}$ is provided by the zero-gradient condition $\nabla f(\boldsymbol{\beta}^{*}) = 0.$
+
+- Gradient descent is an iterative algorithm for solving this fixed point equation: it generates a sequence of iteratives $\left\{\boldsymbol{\beta}^{t} \right\}^{\infty}_{t=0}$ via update
+
+$$\boldsymbol{\beta}^{t+1} = \boldsymbol{\beta}^t - s \nabla f(\boldsymbol{\beta}^t), \phantom{1111} \mbox{for} \phantom{11} t=0,1,2,\ldots$$ 
+where $s > 0$ is a stepsize parameter.
+
+[Source:](https://web.stanford.edu/~hastie/StatLearnSparsity/)
+---
+class: middle
+##Unconstrained Gradient Descent Method - Simple Linear Regression
+
+Let's suppose the following model:
+
+$$\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon}$$
+Our goal is estimate the values of $\boldsymbol{\beta}$
+
+The mean squared function is given by
+
+$$MSE(\beta_0, \beta_1) = \frac{1}{n}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})$$
+The estimates are obtained by minimizing the mean squared error function.
+
+---
+class: middle
+##Unconstrained Gradient Descent Method - Linear Regression
+
+The gradient of this function is the following
+
+--
+$$\frac{\partial MSE(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} = -\frac{2}{n}\mathbf{X}^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})$$
+The gradient descent can be applied as follows
+
+--
+$$\frac{\partial MSE(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} = -\frac{2}{n}\mathbf{X}^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})$$
+The gradient descent can be applied as follows
+
+
+--
+$$\boldsymbol{\beta}^{t+1} := \boldsymbol{\beta}^t - \frac{2}{n}s \mathbf{X}^{'}(\mathbf{X}\boldsymbol{\beta}-\mathbf{y})$$
+for $s > 0.$
+
+---
+class: middle
+##Example Prostate - Cancer (lspa ~ lcavol)
+
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE}
+library(tidyverse)
+library(broom)
+dat = read.table("http://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/prostate.data")
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+x = dat$lcavol
+X = cbind(1,x)
+N = nrow(X)
+y = dat$lpsa
+s=0.0001
+iters=1000000
+beta_coef = cbind(c(1,1))
+for(i in 1:iters){
+  beta_coef = beta_coef - (2/N)*s*t(X)%*%(X%*%beta_coef-y)
+}
+
+beta_coef
+
+```
+
+
+
+[Source:](https://www.ocf.berkeley.edu/~janastas/stochastic-gradient-descent-in-r.html)
+
+---
+class: middle
+##Example Prostate - Cancer (lspa ~ lcavol)
+
+```{r, message=FALSE, warning=FALSE}
+
+coef(lm(y ~ x))
+
+```
+
+
+
+---
+class: middle
+##Unconstrained Gradient Descent Method - Simple Logistic Regression
+
+Let's suppose 
+
+$$\pi( \mathbf{x}_i, \boldsymbol{\beta}) = \frac{1}{1 + \exp\left\{ -\mathbf{X}\boldsymbol{\beta}\right\}}$$
+
+Mathematically, the cost function is proportional to minus log likelihood.
+
+The cost function is given by
+
+$$Cost(\boldsymbol{\beta}) = \frac{1}{n}\sum_{i=1}^{n}-y_i \log(\pi( \mathbf{x}_i, \boldsymbol{\beta})) - (1 - y_i)\log(1-\pi( \mathbf{x}_i, \boldsymbol{\beta}))$$
+
+--
+$$Cost(\boldsymbol{\beta}) =\frac{1}{n} \sum_{i=1}^n\left\{-y_i\boldsymbol{\beta}^{'}\mathbf{x}_i + \log(1 + e^{\boldsymbol{\beta}^{'}\mathbf{x}_i}) \right\},$$
+
+---
+class: middle
+##Unconstrained Gradient Descent Method -  Logistic Regression
+
+
+The gradient is the following
+
+--
+$$\frac{\partial Cost(\boldsymbol{\beta})}{\partial\boldsymbol{\beta}} =-\frac{1}{n}\mathbf{X}^{'}(\mathbf{y} - \mathbf{p})$$ 
+where $\mathbf{p} = \left[ \pi(x_1;\boldsymbol{\beta}), \ldots,  \pi(x_n;\boldsymbol{\beta}) \right]$.
+
+
+The gradient descent can be applied as follows
+
+--
+$$\boldsymbol{\beta}^{t+1} := \boldsymbol{\beta}^t -\frac{1}{n}\mathbf{X}^{'}(\mathbf{p} - \mathbf{y})$$
+
+
+
+---
+class: middle
+##Example  South Africa (chd ~ tobacco)
+
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE}
+dados = read.table("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/SAheart.data", sep=",",head=T,row.names=1)
+
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+x = dados$tobacco
+X = cbind(1,x)
+N = nrow(X)
+y = dados$chd
+s=0.0001
+iters=1000000
+beta_coef = cbind(c(1,1))
+for(i in 1:iters){
+  p_coef = 1 / (1  + exp(-X%*%beta_coef))
+  beta_coef = beta_coef - (1/N)*s*t(X)%*%(p_coef-y)
+}
+
+beta_coef
+
+```
+---
+class: middle
+##Example  South Africa (chd ~ tobacco)
+
+
+
+```{r, message=FALSE, warning=FALSE}
+mod_simple = glm(chd~ tobacco, data = dados, family=binomial(link="logit"))
+
+coef(mod_simple)
+
+```
+
+
+---
+class: middle
+##Regularized Linear Regression
+
+Let's get started with an example.
+
+We simulated a linear regression model from $y_i = f(x) + e_i$, where $f(x) = -x^2$ and $e_i \sim N(0, 500)$.
+
+And then, we fit a fourth degree polynomial regression $\beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \beta_4 x^4$.
+
+
+---
+class: middle
+##Regularized Linear Regression
+
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+x = seq(2, by=2,l=5)
+e = rnorm(5,0,50)
+y = -x^2 + e
+
+dat2 = data.frame(x=x,y=y)
+
+ggplot(dat2,aes(x, y)) +
+  stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm', 
+              formula= y ~ poly(x, degree = 4),se=FALSE)+
+  theme_bw()
+
+```
+
+
+---
+class: middle
+##Regularized Linear Regression
+
+Now, let's suppose we want penalize $\beta_3$ and $\beta_4$
+
+An idea could be
+
+$$MSE(\boldsymbol{\beta}) = \frac{1}{n}\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)^2 + \lambda\beta_3^2 +\lambda \beta_4^2$$
+where $\lambda$ is a large number.
+
+In that case, $\beta_3$ and $\beta_4$ should be closed to zero to minimize $MSE(\boldsymbol{\beta})$.
+
+However, in pratice, we do not know previously which coefficient should be zero in the linear regression model. So the cost function for regularized linear regression is given by
+
+$$Cost(\boldsymbol{\beta}) = \frac{1}{n}\left[\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)^2 + \lambda\sum_{j=1}^p \beta_j^2\right]$$
+
+---
+class: middle
+##Unconstrained Gradient Descent Method - Regularized Linear Regression
+
+The gradient is given by
+
+$$\frac{\partial Cost(\boldsymbol{\beta})}{\partial \beta_0}= -\frac{2}{n}\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)$$
+
+$$\frac{\partial Cost(\boldsymbol{\beta})}{\partial \beta_j} = \frac{2}{n}\left[\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)x_j + \lambda\beta_j\right]$$
+
+---
+class: middle
+## Regularized Linear Regression (Ridge Regression) - Least Square Approach
+
+
+Let's suppose the following model: $\mathbf{y} = \mathbf{X}\boldsymbol{\beta} +\boldsymbol{\epsilon}$ where $\mathbf{X}$ is the centered matrix (no intercept)
+
+The Mean Squared Error is given by
+
+--
+$$MSE(\boldsymbol{\beta}) = (\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) - \lambda \boldsymbol{\beta}^{'}\boldsymbol{\beta}$$
+
+--
+$$MSE(\boldsymbol{\beta}) = \mathbf{y}^{'}\mathbf{y} - 2\mathbf{X}^{'}\boldsymbol{\beta}^{'}\mathbf{y} + \boldsymbol{\beta}^{'}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} - \lambda\boldsymbol{\beta}^{'}\boldsymbol{\beta}$$
+
+--
+$$\frac{\partial MSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = 2\mathbf{X}^{'}\mathbf{y} +2\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} + 2\lambda\mathbf{I}\boldsymbol{\beta}$$
+
+--
+Making $\frac{\partial MSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = \mathbf{0}$, we have
+
+--
+$$(\mathbf{X}^{'}\mathbf{X} + \lambda \mathbf{I})\boldsymbol{\beta} = \mathbf{X}^{'}\mathbf{y} \Rightarrow \hat{\boldsymbol{\beta}} =  (\mathbf{X}^{'}\mathbf{X} + \lambda \mathbf{I})^{-1}\mathbf{X}^{'}\mathbf{y}$$
+
+--
+$$E[\hat{\boldsymbol{\beta}}] = (\mathbf{X}^{'}\mathbf{X} + \lambda \mathbf{I})^{-1}\mathbf{X}^{'}\boldsymbol{\beta}.$$
+
+
+---
+class: middle
+## Regularized Linear Regression (Ridge Regression) in R
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+library(glmnet)
+
+
+# Getting the independent variable
+nam = c("lcavol","lweight", "age", "lbph", "svi", "lcp","gleason", "pgg45")
+x_var <- select(dat,one_of(nam))
+# Getting the dependent variable
+y_var = dat$chd
+# Setting the range of lambda values
+lambda_seq <- 10^seq(2, -2, by = -.1)
+# Using glmnet function to build the ridge regression in r
+fit <- glmnet(x_var, y_var, alpha = 0, lambda  = lambda_seq)
+# Checking the model
+summary(fit)
+
+
+```
+
+---
+class: middle
+## Regularized Linear Regression (Ridge Regression) in R
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+library(glmnet)
+
+
+# Getting the independent variable
+nam = c("lcavol","lweight", "age", "lbph", "svi", "lcp","gleason", "pgg45")
+x_var <- as.matrix(select(dat,one_of(nam)))
+# Getting the dependent variable
+y_var = dat$lpsa 
+# Setting the range of lambda values
+#lambda_seq <- 10^seq(2, -2, by = -.1)
+# Using glmnet function to build the ridge regression in r
+fit <- glmnet(x_var, y_var, alpha = 0, lambda  = 100)
+# Checking the model
+nam2 = c("term","estimate")
+select(tidy(fit),one_of(nam2))
+
+
+```
+
+
+---
+class: middle
+##Stepwise Regression
+
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+initial.model = lm(lpsa ~ 1, data = dat)
+stepwise.model = MASS::stepAIC(initial.model, 
+                                scope = list(upper = ~ train+lcavol+ lweight+age+lbph+svi+lcp+gleason+pgg45,  lower = ~1),
+                               direction="both",trace = FALSE)  
+
+tidy(stepwise.model)
+  
+
+```

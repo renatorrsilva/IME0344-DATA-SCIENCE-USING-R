@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 12 - Shrinkage Methods part I</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Trevor Hastie, Robert Tibshirani and Jerome Friedman) - Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 12 - Shrinkage Methods part I
+### Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Trevor Hastie, Robert Tibshirani and Jerome Friedman) - Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-09-18)
+
+---
+
+class: middle
+##Introduction
+
+- The subset selection produces a model that is interpretable and has possibly lower prediction error than the full model. 
+
+- However, because it is a discrete process variables are either retained or discarded—it often exhibits high variance.
+
+- Shrinkage methods are more continuous, and don’t suffer as much from high
+variability.
+
+---
+class: middle
+##Gradient Descent Method
+
+- Before presenting the shrinkage methods itself, we are going to show another way to estimate parameter in a regression model.
+
+- The method is called gradient descent.
+
+- It can be useful for large datasets.
+
+---
+class: middle
+##Unconstrained Gradient Descent Method
+
+- Let's consider a convex differentiable `\(f: \mathbb{R} \Rightarrow \mathbb{R}^p.\)`
+
+- In this case, assuming that a global minimum is achieved, then a necessary and sufficient condition for optimally of `\(\boldsymbol{\beta} \in \mathbb{R}\)` is provided by the zero-gradient condition `\(\nabla f(\boldsymbol{\beta}^{*}) = 0.\)`
+
+- Gradient descent is an iterative algorithm for solving this fixed point equation: it generates a sequence of iteratives `\(\left\{\boldsymbol{\beta}^{t} \right\}^{\infty}_{t=0}\)` via update
+
+`$$\boldsymbol{\beta}^{t+1} = \boldsymbol{\beta}^t - s \nabla f(\boldsymbol{\beta}^t), \phantom{1111} \mbox{for} \phantom{11} t=0,1,2,\ldots$$` 
+where `\(s &gt; 0\)` is a stepsize parameter.
+
+[Source:](https://web.stanford.edu/~hastie/StatLearnSparsity/)
+---
+class: middle
+##Unconstrained Gradient Descent Method - Simple Linear Regression
+
+Let's suppose the following model:
+
+`$$\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon}$$`
+Our goal is estimate the values of `\(\boldsymbol{\beta}\)`
+
+The mean squared function is given by
+
+`$$MSE(\beta_0, \beta_1) = \frac{1}{n}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})$$`
+The estimates are obtained by minimizing the mean squared error function.
+
+---
+class: middle
+##Unconstrained Gradient Descent Method - Linear Regression
+
+The gradient of this function is the following
+
+--
+`$$\frac{\partial MSE(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} = -\frac{2}{n}\mathbf{X}^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})$$`
+The gradient descent can be applied as follows
+
+--
+`$$\frac{\partial MSE(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} = -\frac{2}{n}\mathbf{X}^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta})$$`
+The gradient descent can be applied as follows
+
+
+--
+`$$\boldsymbol{\beta}^{t+1} := \boldsymbol{\beta}^t - \frac{2}{n}s \mathbf{X}^{'}(\mathbf{X}\boldsymbol{\beta}-\mathbf{y})$$`
+for `\(s &gt; 0.\)`
+
+---
+class: middle
+##Example Prostate - Cancer (lspa ~ lcavol)
+
+
+
+
+
+
+```r
+x = dat$lcavol
+X = cbind(1,x)
+N = nrow(X)
+y = dat$lpsa
+s=0.0001
+iters=1000000
+beta_coef = cbind(c(1,1))
+for(i in 1:iters){
+  beta_coef = beta_coef - (2/N)*s*t(X)%*%(X%*%beta_coef-y)
+}
+
+beta_coef
+```
+
+```
+##        [,1]
+##   1.5072975
+## x 0.7193204
+```
+
+
+
+[Source:](https://www.ocf.berkeley.edu/~janastas/stochastic-gradient-descent-in-r.html)
+
+---
+class: middle
+##Example Prostate - Cancer (lspa ~ lcavol)
+
+
+```r
+coef(lm(y ~ x))
+```
+
+```
+## (Intercept)           x 
+##   1.5072975   0.7193204
+```
+
+
+
+---
+class: middle
+##Unconstrained Gradient Descent Method - Simple Logistic Regression
+
+Let's suppose 
+
+`$$\pi( \mathbf{x}_i, \boldsymbol{\beta}) = \frac{1}{1 + \exp\left\{ -\mathbf{X}\boldsymbol{\beta}\right\}}$$`
+
+Mathematically, the cost function is proportional to minus log likelihood.
+
+The cost function is given by
+
+`$$Cost(\boldsymbol{\beta}) = \frac{1}{n}\sum_{i=1}^{n}-y_i \log(\pi( \mathbf{x}_i, \boldsymbol{\beta})) - (1 - y_i)\log(1-\pi( \mathbf{x}_i, \boldsymbol{\beta}))$$`
+
+--
+`$$Cost(\boldsymbol{\beta}) =\frac{1}{n} \sum_{i=1}^n\left\{-y_i\boldsymbol{\beta}^{'}\mathbf{x}_i + \log(1 + e^{\boldsymbol{\beta}^{'}\mathbf{x}_i}) \right\},$$`
+
+---
+class: middle
+##Unconstrained Gradient Descent Method -  Logistic Regression
+
+
+The gradient is the following
+
+--
+`$$\frac{\partial Cost(\boldsymbol{\beta})}{\partial\boldsymbol{\beta}} =-\frac{1}{n}\mathbf{X}^{'}(\mathbf{y} - \mathbf{p})$$` 
+where `\(\mathbf{p} = \left[ \pi(x_1;\boldsymbol{\beta}), \ldots,  \pi(x_n;\boldsymbol{\beta}) \right]\)`.
+
+
+The gradient descent can be applied as follows
+
+--
+`$$\boldsymbol{\beta}^{t+1} := \boldsymbol{\beta}^t -\frac{1}{n}\mathbf{X}^{'}(\mathbf{p} - \mathbf{y})$$`
+
+
+
+---
+class: middle
+##Example  South Africa (chd ~ tobacco)
+
+
+
+
+
+
+```r
+x = dados$tobacco
+X = cbind(1,x)
+N = nrow(X)
+y = dados$chd
+s=0.0001
+iters=1000000
+beta_coef = cbind(c(1,1))
+for(i in 1:iters){
+  p_coef = 1 / (1  + exp(-X%*%beta_coef))
+  beta_coef = beta_coef - (1/N)*s*t(X)%*%(p_coef-y)
+}
+
+beta_coef
+```
+
+```
+##         [,1]
+##   -1.1894068
+## x  0.1452668
+```
+---
+class: middle
+##Example  South Africa (chd ~ tobacco)
+
+
+
+
+```r
+mod_simple = glm(chd~ tobacco, data = dados, family=binomial(link="logit"))
+
+coef(mod_simple)
+```
+
+```
+## (Intercept)     tobacco 
+##  -1.1894300   0.1452696
+```
+
+
+---
+class: middle
+##Regularized Linear Regression
+
+Let's get started with an example.
+
+We simulated a linear regression model from `\(y_i = f(x) + e_i\)`, where `\(f(x) = -x^2\)` and `\(e_i \sim N(0, 500)\)`.
+
+And then, we fit a fourth degree polynomial regression `\(\beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \beta_4 x^4\)`.
+
+
+---
+class: middle
+##Regularized Linear Regression
+
+
+![](Lecture_12_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Regularized Linear Regression
+
+Now, let's suppose we want penalize `\(\beta_3\)` and `\(\beta_4\)`
+
+An idea could be
+
+`$$MSE(\boldsymbol{\beta}) = \frac{1}{n}\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)^2 + \lambda\beta_3^2 +\lambda \beta_4^2$$`
+where `\(\lambda\)` is a large number.
+
+In that case, `\(\beta_3\)` and `\(\beta_4\)` should be closed to zero to minimize `\(MSE(\boldsymbol{\beta})\)`.
+
+However, in pratice, we do not know previously which coefficient should be zero in the linear regression model. So the cost function for regularized linear regression is given by
+
+`$$Cost(\boldsymbol{\beta}) = \frac{1}{n}\left[\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)^2 + \lambda\sum_{j=1}^p \beta_j^2\right]$$`
+
+---
+class: middle
+##Unconstrained Gradient Descent Method - Regularized Linear Regression
+
+The gradient is given by
+
+`$$\frac{\partial Cost(\boldsymbol{\beta})}{\partial \beta_0}= -\frac{2}{n}\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)$$`
+
+`$$\frac{\partial Cost(\boldsymbol{\beta})}{\partial \beta_j} = \frac{2}{n}\left[\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)x_j + \lambda\beta_j\right]$$`
+
+---
+class: middle
+## Regularized Linear Regression (Ridge Regression) - Least Square Approach
+
+
+Let's suppose the following model: `\(\mathbf{y} = \mathbf{X}\boldsymbol{\beta} +\boldsymbol{\epsilon}\)` where `\(\mathbf{X}\)` is the centered matrix (no intercept)
+
+The Mean Squared Error is given by
+
+--
+`$$MSE(\boldsymbol{\beta}) = (\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) - \lambda \boldsymbol{\beta}^{'}\boldsymbol{\beta}$$`
+
+--
+`$$MSE(\boldsymbol{\beta}) = \mathbf{y}^{'}\mathbf{y} - 2\mathbf{X}^{'}\boldsymbol{\beta}^{'}\mathbf{y} + \boldsymbol{\beta}^{'}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} - \lambda\boldsymbol{\beta}^{'}\boldsymbol{\beta}$$`
+
+--
+`$$\frac{\partial MSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = 2\mathbf{X}^{'}\mathbf{y} +2\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} + 2\lambda\mathbf{I}\boldsymbol{\beta}$$`
+
+--
+Making `\(\frac{\partial MSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = \mathbf{0}\)`, we have
+
+--
+`$$(\mathbf{X}^{'}\mathbf{X} + \lambda \mathbf{I})\boldsymbol{\beta} = \mathbf{X}^{'}\mathbf{y} \Rightarrow \hat{\boldsymbol{\beta}} =  (\mathbf{X}^{'}\mathbf{X} + \lambda \mathbf{I})^{-1}\mathbf{X}^{'}\mathbf{y}$$`
+
+--
+`$$E[\hat{\boldsymbol{\beta}}] = (\mathbf{X}^{'}\mathbf{X} + \lambda \mathbf{I})^{-1}\mathbf{X}^{'}\boldsymbol{\beta}.$$`
+
+
+---
+class: middle
+## Regularized Linear Regression (Ridge Regression) in R
+
+
+
+```r
+library(glmnet)
+
+
+# Getting the independent variable
+nam = c("lcavol","lweight", "age", "lbph", "svi", "lcp","gleason", "pgg45")
+x_var &lt;- select(dat,one_of(nam))
+# Getting the dependent variable
+y_var = dat$chd
+# Setting the range of lambda values
+lambda_seq &lt;- 10^seq(2, -2, by = -.1)
+# Using glmnet function to build the ridge regression in r
+fit &lt;- glmnet(x_var, y_var, alpha = 0, lambda  = lambda_seq)
+# Checking the model
+summary(fit)
+```
+
+---
+class: middle
+## Regularized Linear Regression (Ridge Regression) in R
+
+
+
+```
+## # A tibble: 9 x 2
+##   term        estimate
+##   &lt;chr&gt;          &lt;dbl&gt;
+## 1 (Intercept) 2.35    
+## 2 lcavol      0.00802 
+## 3 lweight     0.0131  
+## 4 age         0.000284
+## 5 lbph        0.00160 
+## 6 svi         0.0175  
+## 7 lcp         0.00500 
+## 8 gleason     0.00646 
+## 9 pgg45       0.000190
+```
+
+
+---
+class: middle
+##Stepwise Regression
+
+
+
+```
+## # A tibble: 6 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   0.495     0.877      0.564 5.74e- 1
+## 2 lcavol        0.544     0.0746     7.29  1.11e-10
+## 3 lweight       0.588     0.198      2.97  3.78e- 3
+## 4 svi           0.715     0.207      3.46  8.20e- 4
+## 5 lbph          0.101     0.0576     1.76  8.22e- 2
+## 6 age          -0.0164    0.0107    -1.54  1.27e- 1
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

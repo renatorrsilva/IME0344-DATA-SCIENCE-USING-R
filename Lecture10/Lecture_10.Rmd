@@ -326,7 +326,7 @@ class: middle
 
 dados = read.table("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/SAheart.data", sep=",",head=T,row.names=1)
 
-mod_simple = glm(chd~ tobacco, data = dados)
+mod_simple = glm(chd~ tobacco, data = dados, family=binomial(link="logit"))
 tidy(mod_simple)
 
 ```
@@ -344,8 +344,8 @@ stepwise.model = MASS::stepAIC(initial.model,
                                scope = list(upper = ~sbp +
                                             tobacco+ ldl+adiposity+
                                             famhist+typea+obesity+
-                                            alcohol+ age,  lower = ~1),
-                               direction="both",trace = FALSE)  
+                                            alcohol+ age  ,  lower = ~1),
+                               direction="both",trace = TRUE)  
 
 tidy(stepwise.model)
   
