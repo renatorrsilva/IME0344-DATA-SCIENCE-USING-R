@@ -14,7 +14,7 @@ class: center, middle, inverse, title-slide
 # Lecture 11 - The overfitting problem
 ### Presented by Renato Rodrigues Silva
 ### Federal University of Goias.
-### (updated: 2020-09-22)
+### (updated: 2020-09-23)
 
 ---
 
@@ -210,12 +210,18 @@ And we are going to fit two models
 
 Let's assume `\(\sigma^2=0.3.\)`
 
+
+
+
+
 ---
 class: middle
-##Simulation
+##Simulation - Variance of `\(\hat{f}(x)\)`
 
 
-![](Lecture_11_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+![](Lecture_11_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
 
 ---
 class: middle
@@ -231,7 +237,7 @@ class: middle
 ##Simulation
 
 
-![](Lecture_11_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+![](Lecture_11_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -262,6 +268,18 @@ class: middle
 
 ---
 class: middle
+###The trade-off between prediction accuracy and model interpretability
+
+- Accuracy: It is the ability of a statistical learning model to make correct predictions of unseen data.
+
+- Flexible models: These are complex models (SVM, ANN, etc.) which are better in terms of prediction accuracy, but are not interpretable. 
+
+- Inflexible models. These are simple models (linear regression) are very interpretable but worse in terms of accuracy.
+
+**Source**: Material based on Mini-course: Machine Learning methods for genomic prediction written by Dr. Osval Antonio Montesinos López.
+
+---
+class: middle
 ##Takeaways 
 
 - The bias-variance tradeoff allows us to more precisely describe the modeling phenomena that we have seen thus far.
@@ -289,19 +307,6 @@ class: middle
 - Adding a useful feature to the data, such as a quadratic feature when the underlying process is quadratic, reduces bias. Adding a useless feature rarely increases bias.
 
 [Reference:](https://www.textbook.ds100.org/ch/15/bias_intro.html)
-
-
----
-class: middle
-###The trade-off between prediction accuracy and model interpretability
-
-- Accuracy: It is the ability of a statistical learning model to make correct predictions of unseen data.
-
-- Flexible models: These are complex models (SVM, ANN, etc.) which are better in terms of prediction accuracy, but are not interpretable. 
-
-- Inflexible models. These are simple models (linear regression) are very interpretable but worse in terms of accuracy.
-
-**Source**: Material based on Mini-course: Machine Learning methods for genomic prediction written by Dr. Osval Antonio Montesinos López.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

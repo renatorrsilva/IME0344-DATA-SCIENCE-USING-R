@@ -205,9 +205,6 @@ And we are going to fit two models
 
 Let's assume $\sigma^2=0.3.$
 
----
-class: middle
-##Simulation
 
 
 ```{r, echo = FALSE,warning=FALSE, message=FALSE}
@@ -237,11 +234,63 @@ p2 = ggplot(sim_data,aes(x, y)) +
   stat_summary(fun.data=mean_cl_normal) + 
   geom_smooth(method='lm', formula= y ~ poly(x, degree = 9),se=FALSE)+theme_bw()
 
-ggarrange(p1,p2 , 
-          labels = c("linear", "nine degree"),
-          ncol = 1, nrow = 2)
+#ggarrange(p1,p2 , 
+#          labels = c("linear", "nine degree"),
+#          ncol = 1, nrow = 2)
 
 ```
+
+---
+class: middle
+##Simulation - Variance of $\hat{f}(x)$
+
+
+```{r, echo = FALSE,warning=FALSE, message=FALSE}
+
+set.seed(2)
+sim_data2 = get_sim_data(f)
+
+set.seed(3)
+sim_data3 = get_sim_data(f)
+
+set.seed(4)
+sim_data4 = get_sim_data(f)
+
+
+p2.1 = ggplot(sim_data2,aes(x, y)) +
+  stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm', formula= y ~ poly(x, degree = 9),se=FALSE)+theme_bw()
+
+p3.1 = ggplot(sim_data3,aes(x, y)) +
+  stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm', formula= y ~ poly(x, degree = 9),se=FALSE)+theme_bw()
+
+p4.1 = ggplot(sim_data4,aes(x, y)) +
+  stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm', formula= y ~ poly(x, degree = 9),se=FALSE)+theme_bw()
+
+p2.2 = ggplot(sim_data2,aes(x, y)) +
+  stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm', formula= y ~ 1,se=FALSE)+theme_bw()
+
+p3.2 = ggplot(sim_data3,aes(x, y)) +
+  stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm', formula= y ~1,se=FALSE)+theme_bw()
+
+p4.2 = ggplot(sim_data4,aes(x, y)) +
+  stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm', formula= y ~ 1,se=FALSE)+theme_bw()
+
+ggarrange(p2.1,p2.2,
+          p3.1,p3.2,
+          p4.1,p4.2, 
+          #labels = c("sample 1", "sample 2", "sample 3"),
+          ncol = 2, nrow = 3)
+
+
+```
+
+
 
 ---
 class: middle
@@ -329,6 +378,18 @@ class: middle
 
 ---
 class: middle
+###The trade-off between prediction accuracy and model interpretability
+
+- Accuracy: It is the ability of a statistical learning model to make correct predictions of unseen data.
+
+- Flexible models: These are complex models (SVM, ANN, etc.) which are better in terms of prediction accuracy, but are not interpretable. 
+
+- Inflexible models. These are simple models (linear regression) are very interpretable but worse in terms of accuracy.
+
+**Source**: Material based on Mini-course: Machine Learning methods for genomic prediction written by Dr. Osval Antonio Montesinos López.
+
+---
+class: middle
 ##Takeaways 
 
 - The bias-variance tradeoff allows us to more precisely describe the modeling phenomena that we have seen thus far.
@@ -358,14 +419,3 @@ class: middle
 [Reference:](https://www.textbook.ds100.org/ch/15/bias_intro.html)
 
 
----
-class: middle
-###The trade-off between prediction accuracy and model interpretability
-
-- Accuracy: It is the ability of a statistical learning model to make correct predictions of unseen data.
-
-- Flexible models: These are complex models (SVM, ANN, etc.) which are better in terms of prediction accuracy, but are not interpretable. 
-
-- Inflexible models. These are simple models (linear regression) are very interpretable but worse in terms of accuracy.
-
-**Source**: Material based on Mini-course: Machine Learning methods for genomic prediction written by Dr. Osval Antonio Montesinos López.
