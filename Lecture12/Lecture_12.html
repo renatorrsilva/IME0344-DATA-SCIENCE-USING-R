@@ -14,21 +14,10 @@ class: center, middle, inverse, title-slide
 # Lecture 12 - Shrinkage Methods part I
 ### Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Trevor Hastie, Robert Tibshirani and Jerome Friedman) - Presented by Renato Rodrigues Silva
 ### Federal University of Goias.
-### (updated: 2020-09-18)
+### (updated: 2020-09-22)
 
 ---
 
-class: middle
-##Introduction
-
-- The subset selection produces a model that is interpretable and has possibly lower prediction error than the full model. 
-
-- However, because it is a discrete process variables are either retained or discarded—it often exhibits high variance.
-
-- Shrinkage methods are more continuous, and don’t suffer as much from high
-variability.
-
----
 class: middle
 ##Gradient Descent Method
 
@@ -37,6 +26,95 @@ class: middle
 - The method is called gradient descent.
 
 - It can be useful for large datasets.
+
+---
+class: middle
+##Concave and convex functions of a single variable
+
+- The concept  of concavity and convexity are  central to optimization theory.
+
+###Definition
+
+- Let `\(f\)` be a function of a single variable defined on an interval. 
+
+Then `\(f\)` is 
+
+- **concave** if every line segment joining two points on its graph is never above the graph.
+
+- **convex** if every line segment joining two points on its graph is never below the graph.
+
+[Source:](https://mjo.osborne.economics.utoronto.ca/index.php/tutorial/index/1/cv1/t#:~:text=A%20function%20of%20a%20single,the%20graph%20at%20any%20point.)
+
+---
+class: middle
+##Concave and convex functions of a single variable
+
+
+&lt;img src="Lecture_12_files/figure-html/Fig1.jpeg" width="100%" align="center" /&gt;
+
+
+---
+class: middle
+##Convex functions of a single variable
+
+
+&lt;img src="Lecture_12_files/figure-html/Fig2.png" width="100%" align="center" /&gt;
+
+
+
+---
+class: middle
+##Concave and convex functions of a single variable
+
+
+###Definition
+
+Let `\(f\)` be a function of a single variable defined on the interval `\(I\)`. Then `\(f\)` is
+
+
+- convex if for all `\(x_1 \in I\)`, all `\(x_2 \in I\)`, and all `\(t \in (0, 1)\)` we have
+`\(f(tx_1 + (1−t)x_2)	 \leq tf(x_1) +	(1 − t)f(x_2).\)`
+
+Note that
+
+`$$\forall x_1, x_2 \in C: f\left(\frac{x_1+x_2}{2}\right) \leq \frac{f(x_1)+\f(x_2)}{2}.$$`
+
+
+---
+class: middle
+
+##Differentiable Function
+
+- In calculus, a differentiable function of one real variable is a function whose derivative exists at each point in its domain. 
+
+- As a result, the graph of a differentiable function must have a (non-vertical) tangent line at each interior point in its domain, be relatively smooth, and cannot contain any break, angle, or cusp.
+
+[Source](https://en.wikipedia.org/wiki/Differentiable_function)
+
+
+---
+class: middle
+
+##Convex Optimality Conditions
+
+- An important class of optmization problems involves convex 
+cost functions and convex constraints. 
+
+`$$f(\boldsymbol{\beta}(s)) = f(s\boldsymbol{\beta} + (1-s)\boldsymbol{\beta}^{'}) \leq sf(\boldsymbol{\beta}) + 
+(1-s)\boldsymbol{\beta}^{'}.$$`
+
+- **This inequality guarantees that a convex 
+function cannot have any local minima that are not also 
+globally minimal**.
+
+
+---
+class: middle
+##Convex Optimality Condition
+
+
+&lt;img src="Lecture_12_files/figure-html/Fig3.png" width="100%" align="center" /&gt;
+
 
 ---
 class: middle
@@ -220,58 +298,14 @@ coef(mod_simple)
 ```
 
 
----
-class: middle
-##Regularized Linear Regression
 
-Let's get started with an example.
-
-We simulated a linear regression model from `\(y_i = f(x) + e_i\)`, where `\(f(x) = -x^2\)` and `\(e_i \sim N(0, 500)\)`.
-
-And then, we fit a fourth degree polynomial regression `\(\beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \beta_4 x^4\)`.
-
-
----
-class: middle
-##Regularized Linear Regression
-
-
-![](Lecture_12_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
-
-
----
-class: middle
-##Regularized Linear Regression
-
-Now, let's suppose we want penalize `\(\beta_3\)` and `\(\beta_4\)`
-
-An idea could be
-
-`$$MSE(\boldsymbol{\beta}) = \frac{1}{n}\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)^2 + \lambda\beta_3^2 +\lambda \beta_4^2$$`
-where `\(\lambda\)` is a large number.
-
-In that case, `\(\beta_3\)` and `\(\beta_4\)` should be closed to zero to minimize `\(MSE(\boldsymbol{\beta})\)`.
-
-However, in pratice, we do not know previously which coefficient should be zero in the linear regression model. So the cost function for regularized linear regression is given by
-
-`$$Cost(\boldsymbol{\beta}) = \frac{1}{n}\left[\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)^2 + \lambda\sum_{j=1}^p \beta_j^2\right]$$`
-
----
-class: middle
-##Unconstrained Gradient Descent Method - Regularized Linear Regression
-
-The gradient is given by
-
-`$$\frac{\partial Cost(\boldsymbol{\beta})}{\partial \beta_0}= -\frac{2}{n}\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)$$`
-
-`$$\frac{\partial Cost(\boldsymbol{\beta})}{\partial \beta_j} = \frac{2}{n}\left[\sum_{i=1}^n(y_i - \beta_0 - \sum_{j=1}^p \beta_j x_j)x_j + \lambda\beta_j\right]$$`
 
 ---
 class: middle
 ## Regularized Linear Regression (Ridge Regression) - Least Square Approach
 
 
-Let's suppose the following model: `\(\mathbf{y} = \mathbf{X}\boldsymbol{\beta} +\boldsymbol{\epsilon}\)` where `\(\mathbf{X}\)` is the centered matrix (no intercept)
+Let's suppose the following model: `\(\mathbf{y} = \tilde{\mathbf{X}}\boldsymbol{\beta} +\boldsymbol{\epsilon}\)` where `\(\tilde{\mathbf{X}}\)` is the centered matrix, i.e. `\(\tilde{x}_{ij} = x_{ij} - \bar{x}\)`. Consequently, `\(\hat{\beta}_0 = \frac{1}{n}\sum_{i=1}^ny_{i}\)`. The remaining coefficients get estimated by a ridge regression without intercept, 
 
 The Mean Squared Error is given by
 
@@ -305,56 +339,206 @@ library(glmnet)
 
 
 # Getting the independent variable
-nam = c("lcavol","lweight", "age", "lbph", "svi", "lcp","gleason", "pgg45")
-x_var &lt;- select(dat,one_of(nam))
+nam = c("lcavol","lweight", "age", "lbph")
+x_var &lt;- as.matrix(select(dat,one_of(nam)))
+library(glmnet)
+
+
+# Getting the independent variable
+nam = c( "lcavol",  "lweight", "age",     "lbph",    "svi",     "lcp",     "gleason","pgg45", "train" )
+x_var &lt;- as.matrix(select(dat,one_of(nam)))
 # Getting the dependent variable
-y_var = dat$chd
-# Setting the range of lambda values
-lambda_seq &lt;- 10^seq(2, -2, by = -.1)
+y_var = dat$lpsa 
 # Using glmnet function to build the ridge regression in r
-fit &lt;- glmnet(x_var, y_var, alpha = 0, lambda  = lambda_seq)
-# Checking the model
-summary(fit)
+fit &lt;- glmnet(x_var, y_var, alpha = 0, lambda=c(0.001,1000))
+
+#Ordinary Least Square
+#coef(glmnet(x_var, y_var, alpha = 0, lambda=c(0), standardize = FALSE))
 ```
 
 ---
 class: middle
-## Regularized Linear Regression (Ridge Regression) in R
+## Regularized Linear Regression (Ridge Regression) using glmnet package
 
 
 
 ```
-## # A tibble: 9 x 2
-##   term        estimate
-##   &lt;chr&gt;          &lt;dbl&gt;
-## 1 (Intercept) 2.35    
-## 2 lcavol      0.00802 
-## 3 lweight     0.0131  
-## 4 age         0.000284
-## 5 lbph        0.00160 
-## 6 svi         0.0175  
-## 7 lcp         0.00500 
-## 8 gleason     0.00646 
-## 9 pgg45       0.000190
+##            nam   fit1  fit2
+## 1  (Intercept)  0.173 2.465
+## 2       lcavol  0.563 0.001
+## 3      lweight  0.622 0.001
+## 4          age -0.021 0.000
+## 5         lbph  0.097 0.000
+## 6          svi  0.760 0.002
+## 7          lcp -0.105 0.001
+## 8      gleason  0.050 0.001
+## 9        pgg45  0.004 0.000
+## 10       train  0.004 0.000
 ```
+
+---
+class: middle
+
+##Cross-validation
+
+- Cross-validation (CV) is a strategy for model selection or algorithm selection.
+
+- CV consists of splitting the data (at least once) for estimating the error of each algorithm.
+
+- Part of the data (the training set) is used for training each algorithm, and the remaining part (the testing set) is used for estimating the error of the algorithm.
+
+- Then, CV selects the algorithm with the smallest estimated error in new data.
 
 
 ---
 class: middle
-##Stepwise Regression
+
+##Cross-validation - Single hold-out set approach
+
+-  The single hold-out set or validation set approach consists of randomly dividing the available data set into a training set and a validation set.
+
+
+-  One problem of the hold-out (validation) set approach is that it depends on just one training-testing split and its performance depends on how the data are split into the training and testing sets.
+
+
+---
+class: middle
+
+##Cross-validation - Single hold-out set approach
+
+
+&lt;img src="Lecture_12_files/figure-html/Fig4.jpeg" width="100%" align="center" /&gt;
+
+
+---
+class: middle
+
+##Cross-validation - The k-fold cross-validation
+
+- In k-fold CV, the data set is randomly divided into `\(k\)` complementary folds (groups) of approximately equal size. One of the subsets is used as testing data and the rest `\((k-1)\)` as training data.
+
+- Then `\(k-1\)` folds are used for training the statistical learning model and the remaining fold for evaluating the out of sample prediction performance.
+
+- This method is very accurate because it combines `\(k\)` measures of fitness resulting from the k training and testing data sets into which the original data set was divided, but at the cost of more computational resources.
+
+- In practice, the choice of the number of folds depends on the measurement of the data set, although 5 or 10 folds are the most common choices.
+
+
+---
+class: middle
+
+##Cross-validation - The k-fold cross-validation
+
+
+&lt;img src="Lecture_12_files/figure-html/Fig5.jpeg" width="100%" align="center" /&gt;
+
+- It is important to point out that to reduce variability, we recommend implementing the **k-fold CV s times**.
+
+- But each time using different complementary 
+subsets to form the folds.
+
+
+---
+class: middle 
+
+##Choosing Optimal `\(\lambda\)` value using `glmnet`
+
+The `cv.glmnet` function does k-fold cross-validation for glmnet, 
+produces a plot, and returns a value for lambda
+
+
+```r
+cvfit = cv.glmnet(x_var, y_var)
+plot(cvfit)
+```
+
+
+
+[Source:](https://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html)
+
+
+---
+class: middle 
+
+##Choosing Optimal `\(\lambda\)` value using `glmnet`
+
+![](Lecture_12_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle 
+
+##Choosing Optimal `\(\lambda\)` value using `glmnet`
+
+
+```r
+coef(cvfit, s = "lambda.min")
+```
+
+####Output:
+
+`lambda.min`:	value of lambda that gives minimum cvm.
+
+`lambda.1se`:	largest value of lambda such that error is within 1 standard error of the minimum.
+
+---
+class: middle 
+
+##Choosing Optimal `\(\lambda\)` value using `glmnet`
+
+`lambda.min`:
+
+
+```
+## [1] 0.08434274
+```
+
+
+####Results 
+
+
+```
+## 10 x 1 sparse Matrix of class "dgCMatrix"
+##                        1
+## (Intercept)  0.013372603
+## lcavol       0.492165664
+## lweight      0.604072967
+## age         -0.016698819
+## lbph         0.085763938
+## svi          0.685581682
+## lcp         -0.039787028
+## gleason      0.063512239
+## pgg45        0.003421214
+## train       -0.002211434
+```
+
+---
+class: middle 
+
+##Predicted Values 
+
+
+
+```r
+predict(cvfit, s = "lambda.min")
+```
+
+
+---
+class: middle 
+
+##Predicted Values 
 
 
 
 ```
-## # A tibble: 6 x 5
-##   term        estimate std.error statistic  p.value
-##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-## 1 (Intercept)   0.495     0.877      0.564 5.74e- 1
-## 2 lcavol        0.544     0.0746     7.29  1.11e-10
-## 3 lweight       0.588     0.198      2.97  3.78e- 3
-## 4 svi           0.715     0.207      3.46  8.20e- 4
-## 5 lbph          0.101     0.0576     1.76  8.22e- 2
-## 6 age          -0.0164    0.0107    -1.54  1.27e- 1
+##           1
+## 1 0.8811447
+## 2 0.8759251
+## 3 0.5990173
+## 4 0.7504556
+## 5 1.7363952
+## 6 0.9273162
 ```
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>

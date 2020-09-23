@@ -136,7 +136,7 @@ $$\mbox{EPE}[Y, \hat{f}(\mathbf{x})]=E[(Y - f(\mathbf{x}))^2 |\mathbf{X}=\mathbf
 
 --
 $$\mbox{EPE}[Y, \hat{f}(\mathbf{x})]=Var[Y  |\mathbf{X}=\mathbf{x}] + E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2|\mathbf{X}=\mathbf{x}]$$ 
-where $E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2|\mathbf{X}=\mathbf{x}]$ is called mean squared error of estimating $\hat{f}(\mathbf{x}$ or reducible error.
+where $E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2|\mathbf{X}=\mathbf{x}]$ is called mean squared error of estimating $\hat{f}(\mathbf{x})$ or reducible error.
 
 From this point, let's denotate mean squared error by $E[(f(\mathbf{x})  - \hat{f}(\mathbf{x}) )^2]$ without loss of the generality.
 
@@ -201,9 +201,9 @@ And we are going to fit two models
 
 - $$\hat{f}_1(x) = \beta_0$$
 
-- $$\hat{f}_1(x) = \beta_0 + \beta_1 x + \beta_2 x^2 + \ldots + \beta_9 x^9$$.
+- $$\hat{f}_1(x) = \beta_0 + \beta_1 x + \beta_2 x^2 + \ldots + \beta_9 x^9.$$
 
-Let's assume $\sigma^2=0.3$
+Let's assume $\sigma^2=0.3.$
 
 ---
 class: middle
@@ -303,6 +303,16 @@ geom_hline(yintercept=0.81)
 
 ---
 class: middle
+##Key Findings from Simulation
+
+Two things are immediately clear:
+
+- As complexity increases, **bias decreases**. (The mean of a model’s predictions is closer to the truth.)
+- As complexity increases, **variance increases**. (The variance about the mean of a model’s predictions increases.)
+
+
+---
+class: middle
 ##Bias and Variance in Pratice
 
 
@@ -325,7 +335,7 @@ class: middle
 
 - Underfitting is typically caused by too much bias; overfitting is typically caused by too much model variance.
 
-- Collecting more data reduces variance. For example, the model variance of linear regression goes down by a factor of  $\frac{1}{n}$, where $n$�  is the number of data points. 
+- Collecting more data reduces variance. For example, the model variance of linear regression goes down by a factor of  $\frac{1}{n}$, where $n$  is the number of data points. 
 
 - Thus, doubling the dataset size halves the model variance, and collecting many data points will cause the variance to approach 0. 
 
