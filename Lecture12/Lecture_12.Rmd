@@ -71,7 +71,7 @@ $f(tx_1 + (1−t)x_2)	 \leq tf(x_1) +	(1 − t)f(x_2).$
 
 Note that
 
-$$\forall x_1, x_2 \in C: f\left(\frac{x_1+x_2}{2}\right) \leq \frac{f(x_1)+\f(x_2)}{2}.$$
+$$\forall x_1, x_2 \in C: f\left(\frac{x_1+x_2}{2}\right) \leq \frac{f(x_1)+f(x_2)}{2}.$$
 
 
 ---
@@ -287,18 +287,18 @@ class: middle
 ## Regularized Linear Regression (Ridge Regression) - Least Square Approach
 
 
-Let's suppose the following model: $\mathbf{y} = \tilde{\mathbf{X}}\boldsymbol{\beta} +\boldsymbol{\epsilon}$ where $\tilde{\mathbf{X}}$ is the centered matrix, i.e. $\tilde{x}_{ij} = x_{ij} - \bar{x}$. Consequently, $\hat{\beta}_0 = \frac{1}{n}\sum_{i=1}^ny_{i}$. The remaining coefficients get estimated by a ridge regression without intercept, 
+Let's suppose the following model: $\mathbf{y} = \mathbf{X}\boldsymbol{\beta} +\boldsymbol{\epsilon}$ where $\mathbf{X}$ is the centered matrix, i.e. $x_{ij} = \tilde{x}_{ij} - \bar{x}$. Consequently, $\hat{\beta}_0 = \frac{1}{n}\sum_{i=1}^ny_{i}$. The remaining coefficients get estimated by a ridge regression without intercept, 
 
-The Mean Squared Error is given by
-
---
-$$MSE(\boldsymbol{\beta}) = (\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) - \lambda \boldsymbol{\beta}^{'}\boldsymbol{\beta}$$
+The Penalized Sum Squared Error is given by
 
 --
-$$MSE(\boldsymbol{\beta}) = \mathbf{y}^{'}\mathbf{y} - 2\mathbf{X}^{'}\boldsymbol{\beta}^{'}\mathbf{y} + \boldsymbol{\beta}^{'}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} - \lambda\boldsymbol{\beta}^{'}\boldsymbol{\beta}$$
+$$SSE(\boldsymbol{\beta}) = (\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) - \lambda \boldsymbol{\beta}^{'}\boldsymbol{\beta}$$
 
 --
-$$\frac{\partial MSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = 2\mathbf{X}^{'}\mathbf{y} +2\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} + 2\lambda\mathbf{I}\boldsymbol{\beta}$$
+$$SSE(\boldsymbol{\beta}) = \mathbf{y}^{'}\mathbf{y} - 2\mathbf{X}^{'}\boldsymbol{\beta}^{'}\mathbf{y} + \boldsymbol{\beta}^{'}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} - \lambda\boldsymbol{\beta}^{'}\boldsymbol{\beta}$$
+
+--
+$$\frac{\partial SSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = 2\mathbf{X}^{'}\mathbf{y} +2\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} + 2\lambda\mathbf{I}\boldsymbol{\beta}$$
 
 --
 Making $\frac{\partial MSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = \mathbf{0}$, we have
@@ -320,21 +320,16 @@ library(glmnet)
 
 
 # Getting the independent variable
-nam = c("lcavol","lweight", "age", "lbph")
-x_var <- as.matrix(select(dat,one_of(nam)))
-library(glmnet)
-
-
-# Getting the independent variable
 nam = c( "lcavol",  "lweight", "age",     "lbph",    "svi",     "lcp",     "gleason","pgg45", "train" )
 x_var <- as.matrix(select(dat,one_of(nam)))
 # Getting the dependent variable
 y_var = dat$lpsa 
 # Using glmnet function to build the ridge regression in r
-fit <- glmnet(x_var, y_var, alpha = 0, lambda=c(0.001,1000))
-
-#Ordinary Least Square
-#coef(glmnet(x_var, y_var, alpha = 0, lambda=c(0), standardize = FALSE))
+fit1 <- glmnet(x_var, y_var, alpha = 0, lambda=c(0.001))
+fit2 <- glmnet(x_var, y_var, alpha = 0, lambda=c(1000))              
+data.frame(nam = c("(Intercept)",nam),
+           fit1 = round(as.vector(coef(fit1)),3),
+           fit2 = round(as.vector(coef(fit2)),3))
 
 
 
@@ -441,7 +436,7 @@ The `cv.glmnet` function does k-fold cross-validation for glmnet,
 produces a plot, and returns a value for lambda
 
 ```{r,eval=FALSE}
-cvfit = cv.glmnet(x_var, y_var)
+cvfit = cv.glmnet(x_var, y_var, alpha=0)
 plot(cvfit)
 
 ```

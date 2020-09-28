@@ -14,7 +14,7 @@ class: center, middle, inverse, title-slide
 # Lecture 12 - Shrinkage Methods part I
 ### Material based on The Elements of Statistical Learning Data Mining, Inference, and Prediction (Trevor Hastie, Robert Tibshirani and Jerome Friedman) - Presented by Renato Rodrigues Silva
 ### Federal University of Goias.
-### (updated: 2020-09-26)
+### (updated: 2020-09-23)
 
 ---
 
@@ -305,18 +305,18 @@ class: middle
 ## Regularized Linear Regression (Ridge Regression) - Least Square Approach
 
 
-Let's suppose the following model: `\(\mathbf{y} = \mathbf{X}\boldsymbol{\beta} +\boldsymbol{\epsilon}\)` where `\(\mathbf{X}\)` is the centered matrix, i.e. `\(x_{ij} = \tilde{x}_{ij} - \bar{x}\)`. Consequently, `\(\hat{\beta}_0 = \frac{1}{n}\sum_{i=1}^ny_{i}\)`. The remaining coefficients get estimated by a ridge regression without intercept, 
+Let's suppose the following model: `\(\mathbf{y} = \tilde{\mathbf{X}}\boldsymbol{\beta} +\boldsymbol{\epsilon}\)` where `\(\tilde{\mathbf{X}}\)` is the centered matrix, i.e. `\(\tilde{x}_{ij} = x_{ij} - \bar{x}\)`. Consequently, `\(\hat{\beta}_0 = \frac{1}{n}\sum_{i=1}^ny_{i}\)`. The remaining coefficients get estimated by a ridge regression without intercept, 
 
-The Penalized Sum Squared Error is given by
-
---
-`$$SSE(\boldsymbol{\beta}) = (\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) - \lambda \boldsymbol{\beta}^{'}\boldsymbol{\beta}$$`
+The Mean Squared Error is given by
 
 --
-`$$SSE(\boldsymbol{\beta}) = \mathbf{y}^{'}\mathbf{y} - 2\mathbf{X}^{'}\boldsymbol{\beta}^{'}\mathbf{y} + \boldsymbol{\beta}^{'}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} - \lambda\boldsymbol{\beta}^{'}\boldsymbol{\beta}$$`
+`$$MSE(\boldsymbol{\beta}) = (\mathbf{y} - \mathbf{X}\boldsymbol{\beta})^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) - \lambda \boldsymbol{\beta}^{'}\boldsymbol{\beta}$$`
 
 --
-`$$\frac{\partial SSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = 2\mathbf{X}^{'}\mathbf{y} +2\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} + 2\lambda\mathbf{I}\boldsymbol{\beta}$$`
+`$$MSE(\boldsymbol{\beta}) = \mathbf{y}^{'}\mathbf{y} - 2\mathbf{X}^{'}\boldsymbol{\beta}^{'}\mathbf{y} + \boldsymbol{\beta}^{'}\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} - \lambda\boldsymbol{\beta}^{'}\boldsymbol{\beta}$$`
+
+--
+`$$\frac{\partial MSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = 2\mathbf{X}^{'}\mathbf{y} +2\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} + 2\lambda\mathbf{I}\boldsymbol{\beta}$$`
 
 --
 Making `\(\frac{\partial MSE(\boldsymbol{\beta}) }{\partial \boldsymbol{\beta}} = \mathbf{0}\)`, we have
