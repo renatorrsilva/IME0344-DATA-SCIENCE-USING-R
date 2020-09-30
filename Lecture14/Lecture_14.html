@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 14 - The Lasso for Linear Model - (part II)</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Material based on statistical learning with sparsity (Trevor Hastie, Robert Tibshirani and Martin Wainwright) - Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <script src="libs/kePrint-0.0.1/kePrint.js"></script>
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 14 - The Lasso for Linear Model - (part II)
+### Material based on statistical learning with sparsity (Trevor Hastie, Robert Tibshirani and Martin Wainwright) - Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-09-30)
+
+---
+
+class: middle
+
+##Shortcomings of linear regression
+
+1.  *Predictive ability*: the linear regression fit often has **low bias** but **high variance**.
+  - Recall that expected test error is a combination of these two quantities.
+  - Prediction accuracy can sometimes be improved by sacrificing some small amount of bias in order to decrease
+the variance.
+
+2.  *Interpretative ability*: linear regression “freely” assigns a coefficient to each predictor variable.
+
+[Source:](http://www.stat.cmu.edu/~ryantibs/advmethods/notes/highdim.pdf)
+
+
+---
+class: middle 
+
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+- We are going to compare the three approaches discussed so far to estimate the regression coefficients.
+
+- We are going to use the prostate cancer dataset.
+
+---
+class: middle
+
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+```r
+#Loading libraries
+library(tidyverse)
+library(glmnet)
+library(kableExtra)
+library(caret)
+library(leaps)
+
+#Reading dataset
+dat = read.table("http://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/prostate.data")   %&gt;% filter(train == TRUE) %&gt;% select(-train)
+```
+
+---
+class: middle
+
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+```r
+dat2 = dat %&gt;%
+  mutate( lcavol = (lcavol - mean(lcavol)) / sd(lcavol),
+          lweight = (lweight - mean(lweight))/sd(lweight),
+          age = (age - mean(age)) / sd(age),
+          lbph = (lbph - mean(lbph))/sd(lbph),
+          svi = (svi - mean(svi))/sd(svi),
+          lcp = (lcp - mean(lcp)) /sd(lcp),
+          gleason = (gleason - mean(gleason)) /sd(gleason),
+          pgg45 = (pgg45 - mean(pgg45 ))/sd(pgg45 ),
+          lpsa = lpsa)
+
+#Getting the independent variable
+nam = c( "lcavol",  "lweight", "age",    
+         "lbph",    "svi",     "lcp",    
+         "gleason","pgg45")
+x_var &lt;- as.matrix(select(dat2,one_of(nam)))
+# Getting the dependent variable
+y_var = dat2$lpsa 
+```
+
+
+
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+
+```r
+#Ordinary least square
+
+full.model = lm(lpsa ~ ., data = dat2)
+ols = coef(full.model)
+```
+
+
+
+```r
+# Set seed for reproducibility
+set.seed(123)
+# Set up repeated k-fold cross-validation
+train.control &lt;- trainControl(method = "cv", number = 5)
+# Train the model
+step.model &lt;- train(lpsa ~., data = dat,
+                    method = "leapBackward", 
+                    tuneGrid = data.frame(nvmax = 1:9),
+                    trControl = train.control
+                    )
+```
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+
+```r
+set.seed(123)
+#Ridge Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_rr = cv.glmnet(x_var,y_var,  alpha=0, nfolds=5,type.measure = "mae")
+rr = as.matrix(coef(cvfit_rr, s = "lambda.min"))
+```
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+```r
+#Lasso Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_lasso = cv.glmnet(x_var, y_var,  alpha=1, nfolds=5,type.measure = "mae")
+lasso = as.matrix(coef(cvfit_lasso, s = "lambda.min"))
+
+##Results
+results = data.frame(ols = ols,
+                     ridge=rr, lasso = lasso)
+names(results) = c("ols","ridge","lasso")
+results  %&gt;%
+  kable() %&gt;%
+  kable_styling()
+```
+
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+##Final Model - Backward
+
+
+```r
+coef(step.model$finalModel, id=unlist(step.model$bestTune))
+```
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+&lt;table class="table" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; ols &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; ridge &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; lasso &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Intercept) &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.4523451 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.4523451 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.4523451 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; lcavol &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.7164070 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.6121701 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.6822347 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; lweight &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2926424 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2865456 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2858274 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; age &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.1425496 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.1111695 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.1182093 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; lbph &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2120076 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2019343 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1997601 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; svi &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.3096195 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2852935 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2862594 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; lcp &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.2890056 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.1633997 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.2172174 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; gleason &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.0209135 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0122322 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0000000 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; pgg45 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2773460 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2073934 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.2239525 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+##Final Model - Backward
+
+
+```
+##                   [,1]
+## (Intercept)  2.4523451
+## lcavol       0.7131604
+## lweight      0.2951154
+## age         -0.1461421
+## lbph         0.2113905
+## svi          0.3115400
+## lcp         -0.2877348
+## pgg45        0.2621042
+```
+
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+###MAE - Backward
+
+
+```
+##   nvmax      RMSE  Rsquared       MAE    RMSESD RsquaredSD     MAESD
+## 7     7 0.7334251 0.7002753 0.5672845 0.1954796  0.1673772 0.1638639
+```
+
+###MAE - Ridge Regression
+
+
+```
+## [1] 0.581143
+```
+
+###MAE- Lasso Regression
+
+
+```
+## [1] 0.5780582
+```
+
+
+---
+class: middle
+##Another Example - Real estate valuation data set Data Set
+
+The market historical data set of real estate valuation are collected from Sindian Dist., New Taipei City, Taiwan.
+
+
+
+&lt;table class="table" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; ols &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; ridge &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; lasso &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Intercept) &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 37.9801932 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 37.9801932 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 37.980193 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; transaction_date &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.4510676 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.3298054 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.350582 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; house_age &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -3.0725012 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -2.8688707 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -2.966198 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; distance_to_the_nearest_station &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -5.6636677 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -4.7752775 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -5.461418 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; number_of_convenience_stores &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.3381372 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.3112983 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.290608 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; latitude &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.7981640 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.8561374 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.761804 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; longitude &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.1906673 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.4859365 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.000000 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+---
+class: middle
+##Another Example 
+
+##Final Model - Backward
+
+
+```
+##                                      [,1]
+## (Intercept)                     37.980193
+## transaction_date                 1.447838
+## house_age                       -3.068900
+## distance_to_the_nearest_station -5.494405
+## number_of_convenience_stores     3.346581
+## latitude                         2.815645
+```
+
+
+---
+class: middle
+##Another Example
+
+
+
+###MAE - Backward
+
+
+```
+##   nvmax   RMSE  Rsquared      MAE   RMSESD RsquaredSD     MAESD
+## 5     5 8.6455 0.5912024 6.211513 2.189996  0.1471996 0.8630738
+```
+
+###MAE - Ridge Regression
+
+
+```
+## [1] 6.261144
+```
+
+###MAE- Lasso Regression
+
+
+```
+## [1] 6.2306
+```
+
+
+
+
+---
+class: middle
+##High-dimensional regression 
+
+####From Matrix Algebra
+
+- `\(\mbox{rank}(\mathbf{X}) = \mbox{min}(n,p),\)` then for `\(n \leq p \Rightarrow \mbox{rank}(\mathbf{X}) = n\)`
+
+-  `$$\mbox{rank}(\mathbf{X}) = \mbox{rank}(\mathbf{X}^{'}) = \mbox{rank}(\mathbf{X}^{'}\mathbf{X}).$$` 
+
+####Normal System and Ordinary Least Square
+
+- The normal system `\((\mathbf{X}^{'}\mathbf{X})\hat{\boldsymbol{\beta}} = \mathbf{X}^{'}\mathbf{y}\)`  has at least one solution.
+
+- When `\(n &gt; p\)`, we have `\(\hat{\boldsymbol{\beta}} = (\mathbf{X}^{'}\mathbf{X})^{-1}\mathbf{X}^{'}\mathbf{y}.\)`
+
+- However, when `\(n &lt; p,\)` `\((\mathbf{X}^{'}\mathbf{X})\)` is singular, then we have infinite solutions `\(\hat{\boldsymbol{\beta}} = (\mathbf{X}^{'}\mathbf{X})^{-}\mathbf{X}^{'}\mathbf{y}.\)`
+
+
+[Proof:](https://users.wpi.edu/~walker/MA3257/HANDOUTS/least-squares_handout.pdf.)
+
+
+---
+class: middle
+##High-dimensional regression 
+
+###Residuals
+
+`$$\mathbf{e} = \mathbf{y} - \hat{\mathbf{y}},$$`
+
+###Degree of freedom
+
+--
+`$$\mbox{df}_{residual} = tr[\mathbf{I} - \mathbf{X}(\mathbf{X}^{'}\mathbf{X})^{-}\mathbf{X}^{'}]$$`
+
+--
+`$$\mbox{df}_{residual} = n - tr[\mathbf{X}(\mathbf{X}^{'}\mathbf{X})^{-}\mathbf{X}^{'}]$$`
+
+--
+`$$\mbox{df}_{residual} = n - tr[(\mathbf{X}^{'}\mathbf{X})^{-}(\mathbf{X}^{'}\mathbf{X})]$$`
+
+--
+`$$\mbox{df}_{residual} = n - rank(\mathbf{X}) = n - n = 0$$`
+
+####BOTH SIGNAL AND NOISE ARE COPIED !!!!
+
+
+---
+class: middle 
+##An example - Genomic Selection
+
+- Breeding values are the expected phenotypic value of an individual’s offspring (measured as the deviation of an individual’s offspring from the population mean).
+
+- Genomic selection  is based on the principle that information from a large number of markers distributed across the genome can be used to capture diversity in that genome, sufficient to estimate breeding values without having a precise knowledge of where specific genes are located
+
+- Information from a collection of 599 historical CIMMYT wheat lines. The wheat data set is from CIMMYT's Global Wheat Program. 
+
+- The phenotypic trait considered here was the average grain yield (GY) of the 599 wheat lines evaluated in each of these four mega-environments.
+
+- Wheat lines were recently genotyped using 1447 Diversity Array Technology (DArT). The DArT markers may take on two values, denoted by their presence or absence.
+
+---
+class: middle 
+##An example - Genomic Selection
+
+
+
+
+
+###MAE - Ridge Regression
+
+
+```
+## [1] 0.6706607
+```
+
+###MAE- Lasso Regression
+
+
+```
+## [1] 0.6879292
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

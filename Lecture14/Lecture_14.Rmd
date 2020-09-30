@@ -1,0 +1,552 @@
+---
+title: "Lecture 14 - The Lasso for Linear Model - (part II)"
+author: "Material based on statistical learning with sparsity (Trevor Hastie, Robert Tibshirani and Martin Wainwright) - Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+---
+class: middle
+
+##Shortcomings of linear regression
+
+1.  *Predictive ability*: the linear regression fit often has **low bias** but **high variance**.
+  - Recall that expected test error is a combination of these two quantities.
+  - Prediction accuracy can sometimes be improved by sacrificing some small amount of bias in order to decrease
+the variance.
+
+2.  *Interpretative ability*: linear regression “freely” assigns a coefficient to each predictor variable.
+
+[Source:](http://www.stat.cmu.edu/~ryantibs/advmethods/notes/highdim.pdf)
+
+
+---
+class: middle 
+
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+- We are going to compare the three approaches discussed so far to estimate the regression coefficients.
+
+- We are going to use the prostate cancer dataset.
+
+---
+class: middle
+
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+#Loading libraries
+library(tidyverse)
+library(glmnet)
+library(kableExtra)
+library(caret)
+library(leaps)
+
+#Reading dataset
+dat = read.table("http://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/prostate.data")   %>% filter(train == TRUE) %>% select(-train)
+
+```
+
+---
+class: middle
+
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+dat2 = dat %>%
+  mutate( lcavol = (lcavol - mean(lcavol)) / sd(lcavol),
+          lweight = (lweight - mean(lweight))/sd(lweight),
+          age = (age - mean(age)) / sd(age),
+          lbph = (lbph - mean(lbph))/sd(lbph),
+          svi = (svi - mean(svi))/sd(svi),
+          lcp = (lcp - mean(lcp)) /sd(lcp),
+          gleason = (gleason - mean(gleason)) /sd(gleason),
+          pgg45 = (pgg45 - mean(pgg45 ))/sd(pgg45 ),
+          lpsa = lpsa)
+
+#Getting the independent variable
+nam = c( "lcavol",  "lweight", "age",    
+         "lbph",    "svi",     "lcp",    
+         "gleason","pgg45")
+x_var <- as.matrix(select(dat2,one_of(nam)))
+# Getting the dependent variable
+y_var = dat2$lpsa 
+
+```
+
+
+
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+#Ordinary least square
+
+full.model = lm(lpsa ~ ., data = dat2)
+ols = coef(full.model)
+
+
+```
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+# Set seed for reproducibility
+set.seed(123)
+# Set up repeated k-fold cross-validation
+train.control <- trainControl(method = "cv", number = 5)
+# Train the model
+step.model <- train(lpsa ~., data = dat,
+                    method = "leapBackward", 
+                    tuneGrid = data.frame(nvmax = 1:9),
+                    trControl = train.control
+                    )
+
+
+```
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+set.seed(123)
+#Ridge Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_rr = cv.glmnet(x_var,y_var,  alpha=0, nfolds=5,type.measure = "mae")
+rr = as.matrix(coef(cvfit_rr, s = "lambda.min"))
+
+```
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+#Lasso Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_lasso = cv.glmnet(x_var, y_var,  alpha=1, nfolds=5,type.measure = "mae")
+lasso = as.matrix(coef(cvfit_lasso, s = "lambda.min"))
+
+##Results
+results = data.frame(ols = ols,
+                     ridge=rr, lasso = lasso)
+names(results) = c("ols","ridge","lasso")
+results  %>%
+  kable() %>%
+  kable_styling()
+
+```
+
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+##Final Model - Backward
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+coef(step.model$finalModel, id=unlist(step.model$bestTune))
+
+```
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+#Loading libraries
+library(tidyverse)
+library(glmnet)
+library(kableExtra)
+library(caret)
+library(leaps)
+
+
+#Reading dataset
+dat = read.table("http://statweb.stanford.edu/~tibs/ElemStatLearn/datasets/prostate.data")   %>% filter(train == TRUE) %>% select(-train)
+
+
+dat2 = dat %>%
+  mutate( lcavol = (lcavol - mean(lcavol)) / sd(lcavol),
+          lweight = (lweight - mean(lweight))/sd(lweight),
+          age = (age - mean(age)) / sd(age),
+          lbph = (lbph - mean(lbph))/sd(lbph),
+          svi = (svi - mean(svi))/sd(svi),
+          lcp = (lcp - mean(lcp)) /sd(lcp),
+          gleason = (gleason - mean(gleason)) /sd(gleason),
+          pgg45 = (pgg45 - mean(pgg45 ))/sd(pgg45 ),
+          lpsa = lpsa)
+
+#Getting the independent variable
+nam = c( "lcavol",  "lweight", "age",    
+         "lbph",    "svi",     "lcp",    
+         "gleason","pgg45")
+x_var <- as.matrix(select(dat2,one_of(nam)))
+# Getting the dependent variable
+y_var = dat2$lpsa 
+
+#Ordinary least square
+full.model = lm(lpsa ~ ., data = dat2)
+ols = coef(full.model)
+
+
+# Set seed for reproducibility
+set.seed(123)
+# Set up repeated k-fold cross-validation
+train.control <- trainControl(method = "cv", number = 10)
+# Train the model
+step.model <- train(lpsa ~., data = dat2,
+                    method = "leapBackward", 
+                    tuneGrid = data.frame(nvmax = 1:9),
+                    trControl = train.control
+                    )
+
+set.seed(123)
+#Ridge Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_rr = cv.glmnet(x_var, y_var,  nfolds=10,alpha=0, type.measure = "mae")
+rr = as.matrix(coef(cvfit_rr,s="lambda.min"))
+
+#Lasso Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_lasso = cv.glmnet(x_var, y_var, nfolds=10, alpha=1, type.measure = "mae")
+lasso = as.matrix(coef(cvfit_lasso, s = "lambda.min"))
+
+##Results
+results = data.frame(ols = ols,
+                     ridge=rr, lasso = lasso)
+names(results) = c("ols","ridge","lasso")
+results  %>%
+  kable() %>%
+  kable_styling()
+
+
+```
+
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+##Final Model - Backward
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+cbind(coef(step.model$finalModel, id=unlist(step.model$bestTune)))
+
+```
+
+
+---
+class: middle
+##Comparison between Ordinary Least Square, Ridge Regression and the Lasso 
+
+
+
+###MAE - Backward
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+step.model$results[unlist(step.model$bestTune),]
+
+```
+
+###MAE - Ridge Regression
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+cvfit_rr$cvm[cvfit_rr$lambda==cvfit_rr$lambda.min]
+
+```
+
+###MAE- Lasso Regression
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+cvfit_lasso$cvm[cvfit_lasso$lambda==cvfit_lasso$lambda.min]
+
+```
+
+
+---
+class: middle
+##Another Example - Real estate valuation data set Data Set
+
+The market historical data set of real estate valuation are collected from Sindian Dist., New Taipei City, Taiwan.
+
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+#Loading libraries
+library(tidyverse)
+library(glmnet)
+library(kableExtra)
+library(caret)
+library(leaps)
+
+
+#Reading dataset
+dat = read.csv("house_Taiwan.csv", header = TRUE)
+
+
+dat2 = dat %>%
+  mutate( transaction_date = (transaction_date - mean(transaction_date)) / sd(transaction_date),
+          house_age = (house_age - mean(house_age))/sd(house_age),
+          distance_to_the_nearest_station = (distance_to_the_nearest_station - mean(distance_to_the_nearest_station)) / sd(distance_to_the_nearest_station),
+          number_of_convenience_stores = (number_of_convenience_stores - mean(number_of_convenience_stores))/sd(number_of_convenience_stores),
+          latitude = (latitude - mean(latitude))/sd(latitude),
+          longitude = (longitude - mean(longitude)) /sd(longitude),
+          house_price =  house_price_of_unit_area) %>% 
+  select(-house_price_of_unit_area)
+
+#Getting the independent variable
+nam = names(dat2)[1:6]
+x_var <- as.matrix(select(dat2,one_of(nam)))
+# Getting the dependent variable
+y_var = dat2$house_price
+
+#Ordinary least square
+full.model = lm(house_price ~ ., data = dat2)
+ols = coef(full.model)
+
+
+# Set seed for reproducibility
+set.seed(123)
+# Set up repeated k-fold cross-validation
+train.control <- trainControl(method = "cv", number = 10)
+# Train the model
+step.model <- train(house_price ~., data = dat2,
+                    method = "leapBackward", 
+                    tuneGrid = data.frame(nvmax = 1:6),
+                    trControl = train.control
+                    )
+
+set.seed(123)
+#Ridge Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_rr = cv.glmnet(x_var, y_var,  nfolds=10,alpha=0, type.measure = "mae")
+rr = as.matrix(coef(cvfit_rr,s="lambda.min"))
+
+#Lasso Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_lasso = cv.glmnet(x_var, y_var, nfolds=10, alpha=1, type.measure = "mae")
+lasso = as.matrix(coef(cvfit_lasso, s = "lambda.min"))
+
+##Results
+results = data.frame(ols = ols,
+                     ridge=rr, lasso = lasso)
+names(results) = c("ols","ridge","lasso")
+results  %>%
+  kable() %>%
+  kable_styling()
+
+
+```
+
+
+---
+class: middle
+##Another Example 
+
+##Final Model - Backward
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+cbind(coef(step.model$finalModel, id=unlist(step.model$bestTune)))
+
+```
+
+
+---
+class: middle
+##Another Example
+
+
+
+###MAE - Backward
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+step.model$results[unlist(step.model$bestTune),]
+
+```
+
+###MAE - Ridge Regression
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+cvfit_rr$cvm[cvfit_rr$lambda==cvfit_rr$lambda.min]
+
+```
+
+###MAE- Lasso Regression
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+cvfit_lasso$cvm[cvfit_lasso$lambda==cvfit_lasso$lambda.min]
+
+```
+
+
+
+
+---
+class: middle
+##High-dimensional regression 
+
+####From Matrix Algebra
+
+- $\mbox{rank}(\mathbf{X}) = \mbox{min}(n,p),$ then for $n \leq p \Rightarrow \mbox{rank}(\mathbf{X}) = n$
+
+-  $$\mbox{rank}(\mathbf{X}) = \mbox{rank}(\mathbf{X}^{'}) = \mbox{rank}(\mathbf{X}^{'}\mathbf{X}).$$ 
+
+####Normal System and Ordinary Least Square
+
+- The normal system $(\mathbf{X}^{'}\mathbf{X})\hat{\boldsymbol{\beta}} = \mathbf{X}^{'}\mathbf{y}$  has at least one solution.
+
+- When $n > p$, we have $\hat{\boldsymbol{\beta}} = (\mathbf{X}^{'}\mathbf{X})^{-1}\mathbf{X}^{'}\mathbf{y}.$
+
+- However, when $n < p,$ $(\mathbf{X}^{'}\mathbf{X})$ is singular, then we have infinite solutions $\hat{\boldsymbol{\beta}} = (\mathbf{X}^{'}\mathbf{X})^{-}\mathbf{X}^{'}\mathbf{y}.$
+
+
+[Proof:](https://users.wpi.edu/~walker/MA3257/HANDOUTS/least-squares_handout.pdf.)
+
+
+---
+class: middle
+##High-dimensional regression 
+
+###Residuals
+
+$$\mathbf{e} = \mathbf{y} - \hat{\mathbf{y}},$$
+
+###Degree of freedom
+
+--
+$$\mbox{df}_{residual} = tr[\mathbf{I} - \mathbf{X}(\mathbf{X}^{'}\mathbf{X})^{-}\mathbf{X}^{'}]$$
+
+--
+$$\mbox{df}_{residual} = n - tr[\mathbf{X}(\mathbf{X}^{'}\mathbf{X})^{-}\mathbf{X}^{'}]$$
+
+--
+$$\mbox{df}_{residual} = n - tr[(\mathbf{X}^{'}\mathbf{X})^{-}(\mathbf{X}^{'}\mathbf{X})]$$
+
+--
+$$\mbox{df}_{residual} = n - rank(\mathbf{X}) = n - n = 0$$
+
+####BOTH SIGNAL AND NOISE ARE COPIED !!!!
+
+
+---
+class: middle 
+##An example - Genomic Selection
+
+- Breeding values are the expected phenotypic value of an individual’s offspring (measured as the deviation of an individual’s offspring from the population mean).
+
+- Genomic selection  is based on the principle that information from a large number of markers distributed across the genome can be used to capture diversity in that genome, sufficient to estimate breeding values without having a precise knowledge of where specific genes are located
+
+- Information from a collection of 599 historical CIMMYT wheat lines. The wheat data set is from CIMMYT's Global Wheat Program. 
+
+- The phenotypic trait considered here was the average grain yield (GY) of the 599 wheat lines evaluated in each of these four mega-environments.
+
+- Wheat lines were recently genotyped using 1447 Diversity Array Technology (DArT). The DArT markers may take on two values, denoted by their presence or absence.
+
+[Explanation1:](https://www.youtube.com/watch?v=a8qb37TBg_w)
+
+[Explanation2:](https://www.youtube.com/watch?v=FsNP0LwOpOM)
+
+[Explanation3:](https://www.youtube.com/watch?v=rIqQgR2ttK8)
+
+---
+class: middle 
+##An example - Genomic Selection
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+#Reading dataset
+dat = read.table("wheat.txt", header = TRUE)
+
+#Getting the independent variable
+nam = names(dat)[1:1279]
+x_var <- as.matrix(select(dat,one_of(nam)))
+x_var = apply(x_var,2,function(x){ (x - mean(x))/sd(x)})
+# Getting the dependent variable
+y_var = dat$resp 
+
+dat2 = data.frame(x_var, resp = y_var)
+
+# Set seed for reproducibility
+set.seed(123)
+# Set up repeated k-fold cross-validation
+train.control <- trainControl(method = "cv", number = 5)
+# Train the model
+step.model <- train( resp ~., data = dat2,
+                    method = "leapForward", 
+                    tuneGrid = data.frame(nvmax = 1:475),
+                    trControl = train.control
+                    )
+
+
+set.seed(123)
+#Ridge Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_rr = cv.glmnet(x_var, y_var, alpha=0, nfolds=5,type.measure = c("mae"))
+rr = as.matrix(coef(cvfit_rr, s = "lambda.min"))
+
+#Lasso Regression
+# Using glmnet function to build the ridge regression in r
+cvfit_lasso = cv.glmnet(x_var, y_var,  alpha=1, nfolds=5,type.measure = "mae")
+lasso = as.matrix(coef(cvfit_lasso, s = "lambda.min"))
+
+
+```
+
+
+
+###MAE - Forward
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+step.model$results[unlist(step.model$bestTune),]
+
+```
+
+###MAE - Ridge Regression
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+cvfit_rr$cvm[cvfit_rr$lambda==cvfit_rr$lambda.min]
+
+```
+
+###MAE- Lasso Regression
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+cvfit_lasso$cvm[cvfit_lasso$lambda==cvfit_lasso$lambda.min]
+
+```
