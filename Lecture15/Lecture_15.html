@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 15 - Performance Metrics</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Material based on statistical learning with sparsity (Trevor Hastie, Robert Tibshirani and Martin Wainwright) - Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 15 - Performance Metrics
+### Material based on statistical learning with sparsity (Trevor Hastie, Robert Tibshirani and Martin Wainwright) - Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-10-05)
+
+---
+
+class: middle
+##Regression Metrics
+
+Let's suppose a testing set `\(\left\{(x_i, y_i\right\}_{n+1}^{N}\)`
+
+- The Mean Squared Error is given by
+
+`$$\mbox{MSE}_{TST} = \frac{1}{N}\sum_{i=n+1}^{n+N}(y_i - \hat{f}(x_i))^2,$$`
+
+- The Root Mean Squared Error is given by
+
+`$$\mbox{RMSE}_{TST} = \sqrt{\frac{1}{N}\sum_{i=n+1}^{n+N}(y_i - \hat{f}(x_i))^2},$$`
+
+- The Mean Absolute Error 
+
+`$$\mbox{MAE}_{TST} = \frac{1}{N}\sum_{i=n+1}^{n+N}|y_i - \hat{f}(x_i)|,$$`
+
+---
+class: middle
+###Logistic Regression - Example 
+
+- The data represent white males between 15 and 64, and the response variable is the presence or absence of myocardial infarction (MI) at the time of the survey
+
+The variables
+
+- sbp:  systolic blood pressure
+- tobacco:  cumulative tobacco (kg)
+- ldl:  low densiity lipoprotein cholesterol adiposity
+- famhist:  family history of heart disease (Present, Absent)
+- typea:  type-A behavior
+- obesity:
+- alcohol:  current alcohol consumption
+- age: age at onset
+- chd: response, coronary heart disease
+
+---
+class: middle
+###Logistic Regression - Example 
+
+
+
+```
+## # A tibble: 10 x 5
+##    term            estimate std.error statistic    p.value
+##    &lt;chr&gt;              &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+##  1 (Intercept)    -6.15       1.31      -4.70   0.00000258
+##  2 sbp             0.00650    0.00573    1.14   0.256     
+##  3 tobacco         0.0794     0.0266     2.98   0.00285   
+##  4 ldl             0.174      0.0597     2.92   0.00355   
+##  5 adiposity       0.0186     0.0293     0.635  0.526     
+##  6 famhistPresent  0.925      0.228      4.06   0.0000490 
+##  7 typea           0.0396     0.0123     3.21   0.00131   
+##  8 obesity        -0.0629     0.0442    -1.42   0.155     
+##  9 alcohol         0.000122   0.00448    0.0271 0.978     
+## 10 age             0.0452     0.0121     3.73   0.000193
+```
+
+---
+class: middle
+###Interpretation of coefficients
+
+Keeping all other predictors constant then,
+
+- The odds ratio (OR) of getting heart diseases for an additional age
+is `\(\exp\{0.0452\}=1.046237.\)` An OR of 1.04 means there is a 4.7% increase in the odds of an outcome with a one year additional.
+
+###Odds ratio  versus Risk Relative###
+
+####Risk Relative (RR)
+`$$RR = \frac{P(sucess|exposed)}{P(sucess|unexposed)}$$`
+
+####Odds Ratio (OR)
+`$$OR = \frac{\frac{P(sucess|exposed)}{1-P(sucess|exposed)}}{\frac{P(sucess|unexposed)}{1- P(sucess|unexposed)}}.$$`
+
+[Source:](https://www2.stat.duke.edu/courses/Spring13/sta102.001/Lec/Lec21.pdf.)
+
+---
+class: middle
+
+##Odds Ratio - Interpretation
+
+- `\(\mbox{OR} &gt; 1\)` means greater odds of association with the exposure and outcome.
+
+- `\(\mbox{OR} = 1\)` means there is no association between exposure and outcome.
+
+- `\(\mbox{OR} &lt; 1\)` means there is a lower odds of association between the exposure and outcome.
+
+[Source:](https://journalfeed.org/article-a-day/2018/idiots-guide-to-odds-ratios.)
+
+---
+class: middle
+
+##Prediction
+
+- If we have a new value for variable `\(x\)`, how do we predict the `\(y\)`, 0 or 1?
+
+###Prediction rule
+
+- `\(Y = 1,\)` if `\(pr(Y=y|\mathbf{X}=\mathbf{x})\)` is greater than 0.5.
+- `\(Y = 0,\)` if `\(pr(Y=y|\mathbf{X}=\mathbf{x})\)` is less than 0.5.
+
+##Estimating the prediction error
+
+- Prediction error is the probability of a wrong classification (0's predicted as 1's and 1's predicted as 0's).
+
+- We can use cross-validation to estimate these proportions. 
+
+
+---
+class: middle
+
+##Classification Metrics
+
+&lt;img src="Lecture_15_files/figure-html/Fig1.png" width="100%" align="center" /&gt;
+
+&lt;img src="Lecture_15_files/figure-html/Fig2.png" width="100%" align="center" /&gt;
+
+---
+class: middle
+
+###Accuracy
+
+`$$\frac{TP+TN}{TP+FP+FN+TN}$$`
+where
+
+- `\(TP\)` is true positive;
+- `\(TN\)` is true negative;
+- `\(FP\)` is false positive;
+- `\(FN\)` is false negative.
+
+####Is accuracy enough??? Accuracy of 99% is good???
+
+Answer: It is depends on the context.
+
+- Finding Fraud in a financial transaction.
+
+- Spam versus Ham ('E-mail that is generally desired and isn't considered spam.').
+
+- Imbalanced class.
+
+[Source:](
+https://courses.cs.ut.ee/MTAT.03.319/2019_spring/uploads/Main/Lect6-Evl_2019Spring_v3.pdf.)
+
+---
+class: middle
+
+##Recall (Sensitivity), Precision and Specificity
+
+&lt;img src="Lecture_15_files/figure-html/Fig3.png" width="100%" align="center" /&gt;
+
+
+
+[Source:](https://courses.cs.ut.ee/MTAT.03.319/2019_spring/uploads/Main/Lect6-Evl_2019Spring_v3.pdf.)
+
+---
+class: middle
+
+##Harmonic mean (F1 score) of Precision and Recall better than mean (average)
+
+&lt;img src="Lecture_15_files/figure-html/Fig4.png" width="100%" align="center" /&gt;
+
+
+
+
+---
+class: middle
+
+##Confusion Matrix 
+
+&lt;img src="Lecture_15_files/figure-html/Fig5.png" width="100%" align="center" /&gt;
+
+
+
+[Multiclass Classification:](https://www.youtube.com/watch?v=6G5AAl42xp4)
+
+
+---
+class: middle
+
+###Receiver Operating Characteristic (ROC) Curve 
+
+- ROC curve is a plot of the true positive rate (TP) (y-axis)
+vs. false positive rate (FP) (x-axis).
+
+- True Positive Rate (TP) `\(= \frac{TP}{TP+FN}.\)`
+
+- False Positive Rate (FP) `\(= \frac{FP}{TN+FP}.\)`
+
+###Precision-Recall (PR) curves
+
+- PR curve is a plot of the precision (y-axis) versus recall (x-axis)
+
+###Area under curve (AUC)
+- Definition: the AUC is the area under the ROC curve. 
+
+
+- [Source 1:](https://www.alexejgossmann.com/auc/) 
+- [Source 2:](https://datascienceplus.com/interpretation-of-the-auc/)
+
+---
+class: middle
+##Area Under Curve (AUC)
+
+&lt;img src="Lecture_15_files/figure-html/Fig7.png" width="100%" align="center" /&gt;
+
+
+
+---
+class: middle
+
+###Receiver Operating Characteristic (ROC) curve and Precision-Recall (PR) curve
+
+&lt;img src="Lecture_15_files/figure-html/Fig6.png" width="100%" align="center" /&gt;
+
+[Good Explanation:](https://www.youtube.com/watch?v=4jRBRDbJemM)
+
+
+---
+class: middle
+##Classification Metrics
+
+
+```r
+set.seed(42)
+dat_idx = sample(nrow(dat), round(0.7*nrow(dat)))
+dat_trn = dat[dat_idx, ]
+dat_tst = dat[-dat_idx, ]
+
+model_glm = glm(chd~ sbp + tobacco+ ldl+adiposity+famhist+typea+obesity+ alcohol+ age,  data = dat_trn, family = binomial("logit"))
+
+model_glm_pred = ifelse(predict(model_glm, type = "response", newdata=dat_tst) &gt; 0.5, "1", "0")
+
+train_tab = table(predicted = model_glm_pred, actual = as.character(dat_tst$chd))
+
+train_con_mat = confusionMatrix(train_tab, positive = "1")
+```
+
+[Source 1:](https://daviddalpiaz.github.io/r4sl/logistic-regression.html#roc-curves)
+
+[Source 2:](https://machinelearningmastery.com/difference-test-validation-datasets/)
+
+[Source 3:](https://lgatto.github.io/IntroMachineLearningWithR/index.html)
+---
+class: middle
+
+
+
+
+####Confusion Matrix
+
+```
+##          actual
+## predicted  0  1
+##         0 67 28
+##         1 18 26
+```
+
+####Accuracy
+
+```
+##  Accuracy 
+## 0.6690647
+```
+
+####Overall
+
+```
+##          Sensitivity          Specificity       Pos Pred Value 
+##            0.4814815            0.7882353            0.5909091 
+##       Neg Pred Value            Precision               Recall 
+##            0.7052632            0.5909091            0.4814815 
+##                   F1           Prevalence       Detection Rate 
+##            0.5306122            0.3884892            0.1870504 
+## Detection Prevalence    Balanced Accuracy 
+##            0.3165468            0.6348584
+```
+
+
+---
+class: middle
+##ROC Curve
+
+
+```r
+#Testing Data
+test_prob = predict(model_glm, newdata = dat_tst, type = "response")
+test_roc = roc(dat_tst$chd ~ test_prob, plot = TRUE, print.auc = TRUE)
+
+#Training data
+#test_prob = model_glm$fitted.value
+#test_roc = roc(dat_trn$chd ~ test_prob, plot = TRUE, print.auc = TRUE)
+```
+
+
+---
+class: middle
+##ROC Curve -package 'pROC'
+
+![](Lecture_15_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+##ROC Curve - package 'pROC'
+
+
+```r
+#Testing Data
+score = predict(model_glm, type = "response",newdata = dat_tst) 
+obs = dat_tst$chd
+## Warning: package 'ROCit' was built under R version 3.5.2
+ROCit_obj &lt;- rocit(score=score,class=obs)
+plot(ROCit_obj)
+
+
+#Training Data
+#score = model_glm$fitted.value
+#obs = dat_tst$chd
+#ROCit_obj &lt;- rocit(score=score,class=obs)
+#plot(ROCit_obj)
+```
+
+
+---
+class: middle
+##ROC Curve - package 'ROCit'
+
+![](Lecture_15_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+
+---
+class middle
+##Example 2 - Forest Fires
+
+
+
+```r
+#Reading dataset
+dat = read.csv("forestfires.csv", header = TRUE) %&gt;%
+  mutate(month = str_to_title(month)) %&gt;%
+  mutate(month = factor(month, levels = month.abb, ordered=TRUE)) %&gt;%
+  mutate(day = ordered(day, levels=c("mon","tue","wed","thu","fri", "sat","sun"))) %&gt;%
+  mutate(isBurned = as.numeric(area&gt;0))
+
+set.seed(42)
+dat_idx = sample(nrow(dat), round(0.7*nrow(dat)))
+dat_trn = dat[dat_idx, ]
+dat_tst = dat[-dat_idx, ]
+```
+
+
+
+
+
+---
+class middle
+##Example 2 - Forest Fires
+
+
+```r
+full.model = glm(isBurned~ 1 + Y + X + month  + day +
+                                              FFMC + DMC+ 
+                                              DC + ISI + temp +
+                                              RH + wind + rain, data = dat_trn, family="binomial")
+
+
+
+backward.model = MASS::stepAIC(full.model,
+                               scope = list(upper = ~1 + Y +
+                                              X + month  + day +
+                                              FFMC + DMC+
+                                              DC + ISI + temp +
+                                              RH + wind + rain,  lower = ~1),
+                              family="binomial",
+                              direction="backward",trace = FALSE)
+```
+
+
+
+
+
+
+
+---
+class middle
+##Example 2 - Forest Fires
+
+
+```r
+#Testing data
+score2 = predict(backward.model, type = "response",newdata = dat_tst) 
+obs2 = dat_tst$isBurned
+## Warning: package 'ROCit' was built under R version 3.5.2
+ROCit_obj2 &lt;- rocit(score=score2,class=obs2)
+plot(ROCit_obj2)
+
+
+#Training data
+#score2 = backward.model$fitted.values 
+#obs2 = dat_trn$isBurned
+## Warning: package 'ROCit' was built under R version 3.5.2
+#ROCit_obj2 &lt;- rocit(score=score2,class=obs2)
+#plot(ROCit_obj2)
+```
+
+
+---
+class middle
+##Example 2 - Forest Fires
+
+
+![](Lecture_15_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+class middle
+##Example 2 - Forest Fires
+
+
+```r
+#Testing data
+optimal_cutoff = ROCit_obj2$Cutoff[which.max(ROCit_obj2$TPR - ROCit_obj2$FPR)]
+model_glm_pred= ifelse(predict(backward.model, type = "response",newdata=dat_tst) &gt; optimal_cutoff, "1", "0")
+train_tab = table(predicted = model_glm_pred, actual = as.character(dat_tst$isBurned))
+train_con_mat = confusionMatrix(train_tab, positive = "1")
+```
+
+---
+class: middle
+##Example 2 - Forest Fires
+
+####Confusion Matrix
+
+```r
+train_con_mat$table
+```
+
+####Accuracy
+
+```r
+train_con_mat$overall["Accuracy"]
+```
+
+####Overall
+
+```r
+train_con_mat$byClass
+```
+
+
+---
+class: middle
+##Example 2 - Forest Fires
+
+
+
+####Optimal cutoff = 0.537716
+
+
+####Confusion Matrix 
+
+```
+##          actual
+## predicted  0  1
+##         0 48 50
+##         1 19 38
+```
+
+####Accuracy = 0.5548387
+
+
+####Overall
+
+```
+##          Sensitivity          Specificity       Pos Pred Value 
+##            0.4318182            0.7164179            0.6666667 
+##       Neg Pred Value            Precision               Recall 
+##            0.4897959            0.6666667            0.4318182 
+##                   F1           Prevalence       Detection Rate 
+##            0.5241379            0.5677419            0.2451613 
+## Detection Prevalence    Balanced Accuracy 
+##            0.3677419            0.5741180
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
