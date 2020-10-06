@@ -1,0 +1,545 @@
+---
+title: "Assignment 1 - Multiple Regression"
+author: "Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+---
+class: middle
+
+##Dataset - Forest Fires Data Set 
+
+**Abstract**: This is a difficult regression task, where the **aim is to predict the burned area of forest fires**, in the northeast region of Portugal, by using meteorological and other data.
+
+
+**Reference**: P. Cortez and A. Morais. A Data Mining Approach to Predict Forest Fires using Meteorological Data. In J. Neves, M. F. Santos and J. Machado Eds., New Trends in Artificial Intelligence, Proceedings of the 13th EPIA 2007 - Portuguese Conference on Artificial Intelligence, December, Guimaraes, Portugal, pp. 512-523, 2007. APPIA, ISBN-13 978-989-95618-0-9.
+ 
+
+---
+class: middle
+
+##Attribute Information:
+
+1. X - x-axis spatial coordinate within the Montesinho park map: 1 to 9
+2. Y - y-axis spatial coordinate within the Montesinho park map: 2 to 9
+3. month - month of the year: 'jan' to 'dec'
+4. day - day of the week: 'mon' to 'sun'
+5. FFMC - FFMC index from the FWI system: 18.7 to 96.20
+6. DMC - DMC index from the FWI system: 1.1 to 291.3
+7. DC - DC index from the FWI system: 7.9 to 860.6
+8. ISI - ISI index from the FWI system: 0.0 to 56.10
+9. temp - temperature in Celsius degrees: 2.2 to 33.30
+10. RH - relative humidity in %: 15.0 to 100
+11. wind - wind speed in km/h: 0.40 to 9.40
+12. rain - outside rain in mm/m2 : 0.0 to 6.4
+13. area - the burned area of the forest (in ha): 0.00 to 1090.84
+(this output variable is very skewed towards 0.0, thus it may make
+sense to model with the logarithm transform).
+
+
+---
+class: middle, center, inverse
+##Data Import and Exploratory Analysis
+
+
+---
+##Data Import
+class: middle
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+#Loading libraries
+library(tidyverse)
+library(kableExtra)
+library(caret)
+library(leaps)
+library(ggpubr)
+library(broom)
+library(corrplot)
+
+
+#Reading dataset
+dat = read.csv("forestfires.csv", header = TRUE) %>%
+  mutate(month = str_to_title(month)) %>%
+  mutate(month = factor(month, levels = month.abb, ordered=TRUE)) %>%
+  mutate(day = ordered(day, levels=c("mon","tue","wed","thu","fri", "sat","sun")))
+glimpse(dat)
+
+```
+
+---
+class: middle
+##Data Import
+
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+#Loading libraries
+library(tidyverse)
+library(kableExtra)
+library(caret)
+library(leaps)
+library(ggpubr)
+library(broom)
+library(corrplot)
+
+
+#Reading dataset
+dat = read.csv("forestfires.csv", header = TRUE) %>%
+  mutate(month = str_to_title(month)) %>%
+  mutate(month = factor(month, levels = month.abb)) %>%
+  mutate(day = ordered(day, levels=c("mon","tue","wed","thu","fri", "sat","sun")))
+glimpse(dat)
+
+
+#dat = mutate(dat, season = as.factor(unlist(season)))
+
+
+```
+
+
+---
+class: middle
+##Histogram
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+p1 = ggplot(dat, aes(x=area)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+theme_bw()
+
+p2 = ggplot(dat, aes(x=log(area+1))) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+theme_bw()
+
+ggarrange(p1,p2, 
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+```
+
+
+---
+class: middle
+##Histogram
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+p1 = ggplot(dat, aes(x=area)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+theme_bw()
+
+p2 = ggplot(dat, aes(x=log(area+1))) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+theme_bw()
+
+ggarrange(p1,p2, 
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+```
+
+
+---
+class: middle
+##Scatter plot - spatial coordinates vs burned area
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+p1 = ggplot(dat, aes(x = X, y=log(area+1))) + geom_point() +theme_bw()
+
+p2 = ggplot(dat, aes(x = Y, y=log(area+1))) + geom_point()+theme_bw()
+
+
+ggarrange(p1,p2, 
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+```
+
+---
+class: middle
+##Scatter plot - spatial coordinates vs burned area
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+p1 = ggplot(dat, aes(x = X, y=log(area+1))) + geom_point() +theme_bw()
+
+p2 = ggplot(dat, aes(x = log(Y,2), y=log(area+1))) + geom_point()+theme_bw()
+
+
+ggarrange(p1,p2, 
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+```
+
+
+---
+class: middle
+##Box-plot Month, days and season
+
+
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+p1 <-  ggplot(dat, aes(x = month, y=log(area+1))) + 
+  geom_boxplot() +theme_bw()
+
+p2 <-  ggplot(dat, aes(x = day, y=log(area+1))) + 
+  geom_boxplot()+theme_bw()
+
+
+ggarrange(p1,p2,
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+
+```
+
+
+
+
+---
+class: middle
+##Box-plot Month, days and season
+
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+p1 <-  ggplot(dat, aes(x = month, y=log(area+1))) + 
+  geom_boxplot() +theme_bw()
+
+p2 <-  ggplot(dat, aes(x = day, y=log(area+1))) + 
+  geom_boxplot()+theme_bw()
+
+
+
+ggarrange(p1,p2,
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+```
+
+
+---
+class: middle
+
+##Frequency Table - Month
+
+```{r, warning = FALSE, message=FALSE}
+table(dat$month)
+
+```
+
+
+
+---
+class: middle
+##Scatter plot - Indexes
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+p1 = ggplot(dat, aes(x = FFMC, y=log(area+1))) + geom_point() +theme_bw()
+
+p2 = ggplot(dat, aes(x = DMC, y=log(area+1))) + geom_point()+theme_bw()
+
+p3 = ggplot(dat, aes(x = DC, y=log(area+1))) + geom_point() +theme_bw()
+
+p4 = ggplot(dat, aes(x = ISI, y=log(area+1))) + geom_point()+theme_bw()
+
+
+ggarrange(p1,p2,p3,p4,
+          labels = c("A", "B","C","D"),
+          ncol = 2, nrow = 2)
+
+```
+
+---
+class: middle
+##Scatter plot - Indexes
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+p1 = ggplot(dat, aes(x = FFMC, y=log(area+1))) + geom_point() +theme_bw()
+
+p2 = ggplot(dat, aes(x = DMC, y=log(area+1))) + geom_point()+theme_bw()
+
+p3 = ggplot(dat, aes(x = DC, y=log(area+1))) + geom_point() +theme_bw()
+
+p4 = ggplot(dat, aes(x = ISI, y=log(area+1))) + geom_point()+theme_bw()
+
+
+ggarrange(p1,p2,p3,p4,
+          labels = c("A", "B","C","D"),
+          ncol = 2, nrow = 2)
+
+```
+
+
+
+
+---
+class: middle
+##Scatter plot - Meteorological variables
+
+```{r, warning = FALSE, message=FALSE, eval= FALSE}
+
+p1 = ggplot(dat, aes(x = temp, y=log(area+1))) + geom_point() +theme_bw()
+
+p2 = ggplot(dat, aes(x = RH, y=log(area+1))) + geom_point()+theme_bw()
+
+p3 = ggplot(dat, aes(x = wind, y=log(area+1))) + geom_point() +theme_bw()
+
+p4 = ggplot(dat, aes(x = rain, y=log(area+1))) + geom_point()+theme_bw()
+
+
+ggarrange(p1,p2,p3,p4,
+          labels = c("A", "B","C","D"),
+          ncol = 2, nrow = 2)
+
+```
+
+---
+class: middle
+##Scatter plot - Meteorological variables
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+p1 = ggplot(dat, aes(x = temp, y=log(area+1))) + geom_point() +theme_bw()
+
+p2 = ggplot(dat, aes(x = RH, y=log(area+1))) + geom_point()+theme_bw()
+
+p3 = ggplot(dat, aes(x = wind, y=log(area+1))) + geom_point() +theme_bw()
+
+p4 = ggplot(dat, aes(x = rain, y=log(area+1))) + geom_point()+theme_bw()
+
+
+ggarrange(p1,p2,p3,p4,
+          labels = c("A", "B","C","D"),
+          ncol = 2, nrow = 2)
+
+```
+
+
+---
+class: middle
+##Pairs  - all variables
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+#datM = select(dat, -month) %>% select(-day) %>% select(-season)
+datM = select(dat, -month) %>% select(-day)
+M = cor(datM)
+corrplot(M, method="color", outline = TRUE,type="lower",order = "hclust",
+         tl.col="black", tl.srt=45, diag=FALSE,tl.cex = 1,mar=c(0,0,3,0),
+         title="Correlation Matrix between Predictor and Outcome variables")
+```
+
+
+---
+class: middle, inverse, center
+##Solution 1
+
+---
+class: middle
+##Backward Regression
+
+```{r,warning = FALSE, message = FALSE, eval=FALSE}
+
+full.model = lm(log1p(area)~  Y + X +  day + month + 
+                              FFMC + DMC+ DC + ISI + 
+                              temp + RH + wind + rain,
+                              data = na.omit(dat))
+
+backward.model = MASS::stepAIC(full.model,
+                               scope = list(upper ~ 
+                              Y + X +  day + month + 
+                              FFMC + DMC+ DC + ISI + 
+                              temp + RH + wind + rain, 
+                              lower = ~1),
+                              direction="backward",trace = FALSE)
+
+```
+
+
+---
+class: middle
+##Backward Regression
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+full.model = lm(log1p(area)~  Y + X +  day + month + 
+                              FFMC + DMC+ DC + ISI + 
+                              temp + RH + wind + rain,
+                              data = na.omit(dat))
+
+backward.model = MASS::stepAIC(full.model,
+                               scope = list(upper ~ 
+                              Y + X +  day + month + 
+                              FFMC + DMC+ DC + ISI + 
+                              temp + RH + wind + rain, 
+                              lower = ~1),
+                              direction="backward",trace = FALSE)
+
+```
+
+##Final Model
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+formula(backward.model)
+```
+
+
+##R squared
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+summary(backward.model)$r.squared
+```
+
+##Regression Coefficients
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+round(coef(backward.model),3)
+
+```
+
+
+---
+class: middle
+##Metrics to Evaluate Model Performance
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+# Define training control
+set.seed(123)
+train.control <- trainControl(method = "repeatedcv", 
+                              number = 10, repeats = 30)
+# Train the model
+model <- train(formula(full.model),
+               data = dat, method = "lm",
+               tuneGrid  = expand.grid(intercept = FALSE),
+               trControl = train.control)
+# Summarize the results
+print(model)
+
+
+
+
+```
+
+---
+class: middle, inverse, center
+##Solution 2
+
+---
+class: middle
+##Backward Regression
+
+```{r,warning = FALSE, message = FALSE, eval=FALSE}
+
+full.model = lm(log(area)~ 1 + Y + X + month  + day +
+                                              FFMC + DMC+ 
+                                              DC + ISI + temp +
+                                              RH + wind + rain, data = na.omit(dat[dat$area>0,]))
+
+
+
+backward.model = MASS::stepAIC(full.model,
+                               scope = list(upper = ~1 + Y +
+                                              X + month  + day +
+                                              FFMC + DMC+
+                                              DC + ISI + temp +
+                                              RH + wind + rain,  lower = ~1),
+                              direction="backward",trace = FALSE)
+
+
+```
+
+
+---
+class: middle
+##Backward Regression
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+full.model = lm(log(area)~ 1 + Y + X + month  + day +
+                                              FFMC + DMC+ 
+                                              DC + ISI + temp +
+                                              RH + wind + rain, data = na.omit(dat[dat$area>0,]))
+
+
+
+backward.model = MASS::stepAIC(full.model,
+                               scope = list(upper = ~1 + Y +
+                                              X + month  + day +
+                                              FFMC + DMC+
+                                              DC + ISI + temp +
+                                              RH + wind + rain,  lower = ~1),
+                              direction="backward",trace = FALSE)
+
+```
+
+##Final Model
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+formula(backward.model)
+```
+
+
+##R squared
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+summary(backward.model)$r.squared
+```
+
+##Regression Coefficients
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+round(coef(backward.model),3)
+
+```
+
+
+
+---
+class: middle
+##Metrics to Evaluate Model Performance
+
+
+```{r, warning = FALSE, message=FALSE, echo= FALSE}
+
+# Define training control
+set.seed(123)
+train.control <- trainControl(method = "repeatedcv", 
+                              number = 10, repeats = 30)
+# Train the model
+model <- train(formula(backward.model),
+               data = na.omit(dat[dat$area>0,]), method = "lm",
+               tuneGrid  = expand.grid(intercept = TRUE),
+               trControl = train.control)
+# Summarize the results
+print(model)
+
+
+
+
+```
+
+
+---
+class: middle
+##Solution From Others Data Scientists
+
+
+- [Columbia:](http://www.columbia.edu/~yh2693/ForestFire.html)
+
+- [Rstudio:](https://rstudio-pubs-static.s3.amazonaws.com/419751_b251adb1ab8e40f7aeab8b5c4a739c4f.html)
+
+- [dziganto:](https://dziganto.github.io/data%20science/machine%20learning/model%20tuning/python/Model-Tuning-Train-Test-Split/)
+
+

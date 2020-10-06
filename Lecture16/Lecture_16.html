@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 16 - Logistic Regression with Regularization</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Material based on statistical learning with sparsity (Trevor Hastie, Robert Tibshirani and Martin Wainwright) - Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 16 - Logistic Regression with Regularization
+### Material based on statistical learning with sparsity (Trevor Hastie, Robert Tibshirani and Martin Wainwright) - Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-10-06)
+
+---
+
+class: middle
+##Example 2 - Student Performance Data Set
+
+###Data Set Information:
+
+- This dataset describes the student performance in secondary education of two Portuguese schools. 
+
+- Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). In [Cortez and Silva, 2008]
+
+- Here, we are going to use only the dataset regarded to Portuguese
+
+- The dataset was modeled under binary/five-level classification task.
+
+- **Important note**: the target attribute G3 has a strong correlation with attributes G2 and G1. 
+
+- This occurs because G3 is the final year grade (issued at the 3rd period), while G1 and G2 correspond to the 1st and 2nd period grades.
+
+- It is more difficult to predict G3 without G2 and G1, but such prediction is much more useful (see paper source for more details).
+
+
+---
+class: middle
+###Attribute Information:
+
+- **school** - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)
+- **sex** - student's sex (binary: 'F' - female or 'M' - male)
+- **age** - student's age (numeric: from 15 to 22)
+- **address** - student's home address type (binary: 'U' - urban or 'R' - rural)
+- **famsize** - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)
+- **Pstatus** - parent's cohabitation status (binary: 'T' - living together or 'A' - apart)
+- **Medu** - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
+- **Fedu** - father's education  (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
+- **Mjob** - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+- **Fjob** - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+
+---
+class: middle
+###Attribute Information:
+
+
+- **reason** - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')
+- **guardian** - student's guardian (nominal: 'mother', 'father' or 'other')
+- **traveltime** - home to school travel time (numeric: 1 - &lt;15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - &gt;1 hour)
+- **studytime** - weekly study time (numeric: 1 - &lt;2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - &gt;10 hours)
+- **failures** - number of past class failures (numeric: n if 1&lt;=n&lt;3, else 4)
+- **schoolsup** - extra educational support (binary: yes or no)
+- **famsup** - family educational support (binary: yes or no)
+- **paid** - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)
+- **activities** - extra-curricular activities (binary: yes or no)
+- **nursery** - attended nursery school (binary: yes or no)
+
+
+---
+class: middle
+###Attribute Information:
+
+
+- **higher** - wants to take higher education (binary: yes or no)
+- **internet** - Internet access at home (binary: yes or no)
+- **romantic** - with a romantic relationship (binary: yes or no)
+- **famrel** - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)
+- **freetime** - free time after school (numeric: from 1 - very low to 5 - very high)
+- **goout** - going out with friends (numeric: from 1 - very low to 5 - very high)
+- **Dalc** - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)
+- **Walc** - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)
+- **health** - current health status (numeric: from 1 - very bad to 5 - very good)
+- **absences** - number of school absences (numeric: from 0 to 93)
+
+
+---
+class: middle
+###Outcome:
+
+- **G1** - first period grade (numeric: from 0 to 20)
+
+- **G2** - second period grade (numeric: from 0 to 20)
+
+- **G3** - final grade (numeric: from 0 to 20, output target)
+
+- We are going to format the outcome as follows:
+
+- `\(0 \leq G &lt; 4 \Rightarrow E;\)`
+
+- `\(4 \leq G &lt; 8  \Rightarrow D;\)`
+
+- `\(8 \leq G &lt; 16  \Rightarrow C;\)`
+
+- `\(16 \leq G &lt; 19  \Rightarrow B;\)`
+
+- `\(19 \leq G &lt; 20  \Rightarrow A.\)`
+
+---
+class: middle
+###Multinomial logistic regression
+
+
+The model has the form
+
+`$$\log\left\{\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})}\right\} = \beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x},\phantom{111} k = 1, \ldots, K-1.$$`
+
+###Names of Variables
+
+
+```
+##  [1] "school"     "sex"        "age"        "address"    "famsize"   
+##  [6] "Pstatus"    "Medu"       "Fedu"       "Mjob"       "Fjob"      
+## [11] "reason"     "guardian"   "traveltime" "studytime"  "failures"  
+## [16] "schoolsup"  "famsup"     "paid"       "activities" "nursery"   
+## [21] "higher"     "internet"   "romantic"   "famrel"     "freetime"  
+## [26] "goout"      "Dalc"       "Walc"       "health"     "absences"  
+## [31] "G1_final"   "G2_final"   "G3_final"
+```
+
+
+
+---
+class: middle
+###Multinomial logistic regression
+
+
+
+```
+##   (Intercept) schoolMS   sexM   age addressU famsizeLE3 PstatusT   Medu   Fedu
+## D     -109.06     3.85 -37.49 11.36    42.35       0.29     1.67 -36.73   7.04
+## C       58.48   -19.46 -31.33 -0.36     3.20      31.79   -21.72 -28.44  18.14
+## B       59.41   -20.73 -31.97 -0.10     3.24      32.04   -22.54 -29.02  18.20
+## A       55.79   -12.33 -19.33  4.12     6.88      49.10   -30.31   5.45 -21.43
+##   Mjobhealth Mjobother Mjobservices Mjobteacher Fjobhealth Fjobother
+## D       0.36    -54.71        18.26       -8.73      87.67     -6.13
+## C      53.34    -14.25        29.83      -24.11      17.04    -11.51
+## B      55.28    -13.25        32.03      -20.68      14.27    -13.87
+## A      65.46    -95.35        -5.47      -69.63     -20.59    -28.34
+##   Fjobservices Fjobteacher reasonhome reasonother reasonreputation
+## D       -56.79      -10.50     -32.32      -28.88           -10.99
+## C       -55.79      -22.74     -23.66      -19.15           -12.73
+## B       -56.94      -24.28     -22.91      -18.89           -12.81
+## A       -64.85       24.23       2.07      -57.49           -24.75
+##   guardianmother guardianother traveltime studytime failures schoolsupyes
+## D           4.05        -50.84      -0.82    -14.36    -0.27      -107.14
+## C          16.69         42.77      -7.49      5.12   -12.30       -16.68
+## B          14.95         41.82      -7.68      6.09   -15.03       -17.93
+## A         -14.72         -7.35       8.87     18.30   -15.42       -28.39
+##   famsupyes paidyes activitiesyes nurseryyes higheryes internetyes romanticyes
+## D      8.87   -4.33        -32.56      23.10    -13.89      -52.07      -23.37
+## C     38.17    4.30          9.21      -5.97    -12.45      -31.27      -17.30
+## B     37.95    5.49          9.54      -7.08    -10.76      -31.53      -16.75
+## A     16.81   71.72        -10.37     -12.28      3.74      -48.68      -13.13
+##   famrel freetime  goout   Dalc   Walc health absences G1_finalD G1_finalC
+## D -11.90   -20.78  10.07   0.47   8.20  10.51     6.82     76.43     56.40
+## C  -1.73   -18.18 -10.65 -12.53  13.07  -3.32     4.72    101.63    133.13
+## B  -1.19   -18.29 -10.74 -12.49  13.13  -3.42     4.75   -134.38    129.70
+## A  -9.34    14.46 -23.55  23.37 -18.38  -9.19     3.90     17.02     37.48
+##   G1_finalB G1_finalA G2_finalD G2_finalC G2_finalB G2_finalA
+## D     63.44      3.41     76.43     56.40     63.44      3.41
+## C    134.50    -44.41    101.63    133.13    134.50    -44.41
+## B    134.69    110.15   -134.38    129.70    134.69    110.15
+## A     70.80    129.76     17.02     37.48     70.80    129.76
+```
+
+
+---
+class: middle
+###Multinomial logistic regression
+
+
+
+```
+## Penalized Multinomial Regression 
+## 
+## 454 samples
+##  32 predictor
+##   5 classes: 'E', 'D', 'C', 'B', 'A' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 409, 408, 409, 407, 408, 409, ... 
+## Resampling results across tuning parameters:
+## 
+##   decay  Accuracy   Kappa    
+##   0e+00  0.7884620  0.6355463
+##   1e-04  0.8215161  0.6870882
+##   1e-01  0.8369771  0.7094229
+## 
+## Accuracy was used to select the optimal model using the largest value.
+## The final value used for the model was decay = 0.1.
+```
+
+
+[Source:](http://www.cpaqv.org/estatistica/kappa.pdf)
+
+[Decay:](https://stackoverflow.com/questions/9390337/purpose-of-decay-parameter-in-nnet-function-in-r/35096148)
+
+[Decay 2:](https://stats.stackexchange.com/questions/29130/difference-between-neural-net-weight-decay-and-learning-rate)
+
+
+---
+class: middle
+###AUC - pROC package
+
+
+
+```
+## 
+## Call:
+## multiclass.roc.default(response = dat_tst$G3_final, predictor = predict(full.model.decay0.1,     newdata = dat_tst, type = "prob"))
+## 
+## Data: multivariate predictor predict(full.model.decay0.1, newdata = dat_tst, type = "prob") with 5 levels of dat_tst$G3_final: E, D, C, B, A.
+## Multi-class area under the curve: 0.873
+```
+
+[Method:](https://link.springer.com/article/10.1023%2FA%3A1010920819831)
+
+
+- The AUC is equivalent to the probability that a randomly chosen member of one class has a smaller estimated probability of belonging to the other class than has a randomly chosen member of the other class. 
+
+- And so is a natural measure of separability between the two estimated probability distributions. 
+
+
+
+
+---
+class: middle
+###ROC curve - multiROC package
+
+
+![](Lecture_16_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###AUC - multiROC package
+
+
+```
+##     MN.E      MN.D      MN.C      MN.B      MN.A   MN.macro  MN.micro 
+## 0.9358639 0.9611399 0.9280435 0.9139785 0.9171733 0.9310365 0.9648258
+```
+
+[Source:](https://github.com/WandeRum/multiROC)
+
+[Source2:](https://mran.microsoft.com/snapshot/2018-02-12/web/packages/multiROC/vignettes/my-vignette.html)
+
+
+- The AUC is the probability the model will score a randomly chosen positive class higher than a randomly chosen negative class.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
