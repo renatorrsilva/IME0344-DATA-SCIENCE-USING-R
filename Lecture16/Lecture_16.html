@@ -14,7 +14,7 @@ class: center, middle, inverse, title-slide
 # Lecture 16 - Logistic Regression with Regularization
 ### Material based on statistical learning with sparsity (Trevor Hastie, Robert Tibshirani and Martin Wainwright) - Presented by Renato Rodrigues Silva
 ### Federal University of Goias.
-### (updated: 2020-10-06)
+### (updated: 2020-10-07)
 
 ---
 
@@ -261,7 +261,115 @@ class: middle
 [Source2:](https://mran.microsoft.com/snapshot/2018-02-12/web/packages/multiROC/vignettes/my-vignette.html)
 
 
-- The AUC is the probability the model will score a randomly chosen positive class higher than a randomly chosen negative class.
+- The AUC is the probability the model will score a randomly chosen positive class higher than a randomly chosen negative class. 
+
+
+---
+class: middle
+###Multinomial logistic regression - `glmnet` package
+
+For the multinomial model, suppose the response variable has `\(K\)` levels
+`\({\call G} = \left\{1, 2, \ldots, \right\}.\)` 
+
+Here, the model is the following
+
+`$$\log\left\{\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})}\right\} = \beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x},\phantom{111} k = 1, \ldots, K-1.$$`
+
+Let `\(Y\)` be the `\(N \times K\)` indicator response matrix, with elements `\(y_{il} = I(g_i=l)\)`. The log-likelihood is given by
+
+`$$l(\boldsymbol{\beta}) = -\left[\frac{1}{N}\sum_{i=1}^N\left(\sum_{k=1}^K y_{il}(\beta_{0k}+x_i^{'}\beta_k) - \log(\sum_{k=1}^K e^{\beta_{0k} + x_i^{'}\beta_k}) \right)\right] + \lambda \sum_{j=1}^p||\beta_j||_{1},$$`
+
+---
+class: middle
+###Multinomial logistic regression - `glmnet` package
+
+
+
+![](Lecture_16_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Multinomial logistic regression - `glmnet` package
+
+
+```
+##                 nam      E      D      C      B      A
+## 1       (Intercept) -0.782 -4.501  3.968  0.419  0.895
+## 2          schoolGP -0.386 -0.176  0.094  0.543 -0.075
+## 3          schoolMS  0.000  0.000  0.000  0.000  0.000
+## 4              sexM  0.054 -0.014  0.060 -0.143  0.043
+## 5               age  0.082  0.159 -0.174 -0.035 -0.032
+## 6          addressU -0.247  0.424 -0.264  0.151 -0.064
+## 7        famsizeLE3 -0.114 -0.046  0.084 -0.029  0.105
+## 8          PstatusT  0.000  0.000  0.000  0.000  0.000
+## 9              Medu  0.000  0.000  0.000  0.000  0.000
+## 10             Fedu -0.014 -0.145  0.134  0.153 -0.128
+## 11       Mjobhealth  0.000  0.000  0.000  0.000  0.000
+## 12        Mjobother  0.193 -0.125 -0.049  0.303 -0.323
+## 13     Mjobservices -0.329  0.308 -0.251  0.681 -0.410
+## 14      Mjobteacher  0.363 -0.153 -0.692  0.306  0.175
+## 15       Fjobhealth  0.000  0.000  0.000  0.000  0.000
+## 16        Fjobother -0.055  0.058  0.166 -0.107 -0.061
+## 17     Fjobservices  0.000  0.000  0.000  0.000  0.000
+## 18      Fjobteacher  0.000  0.000  0.000  0.000  0.000
+## 19       reasonhome  0.010 -0.019 -0.081  0.043  0.047
+## 20      reasonother  0.027  0.058 -0.065  0.029 -0.049
+## 21 reasonreputation  0.008 -0.045  0.072 -0.003 -0.033
+## 22   guardianmother  0.042  0.172  0.244 -0.231 -0.227
+## 23    guardianother -0.073 -0.509  0.492  0.195 -0.105
+```
+
+---
+class: middle
+###Multinomial logistic regression - `glmnet` package
+
+
+```
+##              nam      E      D      C      B      A
+## 24    traveltime  0.001 -0.010  0.013 -0.004  0.000
+## 25     studytime -0.062 -0.094 -0.188  0.275  0.070
+## 26      failures  0.284  0.403  0.282 -0.786 -0.183
+## 27  schoolsupyes  0.072 -0.074  0.201 -0.170 -0.029
+## 28     famsupyes -0.056 -0.030  0.099  0.004 -0.016
+## 29       paidyes -0.006 -0.006 -0.005  0.020 -0.004
+## 30 activitiesyes  0.224 -0.253  0.063  0.307 -0.340
+## 31    nurseryyes  0.079  0.033  0.159 -0.247 -0.023
+## 32     higheryes -0.012 -0.630 -0.041  0.514  0.170
+## 33   internetyes  0.000  0.000  0.000  0.000  0.000
+## 34   romanticyes  0.172 -0.028 -0.196  0.066 -0.013
+## 35        famrel  0.010 -0.060 -0.024  0.085 -0.011
+## 36      freetime  0.050  0.000 -0.026 -0.057  0.033
+## 37         goout -0.034  0.312 -0.040 -0.067 -0.171
+## 38          Dalc  0.053  0.074 -0.076 -0.017 -0.034
+## 39          Walc  0.000  0.000  0.000  0.000  0.000
+## 40        health  0.055  0.082 -0.044 -0.011 -0.081
+## 41      absences -0.075  0.040  0.022  0.013  0.001
+## 42     G1_finalD -0.086  1.969  0.813 -1.972 -0.724
+## 43     G1_finalC -1.148  0.153  1.914 -0.119 -0.800
+## 44     G1_finalB -1.692 -0.615 -0.777  2.175  0.908
+## 45     G1_finalA -1.313 -0.439 -1.410 -0.315  3.477
+## 46     G2_finalD  0.000  0.005  0.002 -0.005 -0.002
+## 47     G2_finalC -0.291  0.035  0.483 -0.029 -0.198
+## 48     G2_finalB -0.010 -0.004 -0.005  0.013  0.005
+## 49     G2_finalA  0.000  0.000  0.000  0.000  0.000
+```
+
+---
+class: middle
+###ROC curve - multiROC package
+
+
+![](Lecture_16_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###AUC - multiROC package
+
+
+```
+##     MN.E      MN.D      MN.C      MN.B      MN.A   MN.macro  MN.micro 
+## 0.9698953 0.9740933 0.9341304 0.9404385 0.9612462 0.9555176 0.9802038
+```
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

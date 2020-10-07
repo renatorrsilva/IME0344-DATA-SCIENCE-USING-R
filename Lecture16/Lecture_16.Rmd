@@ -117,6 +117,7 @@ $$\log\left\{\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})}\right\} = \beta_{
 
 ```{r,warning = FALSE, message = FALSE, echo=FALSE}
 library(tidyverse)
+library(glmnet)
 library(nnet)
 library(caret)
 library(pROC)
@@ -268,3 +269,117 @@ unlist(roc_res$AUC)
 
 
 - The AUC is the probability the model will score a randomly chosen positive class higher than a randomly chosen negative class. 
+
+
+---
+class: middle
+###Multinomial logistic regression - `glmnet` package
+
+For the multinomial model, suppose the response variable has $K$ levels
+${\call G} = \left\{1, 2, \ldots, \right\}.$ 
+
+Here, the model is the following
+
+$$\log\left\{\frac{Pr(G=k|X=\mathbf{x})}{Pr(G=K|X=\mathbf{x})}\right\} = \beta_{k0} + \boldsymbol{\beta}_{k}^{'}\mathbf{x},\phantom{111} k = 1, \ldots, K-1.$$
+
+Let $Y$ be the $N \times K$ indicator response matrix, with elements $y_{il} = I(g_i=l)$. The log-likelihood is given by
+
+$$l(\boldsymbol{\beta}) = -\left[\frac{1}{N}\sum_{i=1}^N\left(\sum_{k=1}^K y_{il}(\beta_{0k}+x_i^{'}\beta_k) - \log(\sum_{k=1}^K e^{\beta_{0k} + x_i^{'}\beta_k}) \right)\right] + \lambda \sum_{j=1}^p||\beta_j||_{1},$$
+
+---
+class: middle
+###Multinomial logistic regression - `glmnet` package
+
+
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+x = model.matrix(G3_final ~ 0+., data= dat_trn)
+
+y = dat_trn$G3_final  
+
+#glmnet(x, y, family = "multinomial", 
+#       type.multinomial = "grouped")
+  
+cvfit=cv.glmnet(x,y,
+                family="multinomial", nfolds=5,
+                type.multinomial = "grouped",  alpha=1)
+plot(cvfit)
+
+
+```
+
+---
+class: middle
+###Multinomial logistic regression - `glmnet` package
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+mcoef = coef(cvfit, s = "lambda.min")
+
+mcoef = data.frame(nam = rownames(mcoef$E),
+           E = round(as.vector(mcoef$E),3), 
+           D = round(as.vector(mcoef$D),3),
+           C = round(as.vector(mcoef$C),3),
+           B = round(as.vector(mcoef$B),3),
+           A = round(as.vector(mcoef$A),3)
+) 
+mcoef[1:23,]
+```
+
+---
+class: middle
+###Multinomial logistic regression - `glmnet` package
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+
+mcoef[24:nrow(mcoef),]
+```
+
+---
+class: middle
+###ROC curve - multiROC package
+
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+x_tst = model.matrix(G3_final ~ ., data= dat_tst)
+
+
+mn_pred = predict(cvfit, newx = x_tst, s = "lambda.min", type = "response")
+mn_pred <- data.frame(mn_pred[,,1])
+colnames(mn_pred) <- paste(colnames(mn_pred), "_pred_MN")
+
+
+true_label <- dummies::dummy(dat_tst$G3_final, sep = ".")
+true_label <- data.frame(true_label)
+colnames(true_label) <- gsub(".*?\\.", "", colnames(true_label))
+colnames(true_label) <- paste(colnames(true_label), "_true")
+final_df <- cbind(true_label, mn_pred)
+
+roc_res <- multi_roc(final_df, force_diag=T)
+plot_roc_df <- plot_roc_data(roc_res)
+
+
+ggplot(plot_roc_df, aes(x = 1-Specificity, y=Sensitivity)) +
+  geom_path(aes(color = Group), size=1.5) +
+  geom_segment(aes(x = 0, y = 0, xend = 1, yend = 1), 
+                        colour='grey', linetype = 'dotdash') +
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5), 
+                 legend.justification=c(1, 0), legend.position=c(.95, .05),
+                 legend.title=element_blank(), 
+                 legend.background = element_rect(fill=NULL, size=0.5,                                                linetype="solid", colour ="black"))
+
+
+```
+
+---
+class: middle
+###AUC - multiROC package
+
+```{r,warning = FALSE, message = FALSE, echo=FALSE}
+
+unlist(roc_res$AUC)
+```
