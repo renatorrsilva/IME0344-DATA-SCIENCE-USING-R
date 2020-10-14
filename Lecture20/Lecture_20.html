@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 20 - Assignment 2</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 20 - Assignment 2
+### Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-10-14)
+
+---
+
+class: middle
+##Example - Student Performance Data Set
+
+###Data Set Information:
+
+- This dataset describes the student performance in secondary education of two Portuguese schools. 
+
+- Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). In [Cortez and Silva, 2008]
+
+- Here, we are going to use only the dataset regarded to Portuguese
+
+- The dataset was modeled under binary/five-level classification task.
+
+- **Important note**: the target attribute G3 has a strong correlation with attributes G2 and G1. 
+
+- This occurs because G3 is the final year grade (issued at the 3rd period), while G1 and G2 correspond to the 1st and 2nd period grades.
+
+- It is more difficult to predict G3 without G2 and G1, but such prediction is much more useful (see paper source for more details).
+
+- Here, we are going to consider G1, G2 and G3 as dichotomous variables.
+
+
+---
+class: middle
+###Attribute Information:
+
+- **school** - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)
+- **sex** - student's sex (binary: 'F' - female or 'M' - male)
+- **age** - student's age (numeric: from 15 to 22)
+- **address** - student's home address type (binary: 'U' - urban or 'R' - rural)
+- **famsize** - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)
+- **Pstatus** - parent's cohabitation status (binary: 'T' - living together or 'A' - apart)
+- **Medu** - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
+- **Fedu** - father's education  (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
+- **Mjob** - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+- **Fjob** - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+
+---
+class: middle
+###Attribute Information:
+
+
+- **reason** - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')
+- **guardian** - student's guardian (nominal: 'mother', 'father' or 'other')
+- **traveltime** - home to school travel time (numeric: 1 - &lt;15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - &gt;1 hour)
+- **studytime** - weekly study time (numeric: 1 - &lt;2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - &gt;10 hours)
+- **failures** - number of past class failures (numeric: n if 1&lt;=n&lt;3, else 4)
+- **schoolsup** - extra educational support (binary: yes or no)
+- **famsup** - family educational support (binary: yes or no)
+- **paid** - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)
+- **activities** - extra-curricular activities (binary: yes or no)
+- **nursery** - attended nursery school (binary: yes or no)
+
+
+---
+class: middle
+###Attribute Information:
+
+
+- **higher** - wants to take higher education (binary: yes or no)
+- **internet** - Internet access at home (binary: yes or no)
+- **romantic** - with a romantic relationship (binary: yes or no)
+- **famrel** - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)
+- **freetime** - free time after school (numeric: from 1 - very low to 5 - very high)
+- **goout** - going out with friends (numeric: from 1 - very low to 5 - very high)
+- **Dalc** - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)
+- **Walc** - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)
+- **health** - current health status (numeric: from 1 - very bad to 5 - very good)
+- **absences** - number of school absences (numeric: from 0 to 93)
+
+---
+class: middle
+###Outcome:
+
+- **G1** - first period grade (numeric: from 0 to 20)
+
+- **G2** - second period grade (numeric: from 0 to 20)
+
+- **G3** - final grade (numeric: from 0 to 20, output target)
+
+- We are going to format the outcome as follows:
+
+- `\(0 \leq G &lt; 10 \Rightarrow \mbox{Failure};\)`
+
+- `\(10 \leq G &lt; 20  \Rightarrow \mbox{Approved};\)`
+
+---
+class: middle
+###Logistic regression
+
+
+
+```
+##  [1] "school"     "sex"        "age"        "address"    "famsize"   
+##  [6] "Pstatus"    "Medu"       "Fedu"       "Mjob"       "Fjob"      
+## [11] "reason"     "guardian"   "traveltime" "studytime"  "failures"  
+## [16] "schoolsup"  "famsup"     "paid"       "activities" "nursery"   
+## [21] "higher"     "internet"   "romantic"   "famrel"     "freetime"  
+## [26] "goout"      "Dalc"       "Walc"       "health"     "absences"  
+## [31] "G1_final"   "G2_final"   "G3_final"
+```
+
+
+---
+class: middle
+###Logistic regression
+
+
+```
+## 
+## Call:
+## glm(formula = G3_final ~ school + traveltime + failures + activities + 
+##     famrel + Dalc + absences + G1_final + G2_final, family = "binomial", 
+##     data = dat_trn)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -3.1229  -0.2830   0.1551   0.2439   2.3998  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)   -0.17082    0.97253  -0.176 0.860577    
+## schoolMS      -1.59939    0.41186  -3.883 0.000103 ***
+## traveltime     0.34402    0.23166   1.485 0.137533    
+## failures      -0.83814    0.31976  -2.621 0.008763 ** 
+## activitiesyes -0.57038    0.37846  -1.507 0.131784    
+## famrel        -0.32351    0.19289  -1.677 0.093507 .  
+## Dalc           0.33479    0.18141   1.846 0.064962 .  
+## absences      -0.07902    0.03886  -2.033 0.042011 *  
+## G1_final       1.96493    0.41888   4.691 2.72e-06 ***
+## G2_final       3.60174    0.42852   8.405  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 565.71  on 453  degrees of freedom
+## Residual deviance: 208.02  on 444  degrees of freedom
+## AIC: 228.02
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+
+---
+class: middle
+###Logistic regression
+
+![](Lecture_20_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+
+---
+class middle
+##Example - Student Performance Data Set
+
+
+```r
+#Testing data
+optimal_cutoff = ROCit_obj2$Cutoff[which.max(ROCit_obj2$TPR - ROCit_obj2$FPR)]
+model_glm_pred= ifelse(predict(backward.model, type = "response",newdata=dat_tst) &gt; optimal_cutoff, "1", "0")
+train_tab = table(predicted = model_glm_pred, actual = as.character(dat_tst$isBurned))
+train_con_mat = confusionMatrix(train_tab, positive = "1")
+```
+
+---
+class: middle
+##Example - Student Performance Data Set
+
+####Confusion Matrix
+
+```r
+train_con_mat$table
+```
+
+####Accuracy
+
+```r
+train_con_mat$overall["Accuracy"]
+```
+
+####Overall
+
+```r
+train_con_mat$byClass
+```
+
+
+---
+class: middle
+##Example - Student Performance Data Set
+
+
+
+####Optimal cutoff = 0.6662239
+
+
+####Confusion Matrix 
+
+```
+##          actual
+## predicted   0   1
+##         0  50  13
+##         1   4 128
+```
+
+####Accuracy = 0.9128205
+
+
+####Overall
+
+```
+##          Sensitivity          Specificity       Pos Pred Value 
+##            0.9078014            0.9259259            0.9696970 
+##       Neg Pred Value            Precision               Recall 
+##            0.7936508            0.9696970            0.9078014 
+##                   F1           Prevalence       Detection Rate 
+##            0.9377289            0.7230769            0.6564103 
+## Detection Prevalence    Balanced Accuracy 
+##            0.6769231            0.9168637
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

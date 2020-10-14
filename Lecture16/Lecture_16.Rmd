@@ -98,11 +98,11 @@ class: middle
 
 - $4 \leq G < 8  \Rightarrow D;$
 
-- $8 \leq G < 16  \Rightarrow C;$
+- $8 \leq G < 12  \Rightarrow C;$
 
-- $16 \leq G < 19  \Rightarrow B;$
+- $12 \leq G < 18  \Rightarrow B;$
 
-- $19 \leq G < 20  \Rightarrow A.$
+- $18\leq G < 20  \Rightarrow A.$
 
 ---
 class: middle
@@ -297,6 +297,7 @@ class: middle
 x = model.matrix(G3_final ~ 0+., data= dat_trn)
 
 y = dat_trn$G3_final  
+
 
 #glmnet(x, y, family = "multinomial", 
 #       type.multinomial = "grouped")
