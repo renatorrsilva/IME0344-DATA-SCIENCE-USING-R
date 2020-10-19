@@ -129,6 +129,17 @@ The forest error rate depends on two things:
 
 [Source:](https://www.listendata.com/2014/11/random-forest-with-r.html)
 
+
+####Decorrelation 
+
+ - The correlation is because we are growing trees to the 
+ **same data**.
+ 
+ - The correlation decreases as $m$ decreases, where $m$ is the
+ number of variables sampled at each split.
+ 
+[Source:](https://www.youtube.com/watch?v=wPqtzj5VZus&t=1494s) 
+
 ---
 classe: middle
 

@@ -11,6 +11,31 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 
+---
+class: middle
+
+##Learning Ensembles 
+
+**Ensemble Learning** consists of two steps:
+
+1 - Construction of a **dictionary** 
+$D = \left\{ T_1(X), T_2(X), \ldots, T_M(X) \right\}$ of basis
+elements (weak learners) $T_m(X).$
+
+2-  Fitting a model $f(X) = \sum_{m \in D} \alpha_m T_m(X).$
+
+Simple examples of ensembles
+
+- Linear regression: The ensemble consists of the coordinate functions $T_m(X) = X_m.$ The fitting is done by least square. (Unsual terminology)
+
+- **Random Forests:** The ensemble consists of trees grown to 
+bootstrapped versions of the data, 
+with additional randomization at each split. The fitting simply averages.
+
+- **Gradient Boosting:** The ensemble is grown in an adaptative
+fashion, but then simply average.
+
+[Source:](https://www.youtube.com/watch?v=wPqtzj5VZus&t=1494s)
 
 ---
 class: middle

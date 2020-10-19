@@ -120,7 +120,7 @@ class: middle
 ##Elements of a Tree: Nodes and Splits
 
 
-$T:$ a collection of nodes $(t)$ and aplits $(s).$
+$T:$ a collection of nodes $(t)$ and splits $(s).$
 
 - root node
 
