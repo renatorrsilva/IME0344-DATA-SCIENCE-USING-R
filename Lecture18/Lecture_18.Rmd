@@ -16,7 +16,7 @@ class: middle
 
 ##Learning Ensembles 
 
-**Ensemble Learning** consists of two steps:
+ **Ensemble Learning** consists of two steps:
 
 1 - Construction of a **dictionary** 
 $D = \left\{ T_1(X), T_2(X), \ldots, T_M(X) \right\}$ of basis
