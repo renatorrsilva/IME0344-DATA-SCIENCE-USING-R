@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Lecture 20 - Assignment 2</title>
+    <title>Lecture 20 - Ensemble models - part III</title>
     <meta charset="utf-8" />
-    <meta name="author" content="Presented by Renato Rodrigues Silva" />
+    <meta name="author" content="Random Forest - Breiman 2001" />
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
   </head>
@@ -11,233 +11,448 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Lecture 20 - Assignment 2
-### Presented by Renato Rodrigues Silva
+# Lecture 20 - Ensemble models - part III
+### Random Forest - Breiman 2001
 ### Federal University of Goias.
-### (updated: 2020-10-14)
+### (updated: 2020-11-08)
 
 ---
 
 class: middle
-##Example - Student Performance Data Set
 
-###Data Set Information:
+##Abstract
 
-- This dataset describes the student performance in secondary education of two Portuguese schools. 
+- Random forests are a combination of tree predictors such that each tree depends on the values of a random vector sampled independently and with the same distribution for all trees in the forest. 
 
-- Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). In [Cortez and Silva, 2008]
+- The generalization error for forests converges a.s. to a limit as the number of trees in the forest becomes large. 
 
-- Here, we are going to use only the dataset regarded to Portuguese
 
-- The dataset was modeled under binary/five-level classification task.
+- The generalization error of a forest of tree classifiers depends on the strength of the individual trees in the forest and the correlation between them. 
 
-- **Important note**: the target attribute G3 has a strong correlation with attributes G2 and G1. 
 
-- This occurs because G3 is the final year grade (issued at the 3rd period), while G1 and G2 correspond to the 1st and 2nd period grades.
+- Internal estimates monitor error, strength, and correlation and these are used to show the response to increasing the number of features used in the splitting. 
 
-- It is more difficult to predict G3 without G2 and G1, but such prediction is much more useful (see paper source for more details).
+- Internal estimates are also used to measure variable importance. 
 
-- Here, we are going to consider G1, G2 and G3 as dichotomous variables.
+- These ideas are also applicable to regression.
+
 
 
 ---
 class: middle
-###Attribute Information:
+##Prerequisites
 
-- **school** - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)
-- **sex** - student's sex (binary: 'F' - female or 'M' - male)
-- **age** - student's age (numeric: from 15 to 22)
-- **address** - student's home address type (binary: 'U' - urban or 'R' - rural)
-- **famsize** - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)
-- **Pstatus** - parent's cohabitation status (binary: 'T' - living together or 'A' - apart)
-- **Medu** - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
-- **Fedu** - father's education  (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
-- **Mjob** - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
-- **Fjob** - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+###Chebyshev inequality
+
+- If the variance is small, we have little randomness.
+
+**Formal Definition:**
+
+`$$P(|X - \mu| \geq \epsilon ) \leq \frac{\sigma^2}{\epsilon^2}.$$`
+
+The probability that the distance from the mean is larger than or equal to certain number is, at most, the variance divided by the square of that number
+
+[Source:](https://ocw.mit.edu/resources/res-6-012-introduction-to-probability-spring-2018/part-ii-inference-limit-theorems/the-chebyshev-inequality/#:~:text=What%20the%20Chebyshev%20inequality%20says,we%20have%20the%20following%20inequality.)
 
 ---
 class: middle
-###Attribute Information:
+##Prerequisites - Classification Trees
 
+&lt;img src="Lecture_20_files/figure-html/Fig1.png" width="70%" align="center" /&gt;
 
-- **reason** - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')
-- **guardian** - student's guardian (nominal: 'mother', 'father' or 'other')
-- **traveltime** - home to school travel time (numeric: 1 - &lt;15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - &gt;1 hour)
-- **studytime** - weekly study time (numeric: 1 - &lt;2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - &gt;10 hours)
-- **failures** - number of past class failures (numeric: n if 1&lt;=n&lt;3, else 4)
-- **schoolsup** - extra educational support (binary: yes or no)
-- **famsup** - family educational support (binary: yes or no)
-- **paid** - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)
-- **activities** - extra-curricular activities (binary: yes or no)
-- **nursery** - attended nursery school (binary: yes or no)
+[Source:](https://www.cs.cmu.edu/~bhiksha/courses/10-601/decisiontrees/)
+
 
 
 ---
 class: middle
-###Attribute Information:
+##Prerequisites
+
+###The Strong Law of Large Numbers
 
 
-- **higher** - wants to take higher education (binary: yes or no)
-- **internet** - Internet access at home (binary: yes or no)
-- **romantic** - with a romantic relationship (binary: yes or no)
-- **famrel** - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)
-- **freetime** - free time after school (numeric: from 1 - very low to 5 - very high)
-- **goout** - going out with friends (numeric: from 1 - very low to 5 - very high)
-- **Dalc** - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)
-- **Walc** - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)
-- **health** - current health status (numeric: from 1 - very bad to 5 - very good)
-- **absences** - number of school absences (numeric: from 0 to 93)
+**Definition:**
+The strong law of large numbers states that the sample average converges almost surely to the expected value
 
----
-class: middle
-###Outcome:
+`$$\bar{X}_n \xrightarrow[]{a.s} \mu, \phantom{111} n \rightarrow \infty.$$`
+That is, 
 
-- **G1** - first period grade (numeric: from 0 to 20)
+`$$Pr \left( \lim_{n \rightarrow \infty} \bar{X}_n = \mu\right) = 1.$$`
 
-- **G2** - second period grade (numeric: from 0 to 20)
+What this means is that the probability that, as the number of trials `\(n\)` goes to infinity, the average of the observations converges to the expected value, is equal to one.
 
-- **G3** - final grade (numeric: from 0 to 20, output target)
+[Source:](https://en.wikipedia.org/wiki/Law_of_large_numbers#Differences_between_the_weak_law_and_the_strong_law)
 
-- We are going to format the outcome as follows:
-
-- `\(0 \leq G &lt; 10 \Rightarrow \mbox{Failure};\)`
-
-- `\(10 \leq G &lt; 20  \Rightarrow \mbox{Approved};\)`
-
----
-class: middle
-###Logistic regression
-
-
-
-```
-##  [1] "school"     "sex"        "age"        "address"    "famsize"   
-##  [6] "Pstatus"    "Medu"       "Fedu"       "Mjob"       "Fjob"      
-## [11] "reason"     "guardian"   "traveltime" "studytime"  "failures"  
-## [16] "schoolsup"  "famsup"     "paid"       "activities" "nursery"   
-## [21] "higher"     "internet"   "romantic"   "famrel"     "freetime"  
-## [26] "goout"      "Dalc"       "Walc"       "health"     "absences"  
-## [31] "G1_final"   "G2_final"   "G3_final"
-```
+[Differences between the weak law and the strong law:](https://en.wikipedia.org/wiki/Law_of_large_numbers#Differences_between_the_weak_law_and_the_strong_law)
 
 
 ---
 class: middle
-###Logistic regression
+##1. Introduction
+
+**Definition 1.1** 
+
+A random forest is a classifier consisting of a collection of tree-structured classifiers `\(\left\{h(\mathbf{x}, \Theta_k), k = 1, \ldots \right\}\)` where the `\(\left\{ \Theta_k \right\}\)` are independent identically distributed random vectors and each tree casts a unit vote for the most popular class at input `\(\mathbf{x}.\)`
 
 
-```
-## 
-## Call:
-## glm(formula = G3_final ~ school + traveltime + failures + activities + 
-##     famrel + Dalc + absences + G1_final + G2_final, family = "binomial", 
-##     data = dat_trn)
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -3.1229  -0.2830   0.1551   0.2439   2.3998  
-## 
-## Coefficients:
-##               Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)   -0.17082    0.97253  -0.176 0.860577    
-## schoolMS      -1.59939    0.41186  -3.883 0.000103 ***
-## traveltime     0.34402    0.23166   1.485 0.137533    
-## failures      -0.83814    0.31976  -2.621 0.008763 ** 
-## activitiesyes -0.57038    0.37846  -1.507 0.131784    
-## famrel        -0.32351    0.19289  -1.677 0.093507 .  
-## Dalc           0.33479    0.18141   1.846 0.064962 .  
-## absences      -0.07902    0.03886  -2.033 0.042011 *  
-## G1_final       1.96493    0.41888   4.691 2.72e-06 ***
-## G2_final       3.60174    0.42852   8.405  &lt; 2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for binomial family taken to be 1)
-## 
-##     Null deviance: 565.71  on 453  degrees of freedom
-## Residual deviance: 208.02  on 444  degrees of freedom
-## AIC: 228.02
-## 
-## Number of Fisher Scoring iterations: 6
-```
+####Question
+
+- *What is meant by **random vectors** in Random forest ?*
+
+- The parameters of the trees (these parameters include the structure of tree, which variables are split in which node, etc.)
+
 
 
 ---
 class: middle
-###Logistic regression
+##2. Characterizing the accuracy of random forests
 
-![](Lecture_20_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+###2.1 Random forests converge
 
+ - Given an ensemble of classifiers `\(h_1(\mathbf{x}), h_2(\mathbf{x}), \ldots, h_K(\mathbf{x})\)`, and with the training set drawn at random from the distribution of the random vector `\(Y\)`, `\(\mathbf{X},\)` define the margin function as
+ 
+`$$mg(\mathbf{X},Y) = av_k I(h_k(\mathbf{X}) = Y) - \mbox{max}_{j \neq Y}  av_k I(h_k(\mathbf{X}) = j),$$`
 
----
-class middle
-##Example - Student Performance Data Set
+where `\(I(h_k(\mathbf{X}) = Y)\)` is a indicator function such as:
 
+`\begin{align}
+I(h_k(\mathbf{X}) = Y) = \left\{\begin{array}{cc} 
+1, &amp; \mbox{if} \phantom{11} h_k(\mathbf{X}) = Y\\
+0, &amp; \mbox{otherwise.} \end{array} \right.
+\end{align}`
 
-```r
-#Testing data
-optimal_cutoff = ROCit_obj2$Cutoff[which.max(ROCit_obj2$TPR - ROCit_obj2$FPR)]
-model_glm_pred= ifelse(predict(backward.model, type = "response",newdata=dat_tst) &gt; optimal_cutoff, "1", "0")
-train_tab = table(predicted = model_glm_pred, actual = as.character(dat_tst$isBurned))
-train_con_mat = confusionMatrix(train_tab, positive = "1")
-```
+- Here, `\(Y\)` means the "right answer" and `\(j\)` wrong answers.
 
----
-class: middle
-##Example - Student Performance Data Set
+- The margin measures the extent to which the average number of votes at `\(\mathbf{X}\)`, `\(Y\)` for the right class exceeds the average vote for any other class.
 
-####Confusion Matrix
-
-```r
-train_con_mat$table
-```
-
-####Accuracy
-
-```r
-train_con_mat$overall["Accuracy"]
-```
-
-####Overall
-
-```r
-train_con_mat$byClass
-```
-
+- The larger the margin, the more confidence in the classification.
 
 ---
 class: middle
-##Example - Student Performance Data Set
+##2. Characterizing the accuracy of random forests
+
+####Generalization error
+
+`$$PE^{*} = P_{\mathbf{X},Y}(\mbox{mg}(\mathbf{X},Y) &lt; 0).$$`
+where the subscripts `\(\mathbf{X},Y\)` indicate that the probability is over `\(\mathbf{X}, Y\)` space.
+
+
+**Theorem 1.2** *As the number of trees increases, for almost surely all sequences* `\(\Theta_1, \ldots\)` *the generalization error* `\(PE^{*}\)` *converges to*
+
+`$$P_{\mathbf{X}, Y}(P_{\Theta}(h(\mathbf{X}, \Theta) = Y) -
+\mbox{max}_{j \neq Y} P_{\Theta}(h(\mathbf{X}, \Theta) = j) &lt; 0).$$`
+
+- This result explains why random forests do not overfit as more trees are added, but produce a limiting value of the generalization error.
+
+---
+class: middle
+##Appendix I: Almost sure convergence
+
+**Proof of theorem 1.2:** It suffices to show that there is a set of probability zero `\(C\)` on the sequence space `\(\Theta_1, \Theta_2, \ldots\)` such that outside of `\(C\)`, for all `\(\mathbf{x},\)` 
+
+`$$\frac{1}{N} \sum_{n=1}^N I(h(\Theta_n, \mathbf{x})=j) \rightarrow P_{\Theta}(h(\Theta, \mathbf{x})=j).$$`
+
+- Here, `\(j\)` is a general category (it is not only the wrong answers). 
+
+---
+class: middle
+##Appendix I: Almost sure convergence
+
+- For a fixed training set and fixed `\(\Theta,\)` the set of all `\(\mathbf{x}\)` such that `\(h(\Theta, \mathbf{x}) = j\)` is a union of hyper-rectangles.
+
+- For all `\(h(\Theta, \mathbf{x})\)` there is only a finite number `\(K\)` of such unions of hyper-rectangles, denoted by `\(S_1, \ldots, S_K.\)`
+
+
+- Define `\(\varphi(\Theta_n) = k\)` if `\(\left\{ \mathbf{x}: h(\Theta, \mathbf{x}) = j\right\} = S_k.\)`
+
+- Let `\(N_k\)` be the number of times that `\(\varphi(\Theta_n) = k\)` in the first `\(N\)` trials. Then
+
+`$$\frac{1}{N}\sum_{n=1}^N I(h(\Theta_n, \mathbf{x})=j) = \frac{1}{N}\sum_{k}N_k I(\mathbf{x} \in S_k).$$`
+- Here, there is a one to one relationship between `\(j\)` and `\(k\)` and `\(n\)` is the index  of the `\(n\)`-th tree.
+
+
+---
+class: middle
+##Appendix I: Almost sure convergence
+
+By the Law of Large Numbers,
+
+`$$N_k = \frac{1}{N}\sum_{n=1}^N I(\varphi(\Theta_n) =k)$$`
+converges a.s to `\(P_{\Theta}(\varphi(\Theta) = k).\)`
+
+- **Note:** `\(N_k\)` it no longer the the number of times that `\(\varphi(\Theta_n) = k\)` in the first `\(N\)` trials.
+
+- Taking unions of all the sets on which convergence does not occur form some value of `\(k\)` gives a set `\(C\)` of zero probability such that outside of `\(C\)`,
+
+`$$\frac{1}{N} \sum_{n=1}^N I(h(\Theta_n, \mathbf{x})=j) \rightarrow \sum_k P_{\Theta}(\varphi(\Theta) = k) I(\mathbf{x} \in S_k ).$$`
+
+The right hand side is `\(P_{\Theta}(h(\Theta, \mathbf{x})=j).\)`
+
+---
+class: middle
+##2.2 Strength and correlation 
+
+- An upper bound can be derived for the generalization error in terms of two parameters that are measures of how accurate the individual classifiers are and of the dependence between them.
+
+###Definition 2.1 The margin function for a random forest is 
+
+`$$mr(\mathbf{X},Y) = P_{\Theta}(h(\mathbf{X},\Theta) = Y) - \mbox{max}_{j \neq Y} P_{\Theta}(h(\mathbf{X}, \Theta) = j)$$`
+
+and strength of the set of classifiers `\(\left\{h(\mathbf{X}, \Theta) \right\}\)` is
+
+`$$s = E_{\mathbf{X},Y} \mbox{mr}(\mathbf{X},Y).$$`
+
+Assuming `\(s \leq 0\)`, Chebychev’s inequality 
+
+`$$PE^{*} = P_{\mathbf{X},Y}(mr(\mathbf{X},Y) &lt; 0) \leq P_{\mathbf{X},Y}\left( |mr(\mathbf{X},Y) - s| \geq s \right) \leq \frac{Var(mr(\mathbf{X},Y))}{s^2}.$$`
+
+- Why ???
+---
+class: middle
+##2.2 Strength and correlation 
+
+`\begin{align}
+&amp;P_{\mathbf{X},Y}\left( |mr(\mathbf{X},Y) - s| \geq s \right) = \\
+&amp; P_{\mathbf{X},Y}\left( mr(\mathbf{X},Y) - s &lt; -s\right) + P_{\mathbf{X},Y}\left(mr(\mathbf{X},Y) - s &gt; s\right)  =\\
+&amp; P_{\mathbf{X},Y}(mr(\mathbf{X},Y) &lt; 0) + P_{\mathbf{X},Y}\left(mr(\mathbf{X},Y) - s &gt; s\right).
+\end{align}`
+
+Therefore,
+
+`$$PE^{*} = P_{\mathbf{X},Y}(mr(\mathbf{X},Y) &lt; 0) \leq P_{\mathbf{X},Y}\left( |mr(\mathbf{X},Y) - s| \geq s \right)$$`
+and consequently,
+
+`$$PE^{*} = P_{\mathbf{X},Y}(mr(\mathbf{X},Y) &lt; 0) \leq P_{\mathbf{X},Y}\left( |mr(\mathbf{X},Y) - s| \geq s \right) \leq \frac{Var(mr(\mathbf{X},Y))}{s^2}.$$`
+
+---
+class: middle
+##2.2 Strength and correlation 
+
+
+- A more revealing expression for the variance of `\(mr\)` is derived in the following: 
+
+`$$\hat{j}(\mathbf{X},Y) = \mbox{arg max}_{j \neq Y}P_{\Theta}(h(\mathbf{X}, \Theta) = j)$$`
+
+so
+
+`\begin{align}
+mr(\mathbf{X},Y) =&amp; P_{\Theta}(h(\mathbf{X},\Theta = Y)) - P_{\Theta}(h(\mathbf{X},\Theta) = \hat{j}(\mathbf{X},Y)) \\
+=&amp; E_{\Theta}\left[I(h(\mathbf{X},\Theta = Y)) - I(h(\mathbf{X},\Theta) = \hat{j}(\mathbf{X},Y)\right]
+\end{align}`
+
+---
+class: middle
+##2.2 Strength and correlation 
+
+
+###Definition 2.2 The raw margin function is
+
+`$$rmg(\Theta, \mathbf{X},Y) = I(h(\mathbf{X},\Theta)=Y) - I(h(\mathbf{X},\Theta)=\hat{j}(\mathbf{X},Y)).$$`
+
+- Thus, `\(mr(\mathbf{X},Y)\)` is the expectation of `\(rmg(\Theta, \mathbf{X},Y)\)` with respect to `\(\Theta.\)`
+
+
+- For any function `\(f\)`
+
+`$$\left[E_{\Theta} f(\Theta) \right]^2 = E_{\Theta, \Theta^{'}}f(\Theta )f(\Theta^{'})$$`
+holds where `\(\Theta, \Theta^{'}\)` are independent with the same distribution, implying that
+
+`$$mr(\mathbf{X},Y)^2 =  E_{\Theta, \Theta^{'}}rmg(\Theta, \mathbf{X},Y)rmg(\Theta^{'}, \mathbf{X},Y)$$`
+
+
+---
+class: middle
+##2.2 Strength and correlation 
+
+`\begin{align}
+Var_{\mathbf{X},Y}(mr) =&amp; E_{\mathbf{X},Y}[mr^2] -  E^2_{\mathbf{X},Y}[mr]\\
+=&amp; E_{\mathbf{X},Y}[E_{\Theta, \Theta^{'}}[rmg(\Theta, \mathbf{X},Y)rmg(\Theta^{'}, \mathbf{X},Y)]] -  \\
+&amp; E_{\mathbf{X},Y}[E_{\Theta}[rmg(\Theta, \mathbf{X},Y)]]  E_{\mathbf{X},Y}[E_{\Theta^{'}}[rmg(\Theta^{'}, \mathbf{X},Y)]] \\
+=&amp; E_{\Theta, \Theta^{'}}[
+E_{\mathbf{X},Y}[ rmg(\Theta, \mathbf{X},Y) rmg(\Theta^{'}, \mathbf{X},Y)] - E_{\mathbf{X},Y}[rmg(\Theta,\mathbf{X},Y)]
+E_{\mathbf{X},Y}[rmg(\Theta^{'}, \mathbf{X},Y)]
+] \\
+=&amp; E_{\Theta, \Theta^{'}}[ Cov_{\mathbf{X},Y}[ rmg(\Theta, \mathbf{X},Y) rmg(\Theta^{'}, \mathbf{X},Y)]    ] \\
+=&amp; E_{\Theta, \Theta^{'}}[\rho(\Theta, \Theta^{'}) sd(\Theta) sd(\Theta^{'})]
+\end{align}`
+
+where `\(\rho(\Theta, \Theta^{'})\)` is the correlation between `\(rmg(\Theta, \mathbf{X},Y)\)` and `\(rmg(\Theta^{'}, \mathbf{X},Y)\)` holding `\(\Theta\)`, `\(\Theta^{'}\)` fixed and `\(sd(\Theta)\)` is the standard deviation of `\(rmg(\Theta, \mathbf{X},Y)\)` holding `\(\Theta\)` fixed.
 
 
 
-####Optimal cutoff = 0.6662239
+**Note: I am not sure. I have to double check !!!**
+
+---
+class: middle
+##2.2 Strength and correlation    
+
+Then,
+
+`\begin{align}
+Var(mr) =&amp;  E_{\Theta, \Theta^{'}}[\rho(\Theta, \Theta^{'}) sd(\Theta) sd(\Theta^{'})] \\
+=&amp; \frac{E_{\Theta, \Theta^{'}}[\rho(\Theta, \Theta^{'}) sd(\Theta) sd(\Theta^{'})] }{ E_{\Theta, \Theta^{'}}[sd(\Theta) sd(\Theta^{'})]}(E_{\Theta} sd(\Theta))^2  \\
+=&amp; \bar{\rho}(E_{\Theta} sd(\Theta))^2 \\
+\leq&amp;  \bar{\rho} E_{\Theta} Var(\Theta).
+\end{align}`
+
+where `\(\bar{\rho} = \frac{E_{\Theta, \Theta^{'}}[\rho(\Theta, \Theta^{'}) sd(\Theta) sd(\Theta^{'})] }{ E_{\Theta, \Theta^{'}}[sd(\Theta) sd(\Theta^{'})]}.\)` and
+`\(Var(\Theta) = Var_{\mathbf{X},Y}(rmg(\Theta,\mathbf{X},Y)).\)`
+
+---
+class: middle
+##2.2 Strength and correlation    
 
 
-####Confusion Matrix 
 
-```
-##          actual
-## predicted   0   1
-##         0  50  13
-##         1   4 128
-```
+Write
 
-####Accuracy = 0.9128205
+`\begin{align}
+E_{\Theta}Var(\Theta) &amp; \leq 
+E_{\Theta}(E_{\mathbf{X},Y}rmg(\Theta,\mathbf{X},Y))^2 - s^2 \\
+&amp; \leq 1 - s^2.
+\end{align}`
+
+We have
+
+###Theorem 2.3 An upper bound for the generalization error is given by
+
+`$$PE^{*} \leq \frac{\bar{\rho}(1 - s^2)}{s^2}.$$`
 
 
-####Overall
+- It shows that the two ingredients involved in the generalization error for random forests are the strength of the individual classifiers in the forest, and the correlation between them in terms of the raw margin functions. 
 
-```
-##          Sensitivity          Specificity       Pos Pred Value 
-##            0.9078014            0.9259259            0.9696970 
-##       Neg Pred Value            Precision               Recall 
-##            0.7936508            0.9696970            0.9078014 
-##                   F1           Prevalence       Detection Rate 
-##            0.9377289            0.7230769            0.6564103 
-## Detection Prevalence    Balanced Accuracy 
-##            0.6769231            0.9168637
-```
+- The `\(\frac{c}{s2} = \frac{\bar{\rho}}{s^2}\)` ratio is the correlation divided by the square of the strength. 
+
+- In understanding the functioning of random forests, this ratio will be a helpful guide—the smaller it is, the better.
+
+
+---
+class: middle
+##3. Using random features  
+
+The resulting forests give accuracy that compare favorably with Adaboost. This class of procedures has desirable characteristics:
+
+i.    Its accuracy is as good as Adaboost and sometimes better.
+
+ii.   It's relatively robust to outliers and noise
+
+iii.  It's faster than bagging or boosting.
+
+iv.   It gives useful internal estimates of error, strength, correlation,
+and variable importance.
+
+v.    It's simple and easily parallelized.
+
+---
+class: middle
+##3.1. Using out-of-bag estimates to monitor error, strength, and correlation
+
+-  In my experiments with random forests, bagging is used in tandem with random feature selection.
+
+- Each new training set is drawn, with replacement, from the original training set.
+Then a tree is grown on the new training set using random feature selection. The trees grown are not pruned.
+
+- Assume a method for constructing a classifier from any training set. Given a specific training set `\(T,\)` form bootsrap training sets `\(T_k\)` construct classifiers `\(h(\mathbf{x}, T_k)\)` and let these vote to form the bagged predictor.
+
+- For each `\(y\)`, `\(\mathbf{x}\)` in the training set, aggregate the votes only over those classifiers for which `\(T_k\)` dose not containing `\(y\)`, `\(\mathbf{x}.\)`
+
+- Call this the out-of-bag classifier. Then the out-of-bag estimate for the generalization error is the error rate of the out-of-bag classifier on the training set. 
+
+---
+class: middle
+##3.1. Using out-of-bag estimates to monitor error, strength, and correlation
+
+- In each bootstrap training set, about one-third of the instances are left out. Therefore, the out-of-bag estimates are based on combining only about one-third as many classifiers as in the ongoing main combination. 
+
+- Since the error rate decreases as the number of combinations increases, the out-of-bag estimates will tend to overestimate the current error rate. 
+
+- To get unbiased out-of-bag estimates, it is necessary to run past the point where the test set error converges.
+
+- But unlike cross-validation, where bias is present but its extent unknown, the
+out-of-bag estimates are unbiased.
+
+- Strength and correlation can also be estimated using out-of-bag methods. This gives internal estimates that are helpful in understanding classification accuracy and how to improve it.
+
+---
+class: middle
+## 10. Exploring the random forest mechanism
+
+- A forest of trees is impenetrable as far as simple interpretations of its mechanism go. 
+
+- In some applications, analysis of medical experiments for example, it is critical to understand the interaction of variables that is providing the predictive accuracy.
+
+- A start on this problem is made by using internal out-of-bag estimates, and verification by reruns using only selected variables.
+
+- Suppose there are `\(M\)` input variables. After each tree is constructed, the values of the `\(mth\)` variable in the out-of-bag examples are randomly permuted and the out-of-bag data is run down the corresponding tree.
+
+- The classification given for each `\(x_n\)` that is out of bag is saved.
+
+- This is repeated for `\(m = 1, 2, \ldots, M.\)` . At the end of the run, the plurality of out-of-bag class votes for `\(\mathbf{x}_n\)` with the `\(mth\)` variable noised up is compared with the true class label of `\(\mathbf{x}_n\)` to give a misclassification rate.
+
+---
+class: middle
+##11. Random forests for regression
+
+- Random forests for regression are formed by growing trees depending on a random vector `\(\Theta\)` such that the tree predictor `\(h(\mathbf{X}, \Theta)\)` takes on numerical values as opposed to class labels.
+
+- The output values are numerical and we assume that the training set is independently drawn from the distribution of the random vector `\(Y, \mathbf{X}\)`.
+
+- The mean-squared generalization error for any numerical predictor `\(h(\mathbf{X})\)` is
+
+`$$E_{\mathbf{X},Y}(Y - h(\mathbf{X}))^2$$`
+
+- The random forest predictor is formed by taking the average over `\(k\)` of the trees `\(\left\{ h(\mathbf{x},\Theta_k) \right\}.\)` Similarly to the classification case, the following holds:
+
+
+---
+class: middle
+##11. Random forests for regression
+
+
+**Theorem 11.1. As the number of trees in the forest goes to infinity, almost surely,**
+
+`$$E_{\mathbf{X},Y}(Y - av_k h(\mathbf{X},\Theta_k))^2 \rightarrow E_{\mathbf{X},Y}(Y - E_{\Theta}h(\mathbf{X},\Theta))^2.$$`
+where `\(E_{\mathbf{X},Y}(Y - E_{\Theta}h(\mathbf{X},\Theta))^2\)` is the generalization error of the forest `\(PE^*(forest).\)`
+
+- Define the average generalization error of a tree as:
+
+`$$PE^{*}(tree) = E_{\Theta} E_{\mathbf{X},Y}(Y - h(\mathbf{X},\Theta))^2$$`
+
+---
+class: middle
+##11. Random forests for regression
+
+
+**Theorem 11.2. Assume that for all** `\(\Theta,\)` `\(EY = E_{\mathbf{X}}h(\mathbf{X},\Theta).\)` **Then**
+
+`$$PE^{*}(forest) \leq \bar{\rho}PE^{*}(tree)$$`
+where `\(\bar{\rho}\)` is the weighted correlation between the residuals `\(Y - h(\mathbf{X},\Theta)\)` and `\(Y - h(\mathbf{X},\Theta)\)` where `\(\Theta,\Theta^{'}\)` are independent.
+
+`\begin{align}
+PE^{*}(forest) =&amp; E_{\mathbf{X},Y}[E_{\Theta}(Y - h(\mathbf{X}, \Theta))]^2 \\
+=&amp; E_{\Theta}E_{\Theta^{'}}E_{\mathbf{X},Y}(Y - h(\mathbf{X},\Theta))(Y - h(\mathbf{X},\Theta^{'})) \\
+=&amp; E_{\Theta}E_{\Theta^{'}}(\rho(\Theta,\Theta^{'})sd(\Theta)sd(\Theta^{'}))
+\end{align}`
+where `\(sd(\Theta) = \sqrt{E_{\mathbf{X},Y}(Y - h(\mathbf{X},\Theta))^2}.\)` 
+
+Define the weighted correlation as:
+
+`$$\bar{\rho} = \frac{ E_{\Theta}E_{\Theta^{'}}(\rho(\Theta,\Theta^{'})sd(\Theta)sd(\Theta^{'}))}{(E_{\Theta}sd(\Theta))^2}.$$`
+
+Then 
+
+`$$PE^{*}(forest) = \bar{\rho}(E_{\Theta}sd(\Theta))^2 \leq \bar{\rho}PE^{*}(tree).$$`
+
+---
+class: middle
+##11. Random forests for regression
+
+
+- Theorem 11.2 pinpoints the requirements for accurate regression forests: low correlation between residuals and low error trees.
+
+- The random forest decreases the average error of the trees employed by the factor `\(\bar{\rho}.\)`
+
+- The randomization employed needs to aim at low correlation.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
