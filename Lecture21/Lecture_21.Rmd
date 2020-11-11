@@ -1,6 +1,6 @@
 ---
 title: "Lecture 21 - Ensemble models - part III"
-author: "Material written by Ryan Tibishirani and Presented by Renato Rodrigues Silva"
+author: "Presented by Renato Rodrigues Silva"
 institute: "Federal University of Goias."
 date: "(updated: `r Sys.Date()`)"
 output:
@@ -16,177 +16,508 @@ output:
 
 ---
 class: middle
+##Example - Student Performance Data Set
 
-##Review: Classification trees
+###Data Set Information:
 
+- This dataset describes the student performance in secondary education of two Portuguese schools. 
 
-<img src="Lecture_21_files/figure-html/Fig1.png" width="70%" align="center" />
+- Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). In [Cortez and Silva, 2008]
+
+- Here, we are going to use only the dataset regarded to Portuguese
+
+- The dataset was modeled under binary/five-level classification task.
 
 
 ---
 class: middle
 
-##Review: Classification trees
+###Data Set Information:
+
+- **Important note**: the target attribute G3 has a strong correlation with attributes G2 and G1. 
+
+- This occurs because G3 is the final year grade (issued at the 3rd period), while G1 and G2 correspond to the 1st and 2nd period grades.
+
+- It is more difficult to predict G3 without G2 and G1, but such prediction is much more useful (see paper source for more details).
+
+- Here, we are going to consider G1, G2 and G3 as dichotomous variables.
 
 
-####CART algorithm:
+---
+class: middle
+###Attribute Information:
 
-The algorithm starts splitting on variable $j$ and split point $s$, defining the regions.
+- **school** - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)
+- **sex** - student's sex (binary: 'F' - female or 'M' - male)
+- **age** - student's age (numeric: from 15 to 22)
+- **address** - student's home address type (binary: 'U' - urban or 'R' - rural)
+- **famsize** - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)
+- **Pstatus** - parent's cohabitation status (binary: 'T' - living together or 'A' - apart)
+- **Medu** - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
+- **Fedu** - father's education  (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
+- **Mjob** - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+- **Fjob** - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
 
-$$R_1 = \left\{ X \in \mathbb{R}^p: X_j \leq s \right\}, \phantom{111} R_2 = \left\{ X \in \mathbb{R}^p: X_j \leq s \right\}.$$
+---
+class: middle
+###Attribute Information:
+
+
+- **reason** - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')
+- **guardian** - student's guardian (nominal: 'mother', 'father' or 'other')
+- **traveltime** - home to school travel time (numeric: 1 - <15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - >1 hour)
+- **studytime** - weekly study time (numeric: 1 - <2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - >10 hours)
+- **failures** - number of past class failures (numeric: n if 1<=n<3, else 4)
+- **schoolsup** - extra educational support (binary: yes or no)
+- **famsup** - family educational support (binary: yes or no)
+- **paid** - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)
+- **activities** - extra-curricular activities (binary: yes or no)
+- **nursery** - attended nursery school (binary: yes or no)
+
+
+---
+class: middle
+###Attribute Information:
+
+
+- **higher** - wants to take higher education (binary: yes or no)
+- **internet** - Internet access at home (binary: yes or no)
+- **romantic** - with a romantic relationship (binary: yes or no)
+- **famrel** - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)
+- **freetime** - free time after school (numeric: from 1 - very low to 5 - very high)
+- **goout** - going out with friends (numeric: from 1 - very low to 5 - very high)
+- **Dalc** - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)
+- **Walc** - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)
+- **health** - current health status (numeric: from 1 - very bad to 5 - very good)
+- **absences** - number of school absences (numeric: from 0 to 93)
+
+---
+class: middle
+- **G1** - first period grade (numeric: from 0 to 20)
+
+- **G2** - second period grade (numeric: from 0 to 20)
+
+- **G3** - final grade (numeric: from 0 to 20, output target)
+
+- We are going to format the outcome as follows:
+
+- $0 \leq G < 10 \Rightarrow \mbox{Failure};$
+
+- $10 \leq G < 20  \Rightarrow \mbox{Approved};$
 
 
 
- Proportion of points of class $k$ is given by $\hat{p}_k(R_m) = \frac{1}{n_m}\sum_{x_i \in R_m}I(y_i = k).$ with $n_m$ the number of points in $R_m$. 
+
+---
+class: middle
+
+##Hyperparameter Optimization Methods
+
+- The Hyperparameters are parameters specified by data scientists before training.
+
+- There are three main methods to tune/optimize hyperparameters:
+
+a) Grid Search method: an exhaustive search over a manually specified subset of the hyperparameter space. 
+
+b) Random Search method: a simple alternative and similar to the grid search method but the grid is randomly selected. 
+
+c) Informed Search method:
+In informed search, each iteration learns from the last, the results of one model helps creating the next model.
+
+- Here, we are going to use the Grid Search.
+
+[Source:](https://www.r-bloggers.com/2020/03/grid-search-and-bayesian-hyperparameter-optimization-using-tune-and-caret-packages/)
+
+
+---
+class: middle
+
+##Parameters of Random Forest
+
+- The main parameters used by a Random Forest Classifier are:
+
+- `mtry`: The number of predictors that will be randomly sampled at each split when creating the tree models.
+
+- `trees`: The number of trees contained in the ensemble.
+
+- `min_n`: The minimum number of data points in a node that are required for the node to be split further.
+
+- However, it has already known as the number of trees increases the generalization error reaches a limit. Moreover, there are small performance gains with an increase in the depth of the trees.
+
+---
+classe: middle
+
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+
+library(tidyverse)
+library(tidymodels)   # packages for modeling and statistical analysis
+library(tune)         # For hyperparemeter tuning
+library(workflows)    # streamline process
+library(tictoc)       # for timimg
+library(ranger)
+library(pROC)
+library(ROCit)
+
+
+dat =  read.csv2("student-por.csv", header = TRUE)
+
+dat = mutate(dat,
+            G1_final = ifelse(G1 <= 10, 0, 1
+            ),
+            G2_final =  ifelse(G2 <= 10, 0, 1
+            ),
+            G3_final = ifelse(G3 <= 10, 0, 1
+            )) %>% select(-G1) %>% select(-G2) %>% select(-G3) %>% 
+  mutate(Medu = factor(Medu), 
+         Fedu = factor(Fedu),
+         famrel = factor(famrel),
+         freetime = factor(freetime),
+         goout = factor(goout),
+         Dalc = factor(Dalc),
+         Walc =factor(Walc),
+         health = factor(health) ,
+         G1_final = factor(G1_final),
+         G2_final = factor(G2_final),
+         G3_final = factor(G3_final))
+
+#names(dat)
+
+```
+
+##Checking the possibility of class imbalance
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+
+round(prop.table(table(dat$G3_final)), 2)
+
+
+```
+
+- The dataset is slightly imbalanced. However,  we are going to run a random forest algorithm without doing oversampling or undersampling.
+- Further details could be found at: [stackexchange_link](https://stats.stackexchange.com/questions/419714/machine-learning-how-to-sample-test-and-training-data-for-rare-events)
+
+
+---
+classe: middle
+
+### Split data into train and test data and create resamples for tuning
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+
+set.seed(2020)
+train_test_split_data <- initial_split(dat)
+data_in_scope_train <- training(train_test_split_data)
+data_in_scope_test <-  testing(train_test_split_data)
+# create resammples
+folds <- vfold_cv(data_in_scope_train, v = 5, repeats = 2)
+
+
+```
+
+
+
+
+###Preprocessing the data
+
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+
+#  Pre-Processing the data with{recipes}
+set.seed(2020)
+# Fomula
+rec <- recipe(G3_final ~., data = data_in_scope_train) %>%   
+# Normalize numeric data to have a mean of zero.
+step_center(all_numeric(), -all_outcomes())%>%  
+# Normalize numeric data to have a standard deviation of one  
+step_scale(all_numeric(), -all_outcomes())  %>%     
+# Convert nominal data into one or more numeric.  
+step_dummy(all_nominal(), -G3_final)  
  
-The most common class is $c_m = \mbox{argmax}_{k=1,\ldots,K}\hat{p}_k(R_m).$
+```
 
-The feature and split point are chosen recursively by minimizing the misclassification error $\mbox{argmin}_{j,s}\left([1 - \hat{p}_{c_1}(R_1) ] +[1 - \hat{p}_{c_2}(R_2) ]\right).$
+---
+classe: middle
+
+##Preprocessing the data
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+trained_rec<-  prep(rec, training = data_in_scope_train, retain = TRUE)
+# create the train and test set 
+train_data <- as.data.frame(juice(trained_rec))
+test_data  <- as.data.frame( bake(trained_rec, new_data = data_in_scope_test))
+
+```
+
+- The trained data (train_data and test_data) will be used for modeling and fitting the model using the default hyperparameter of the model at hand. 
+
+- The model performance is determined by AUC (Area under the ROC Curve), which will be computed via roc_auc {yardstick} function. 
+
+- This AUC value will be taken as reference value to check if the hyperparameters Optimization leads to better performance or not.
+
+
+---
+classe: middle
+
+##Preprocessing the data
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+
+set.seed(2020)
+train_test_split_data <- initial_split(dat)
+data_in_scope_train <- training(train_test_split_data)
+data_in_scope_test <-  testing(train_test_split_data)
+folds <- vfold_cv(data_in_scope_train, v = 5, repeats = 2)
+
+
+#  Pre-Processing the data with{recipes}
+set.seed(2020)
+rec <- recipe(G3_final ~., data = data_in_scope_train) %>%   
+step_center(all_numeric(), -all_outcomes())%>%  
+step_scale(all_numeric(), -all_outcomes())  %>%     
+step_dummy(all_nominal(), -G3_final)  
+    
+
+trained_rec<-  prep(rec, training = data_in_scope_train, retain = TRUE)
+train_data <- as.data.frame(juice(trained_rec))
+test_data  <- as.data.frame( bake(trained_rec, new_data = data_in_scope_test))
+
+glimpse(train_data)
+
+```
+
+
+---
+classe: middle
+####Specification of the ingredients for the tune function
+
+a.  model to tune: Build the model with {parsnip} package and specify the parameters we want to tune.
+
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+# Build the model to tune and leave the tuning parameters empty (Placeholder with the tune() function)
+model_def_to_tune <- rand_forest(mode = "classification", mtry = tune(), 
+                                 trees = tune(),       
+                                 min_n =  tune()) %>%
+set_engine("ranger") 
+```
+
+b.  Build the workflow {workflows} object.
+
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+# Build the workflow object
+model_wflow <-
+  workflow() %>%
+  add_model(model_def_to_tune) %>%
+  add_recipe(rec)
+```
+
+c.  Finalize the hyperparameter set to be tuned. Parameters update will be done via the finalize {dials} function.
+
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+# Which parameters have been collected ?
+HP_set <- parameters(model_wflow)
+without_output <- select(data_in_scope_train, -G3_final)
+HP_set <- finalize(HP_set, without_output)
+
+```
+
+
 
 ---
 class: middle
 
-##Classification trees with observation weights
+###Hyperparameter tuning via Grid Search
 
-- Now suppose that we are going to add observation weights 
-$w_i, i = 1, \ldots, n$.
+- To perform Grid Search process, we need to call tune_grid() function. Execution time will be estimated via {tictoc} package.
 
-- The weigthed proportion of points of class $k$ in region $R_m:$
 
-$$\hat{p}_k(R_m) = \frac{\sum_{x_i \in R_m} w_i I(y_i = k)}{\sum_{x_i \in R_m} w_i},$$
-As before, we let 
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
 
-$$c_m = \mbox{argmax}_{k=1,\ldots, K} \hat{p}_k (R_m).$$
-and hence $1 - \hat{p}_{c_m}(R_m)$ is the weighted misclassification error.
+grid_parameters = expand.grid(mtry = seq(2,4,8),
+                              trees = 3000,
+                              min_n = c(2,5))
+
+# Perform Grid Search 
+set.seed(2020)
+tic() 
+results_grid_search <- tune_grid(
+  model_wflow,                       # Model workflow defined above
+  resamples = folds,                 # Resamples defined obove
+  param_info = HP_set,               # HP Parmeter to be tuned (defined above) 
+  grid = grid_parameters,                        # number of candidate parameter sets to be created automatically
+  metrics = metric_set(roc_auc),     # metric
+  control = control_grid(save_pred = TRUE, verbose = TRUE) # controle the tuning process
+)
+results_grid_search
+```
+
+
 
 
 ---
 class: middle
 
-##Boosting for Classification
+###Hyperparameter tuning via Grid Search
 
-- Boosting is an ensemble algorithm that transforms a set of weak learners into strong ones.
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+model_def_to_tune <- rand_forest(mode = "classification", mtry = tune(), 
+                                 trees = tune(),       
+                                 min_n =  tune()) %>%
+set_engine("ranger") 
 
-- Let's assume the training data $(x_i, y_i), i = 1, \ldots, n.$ and 
-$y_i \in \left\{ -1, 1\right\}$ and $x_i \in \mathbb{R}^p.$
-
-- Now let's assume that a predicted value of classification tree 
-$\hat{f}^{\mbox{tree}}(x) \in \left\{ -1, 1\right\}$ for an input 
-$x \in \mathbb{R}^p.$
-
-In boositng we combine a **weighted sum** of $B$ different tree classfiers,
-
-$$\hat{f}^{\mbox{boost}}(x) = \mbox{sign}(\sum_{b=1}^B \alpha_b \hat{f}^{\mbox{tree},b}(x))$$ 
-
- - Unlike in bagging and random forest, boosting use the entire training set.
+model_wflow <-
+  workflow() %>%
+  add_model(model_def_to_tune) %>%
+  add_recipe(rec)
  
- 
----
-class: middle
+HP_set <- parameters(model_wflow) 
+without_output <- select(data_in_scope_train, -G3_final)
+HP_set <- finalize(HP_set, without_output)
 
-##Boosting
+grid_parameters = expand.grid(mtry = seq(2,4,8),
+                              trees = 3000,
+                              min_n = c(2,5))
 
 
-<img src="Lecture_21_files/figure-html/Fig2.png" width="70%" align="center" />
+set.seed(2020)
+tic() 
+results_grid_search <- tune_grid(
+  model_wflow,                       # Model workflow defined above
+  resamples = folds,                 # Resamples defined obove
+  param_info = HP_set,               # HP Parmeter to be tuned (defined above) 
+  grid = grid_parameters,                         # number of candidate parameter sets to be created automatically
+  metrics = metric_set(roc_auc),     # metric
+  control = control_grid(save_pred = TRUE, verbose = TRUE) # controle the tuning process
+)
+results_grid_search
 
 
----
-class: middle
+toc()
 
-##AdaBoost
 
-- Given training data $(x_i, y_i), i = 1, \ldots, n$ the basic boosting method
-is called **AdaBoost,** and can be described as:
+```
 
-- Initialize the weights by $w_i = \frac{1}{n}$ for each $i$
-
-- For $b = 1, \ldots, B:$
-
-1.  Fit a classification tree $\hat{f}^{tree, b}$ to the training data with
-weights $w_1, \ldots, w_n.$
-
-2.  Compute the weighted misclassification error 
-$e_b = \frac{\sum_{i=1}^n w_i I(y_i \neq \hat{f}^{tree, b}(x_i))}{\sum_{i=1}^n w_i}.$
-
-3.  Let $\alpha_b = \log\left\{ \frac{(1 - e_b)}{e_b} \right\}.$
-
-4. Update the weights as  $w_i \leftarrow w_i \exp\left\{ \alpha_b I(y_i \neq \hat{f}^{tree, b}(x_i))\right\}$ for each $i$
-
-Return $\hat{f}^{\mbox{boost}}(x) = \mbox{sign}(\sum_{b=1}^B \alpha_b \hat{f}^{\mbox{tree},b}(x))$
 
 
 ---
 class: middle
 
-##Conection between forward and boosting
+##Results Grid Search process
 
-###Review: Forward
+###Select best HP combination:
 
-- Given a continuous response  $y \in \mathbb{R}^p$ and predictors
-$X_1, \ldots, X_p \in \mathbb{R}^n,$ we:
-
-- Choose the predictor $X_j$ giving the  smallest squared error loss 
-$\sum_{i=1}^n (y_i - \hat{\beta}_j X_{ij})^2$  
-
-- Choose the predictor $X_k$ giving  the smallest additional loss 
-$\sum_{i=1}^n (r_i - \hat{\beta}_k X_{ik})^2$  where $r$ is the residual defined by 
-$r_i = y_i -  \hat{\beta}_j X_{ij}.$
-
-- Repeat the last step.
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+# Select best HP combination
+best_HP_grid_search <- select_best(results_grid_search, metric = "roc_auc", maximize = TRUE)
+```
 
 
 ---
 class: middle
 
-##Conection between forward and boosting
 
-###Least Square Boosting
+### Taking the result of the tuning process, the recipe object, model to tune as arguments, finalize the recipe
 
-1 - Start with function $F_0(x) = 0$ and 
-residual $r = y,$ $m = 0.$
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
 
-2 - $m \leftarrow m + 1$
+# Finalize recipe
+final_rec <- rec %>% finalize_recipe(best_HP_grid_search) %>% prep()
 
-3 - Fit a CART regression tree to $r$ 
-giving $g(x)$
+final_model <- model_def_to_tune %>% finalize_model(best_HP_grid_search) %>%
+fit(G3_final  ~ ., data = juice(final_rec))
 
-4 - Set $f_m(x) \leftarrow \epsilon g(x)$
+df_train_after_tuning <- as.data.frame(juice(final_rec)) 
+df_test_after_tuning <- as.data.frame(bake(final_rec, new_data = data_in_scope_test))
 
-5 - Set $F_m(x) \leftarrow F_{m-1}(x) + f_m(x),$
-$r \leftarrow r - f_m(x)$ and repeat step 2-5 many times.
 
-- $g(x)$ typically shallow tree; e.g. constrained 
-to have $k=3$ splits only (depth).
+model_class = predict(final_model, new_data = df_test_after_tuning) %>% pull(.pred_class)
 
-- $0 < \epsilon \leq 1$ is shrinkage parameter.
 
-[Source:](https://www.youtube.com/watch?v=wPqtzj5VZus&t=1494s)
+model_prob  = predict(final_model, new_data = df_test_after_tuning, type = "prob") %>% pull(.pred_1)
+
+results_ = tibble(
+  G3_final = df_test_after_tuning$G3_final,
+  model_class = model_class,
+  model_prob = model_prob)
+
+```
+
 
 ---
 class: middle
 
-##General Boosting Algorithm
 
-The boosting paradigm can be extended 
-to general loss functions - not only 
-**squared error** or **exponential**.
+###Performance: AUC value, confusion matrix, and the ROC curve (tuned model via Grid Search):
 
-1.  Initialize $F_0(x) = 0.$
 
-2.  For $m = 1$ to $M:$
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
 
-  a.  Compute
-  $$(\beta_m, \gamma_m) = \mbox{argmin}_{\beta, \gamma}\sum_{i=1}^N L(y_i, F_{m-1}(x) + \beta_i b(x_i;\gamma))$$
-  b.  Set $F_m(x) = F_{m-1}(x) + \epsilon\beta_m b(x;\gamma_m)$
-  
-Sometimes we define $\epsilon = 1.$
+confusion_matrix <- conf_mat(results_, truth= G3_final, model_class)
 
-- Here $\epsilon$ is a shrinkage factor; in `gbm` package
-in R, default is $\epsilon = 0.001.$
+ROCit_obj <- rocit(score=results_$model_prob,class=results_$G3_final)
+plot(ROCit_obj)
 
-- Shrinkage slows the stagewise model-building  even more,
-and tipically leads to better performance.
+ROCit_obj$AUC
 
-[Source:](https://www.youtube.com/watch?v=wPqtzj5VZus&t=1494s)
+```
 
-[Next:](http://uc-r.github.io/gbm_regression)
+---
+class: middle
+
+##Results Grid Search process
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+
+
+# Select best HP combination
+best_HP_grid_search <- select_best(results_grid_search, metric = "roc_auc", maximize = TRUE)
+
+# Finalize recipe
+final_rec <- rec %>% finalize_recipe(best_HP_grid_search) %>% prep()
+
+final_model <- model_def_to_tune %>% finalize_model(best_HP_grid_search) %>%
+fit(G3_final ~ ., data = juice(final_rec))
+
+df_train_after_tuning <- as.data.frame(juice(final_rec)) 
+df_test_after_tuning <- as.data.frame(bake(final_rec, new_data = data_in_scope_test))
+
+
+model_class = predict(final_model, new_data = df_test_after_tuning) %>% pull(.pred_class)
+
+
+model_prob  = predict(final_model, new_data = df_test_after_tuning, type = "prob") %>% pull(.pred_1)
+
+results_ = tibble(
+  G3_final = df_test_after_tuning$G3_final,
+  model_class = model_class,
+  model_prob = model_prob)
+
+confusion_matrix <- conf_mat(results_, truth= G3_final, model_class)
+ROCit_obj <- rocit(score=results_$model_prob,class=results_$G3_final)
+
+confusion_matrix 
+```
+
+
+####AUC
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+
+ROCit_obj$AUC
+
+```
+
+---
+class: middle
+
+##ROC Curve
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+
+plot(ROCit_obj)
+
+
+```

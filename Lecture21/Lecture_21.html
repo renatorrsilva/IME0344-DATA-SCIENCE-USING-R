@@ -3,7 +3,7 @@
   <head>
     <title>Lecture 21 - Ensemble models - part III</title>
     <meta charset="utf-8" />
-    <meta name="author" content="Material written by Ryan Tibishirani and Presented by Renato Rodrigues Silva" />
+    <meta name="author" content="Presented by Renato Rodrigues Silva" />
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
   </head>
@@ -12,187 +12,483 @@
 class: center, middle, inverse, title-slide
 
 # Lecture 21 - Ensemble models - part III
-### Material written by Ryan Tibishirani and Presented by Renato Rodrigues Silva
+### Presented by Renato Rodrigues Silva
 ### Federal University of Goias.
-### (updated: 2020-10-16)
+### (updated: 2020-11-11)
 
 ---
 
 class: middle
+##Example - Student Performance Data Set
 
-##Review: Classification trees
+###Data Set Information:
 
+- This dataset describes the student performance in secondary education of two Portuguese schools. 
 
-&lt;img src="Lecture_21_files/figure-html/Fig1.png" width="70%" align="center" /&gt;
+- Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). In [Cortez and Silva, 2008]
 
+- Here, we are going to use only the dataset regarded to Portuguese
 
----
-class: middle
-
-##Review: Classification trees
-
-
-####CART algorithm:
-
-The algorithm starts splitting on variable `\(j\)` and split point `\(s\)`, defining the regions.
-
-`$$R_1 = \left\{ X \in \mathbb{R}^p: X_j \leq s \right\}, \phantom{111} R_2 = \left\{ X \in \mathbb{R}^p: X_j \leq s \right\}.$$`
-
-
-
- Proportion of points of class `\(k\)` is given by `\(\hat{p}_k(R_m) = \frac{1}{n_m}\sum_{x_i \in R_m}I(y_i = k).\)` with `\(n_m\)` the number of points in `\(R_m\)`. 
- 
-The most common class is `\(c_m = \mbox{argmax}_{k=1,\ldots,K}\hat{p}_k(R_m).\)`
-
-The feature and split point are chosen recursively by minimizing the misclassification error `\(\mbox{argmin}_{j,s}\left([1 - \hat{p}_{c_1}(R_1) ] +[1 - \hat{p}_{c_2}(R_2) ]\right).\)`
-
----
-class: middle
-
-##Classification trees with observation weights
-
-- Now suppose that we are going to add observation weights 
-`\(w_i, i = 1, \ldots, n\)`.
-
-- The weigthed proportion of points of class `\(k\)` in region `\(R_m:\)`
-
-`$$\hat{p}_k(R_m) = \frac{\sum_{x_i \in R_m} w_i I(y_i = k)}{\sum_{x_i \in R_m} w_i},$$`
-As before, we let 
-
-`$$c_m = \mbox{argmax}_{k=1,\ldots, K} \hat{p}_k (R_m).$$`
-and hence `\(1 - \hat{p}_{c_m}(R_m)\)` is the weighted misclassification error.
+- The dataset was modeled under binary/five-level classification task.
 
 
 ---
 class: middle
 
-##Boosting for Classification
+###Data Set Information:
 
-- Boosting is an ensemble algorithm that transforms a set of weak learners into strong ones.
+- **Important note**: the target attribute G3 has a strong correlation with attributes G2 and G1. 
 
-- Let's assume the training data `\((x_i, y_i), i = 1, \ldots, n.\)` and 
-`\(y_i \in \left\{ -1, 1\right\}\)` and `\(x_i \in \mathbb{R}^p.\)`
+- This occurs because G3 is the final year grade (issued at the 3rd period), while G1 and G2 correspond to the 1st and 2nd period grades.
 
-- Now let's assume that a predicted value of classification tree 
-`\(\hat{f}^{\mbox{tree}}(x) \in \left\{ -1, 1\right\}\)` for an input 
-`\(x \in \mathbb{R}^p.\)`
+- It is more difficult to predict G3 without G2 and G1, but such prediction is much more useful (see paper source for more details).
 
-In boositng we combine a **weighted sum** of `\(B\)` different tree classfiers,
-
-`$$\hat{f}^{\mbox{boost}}(x) = \mbox{sign}(\sum_{b=1}^B \alpha_b \hat{f}^{\mbox{tree},b}(x))$$` 
-
- - Unlike in bagging and random forest, boosting use the entire training set.
- 
- 
----
-class: middle
-
-##Boosting
-
-
-&lt;img src="Lecture_21_files/figure-html/Fig2.png" width="70%" align="center" /&gt;
+- Here, we are going to consider G1, G2 and G3 as dichotomous variables.
 
 
 ---
 class: middle
+###Attribute Information:
 
-##AdaBoost
+- **school** - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)
+- **sex** - student's sex (binary: 'F' - female or 'M' - male)
+- **age** - student's age (numeric: from 15 to 22)
+- **address** - student's home address type (binary: 'U' - urban or 'R' - rural)
+- **famsize** - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)
+- **Pstatus** - parent's cohabitation status (binary: 'T' - living together or 'A' - apart)
+- **Medu** - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
+- **Fedu** - father's education  (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3 - secondary education, 4 - higher education)
+- **Mjob** - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+- **Fjob** - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
 
-- Given training data `\((x_i, y_i), i = 1, \ldots, n\)` the basic boosting method
-is called **AdaBoost,** and can be described as:
+---
+class: middle
+###Attribute Information:
 
-- Initialize the weights by `\(w_i = \frac{1}{n}\)` for each `\(i\)`
 
-- For `\(b = 1, \ldots, B:\)`
+- **reason** - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')
+- **guardian** - student's guardian (nominal: 'mother', 'father' or 'other')
+- **traveltime** - home to school travel time (numeric: 1 - &lt;15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - &gt;1 hour)
+- **studytime** - weekly study time (numeric: 1 - &lt;2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - &gt;10 hours)
+- **failures** - number of past class failures (numeric: n if 1&lt;=n&lt;3, else 4)
+- **schoolsup** - extra educational support (binary: yes or no)
+- **famsup** - family educational support (binary: yes or no)
+- **paid** - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)
+- **activities** - extra-curricular activities (binary: yes or no)
+- **nursery** - attended nursery school (binary: yes or no)
 
-1.  Fit a classification tree `\(\hat{f}^{tree, b}\)` to the training data with
-weights `\(w_1, \ldots, w_n.\)`
 
-2.  Compute the weighted misclassification error 
-`\(e_b = \frac{\sum_{i=1}^n w_i I(y_i \neq \hat{f}^{tree, b}(x_i))}{\sum_{i=1}^n w_i}.\)`
+---
+class: middle
+###Attribute Information:
 
-3.  Let `\(\alpha_b = \log\left\{ \frac{(1 - e_b)}{e_b} \right\}.\)`
 
-4. Update the weights as  `\(w_i \leftarrow w_i \exp\left\{ \alpha_b I(y_i \neq \hat{f}^{tree, b}(x_i))\right\}\)` for each `\(i\)`
+- **higher** - wants to take higher education (binary: yes or no)
+- **internet** - Internet access at home (binary: yes or no)
+- **romantic** - with a romantic relationship (binary: yes or no)
+- **famrel** - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)
+- **freetime** - free time after school (numeric: from 1 - very low to 5 - very high)
+- **goout** - going out with friends (numeric: from 1 - very low to 5 - very high)
+- **Dalc** - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)
+- **Walc** - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)
+- **health** - current health status (numeric: from 1 - very bad to 5 - very good)
+- **absences** - number of school absences (numeric: from 0 to 93)
 
-Return `\(\hat{f}^{\mbox{boost}}(x) = \mbox{sign}(\sum_{b=1}^B \alpha_b \hat{f}^{\mbox{tree},b}(x))\)`
+---
+class: middle
+- **G1** - first period grade (numeric: from 0 to 20)
+
+- **G2** - second period grade (numeric: from 0 to 20)
+
+- **G3** - final grade (numeric: from 0 to 20, output target)
+
+- We are going to format the outcome as follows:
+
+- `\(0 \leq G &lt; 10 \Rightarrow \mbox{Failure};\)`
+
+- `\(10 \leq G &lt; 20  \Rightarrow \mbox{Approved};\)`
+
+
 
 
 ---
 class: middle
 
-##Conection between forward and boosting
+##Hyperparameter Optimization Methods
 
-###Review: Forward
+- The Hyperparameters are parameters specified by data scientists before training.
 
-- Given a continuous response  `\(y \in \mathbb{R}^p\)` and predictors
-`\(X_1, \ldots, X_p \in \mathbb{R}^n,\)` we:
+- There are three main methods to tune/optimize hyperparameters:
 
-- Choose the predictor `\(X_j\)` giving the  smallest squared error loss 
-`\(\sum_{i=1}^n (y_i - \hat{\beta}_j X_{ij})^2\)`  
+a) Grid Search method: an exhaustive search over a manually specified subset of the hyperparameter space. 
 
-- Choose the predictor `\(X_k\)` giving  the smallest additional loss 
-`\(\sum_{i=1}^n (r_i - \hat{\beta}_k X_{ik})^2\)`  where `\(r\)` is the residual defined by 
-`\(r_i = y_i -  \hat{\beta}_j X_{ij}.\)`
+b) Random Search method: a simple alternative and similar to the grid search method but the grid is randomly selected. 
 
-- Repeat the last step.
+c) Informed Search method:
+In informed search, each iteration learns from the last, the results of one model helps creating the next model.
+
+- Here, we are going to use the Grid Search.
+
+[Source:](https://www.r-bloggers.com/2020/03/grid-search-and-bayesian-hyperparameter-optimization-using-tune-and-caret-packages/)
+
+
+---
+class: middle
+
+##Parameters of Random Forest
+
+- The main parameters used by a Random Forest Classifier are:
+
+- `mtry`: The number of predictors that will be randomly sampled at each split when creating the tree models.
+
+- `trees`: The number of trees contained in the ensemble.
+
+- `min_n`: The minimum number of data points in a node that are required for the node to be split further.
+
+- However, it has already known as the number of trees increases the generalization error reaches a limit. Moreover, there are small performance gains with an increase in the depth of the trees.
+
+---
+classe: middle
+
+
+
+
+##Checking the possibility of class imbalance
+
+
+```
+## 
+##   0   1 
+## 0.3 0.7
+```
+
+- The dataset is slightly imbalanced. However,  we are going to run a random forest algorithm without doing oversampling or undersampling.
+- Further details could be found at: [stackexchange_link](https://stats.stackexchange.com/questions/419714/machine-learning-how-to-sample-test-and-training-data-for-rare-events)
+
+
+---
+classe: middle
+
+### Split data into train and test data and create resamples for tuning
+
+
+```r
+set.seed(2020)
+train_test_split_data &lt;- initial_split(dat)
+data_in_scope_train &lt;- training(train_test_split_data)
+data_in_scope_test &lt;-  testing(train_test_split_data)
+# create resammples
+folds &lt;- vfold_cv(data_in_scope_train, v = 5, repeats = 2)
+```
+
+
+
+
+###Preprocessing the data
+
+
+
+```r
+#  Pre-Processing the data with{recipes}
+set.seed(2020)
+# Fomula
+rec &lt;- recipe(G3_final ~., data = data_in_scope_train) %&gt;%   
+# Normalize numeric data to have a mean of zero.
+step_center(all_numeric(), -all_outcomes())%&gt;%  
+# Normalize numeric data to have a standard deviation of one  
+step_scale(all_numeric(), -all_outcomes())  %&gt;%     
+# Convert nominal data into one or more numeric.  
+step_dummy(all_nominal(), -G3_final)  
+```
+
+---
+classe: middle
+
+##Preprocessing the data
+
+
+```r
+trained_rec&lt;-  prep(rec, training = data_in_scope_train, retain = TRUE)
+# create the train and test set 
+train_data &lt;- as.data.frame(juice(trained_rec))
+test_data  &lt;- as.data.frame( bake(trained_rec, new_data = data_in_scope_test))
+```
+
+- The trained data (train_data and test_data) will be used for modeling and fitting the model using the default hyperparameter of the model at hand. 
+
+- The model performance is determined by AUC (Area under the ROC Curve), which will be computed via roc_auc {yardstick} function. 
+
+- This AUC value will be taken as reference value to check if the hyperparameters Optimization leads to better performance or not.
+
+
+---
+classe: middle
+
+##Preprocessing the data
+
+
+```
+## Rows: 487
+## Columns: 66
+## $ age               &lt;dbl&gt; 0.1998768, -1.3958606, -0.5979919, -0.5979919, -0.5…
+## $ traveltime        &lt;dbl&gt; -0.7880561, -0.7880561, -0.7880561, -0.7880561, -0.…
+## $ studytime         &lt;dbl&gt; 0.09054364, 1.28229366, 0.09054364, 0.09054364, 0.0…
+## $ failures          &lt;dbl&gt; -0.3540587, -0.3540587, -0.3540587, -0.3540587, -0.…
+## $ absences          &lt;dbl&gt; -0.36408625, -0.79340830, -0.79340830, 0.49455784, …
+## $ G3_final          &lt;fct&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, …
+## $ school_MS         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ sex_M             &lt;dbl&gt; 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, …
+## $ address_U         &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+## $ famsize_LE3       &lt;dbl&gt; 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, …
+## $ Pstatus_T         &lt;dbl&gt; 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, …
+## $ Medu_X1           &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Medu_X2           &lt;dbl&gt; 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, …
+## $ Medu_X3           &lt;dbl&gt; 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, …
+## $ Medu_X4           &lt;dbl&gt; 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, …
+## $ Fedu_X1           &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Fedu_X2           &lt;dbl&gt; 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, …
+## $ Fedu_X3           &lt;dbl&gt; 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, …
+## $ Fedu_X4           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, …
+## $ Mjob_health       &lt;dbl&gt; 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, …
+## $ Mjob_other        &lt;dbl&gt; 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, …
+## $ Mjob_services     &lt;dbl&gt; 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, …
+## $ Mjob_teacher      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Fjob_health       &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, …
+## $ Fjob_other        &lt;dbl&gt; 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, …
+## $ Fjob_services     &lt;dbl&gt; 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, …
+## $ Fjob_teacher      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ reason_home       &lt;dbl&gt; 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, …
+## $ reason_other      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, …
+## $ reason_reputation &lt;dbl&gt; 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, …
+## $ guardian_mother   &lt;dbl&gt; 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, …
+## $ guardian_other    &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, …
+## $ schoolsup_yes     &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, …
+## $ famsup_yes        &lt;dbl&gt; 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, …
+## $ paid_yes          &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, …
+## $ activities_yes    &lt;dbl&gt; 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, …
+## $ nursery_yes       &lt;dbl&gt; 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+## $ higher_yes        &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+## $ internet_yes      &lt;dbl&gt; 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, …
+## $ romantic_yes      &lt;dbl&gt; 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, …
+## $ famrel_X2         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ famrel_X3         &lt;dbl&gt; 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, …
+## $ famrel_X4         &lt;dbl&gt; 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, …
+## $ famrel_X5         &lt;dbl&gt; 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, …
+## $ freetime_X2       &lt;dbl&gt; 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, …
+## $ freetime_X3       &lt;dbl&gt; 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, …
+## $ freetime_X4       &lt;dbl&gt; 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, …
+## $ freetime_X5       &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, …
+## $ goout_X2          &lt;dbl&gt; 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, …
+## $ goout_X3          &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, …
+## $ goout_X4          &lt;dbl&gt; 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, …
+## $ goout_X5          &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, …
+## $ Dalc_X2           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, …
+## $ Dalc_X3           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Dalc_X4           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Dalc_X5           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Walc_X2           &lt;dbl&gt; 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, …
+## $ Walc_X3           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, …
+## $ Walc_X4           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, …
+## $ Walc_X5           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ health_X2         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, …
+## $ health_X3         &lt;dbl&gt; 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, …
+## $ health_X4         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, …
+## $ health_X5         &lt;dbl&gt; 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, …
+## $ G1_final_X1       &lt;dbl&gt; 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, …
+## $ G2_final_X1       &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, …
+```
+
+
+---
+classe: middle
+####Specification of the ingredients for the tune function
+
+a.  model to tune: Build the model with {parsnip} package and specify the parameters we want to tune.
+
+
+
+```r
+# Build the model to tune and leave the tuning parameters empty (Placeholder with the tune() function)
+model_def_to_tune &lt;- rand_forest(mode = "classification", mtry = tune(), 
+                                 trees = tune(),       
+                                 min_n =  tune()) %&gt;%
+set_engine("ranger") 
+```
+
+b.  Build the workflow {workflows} object.
+
+
+
+```r
+# Build the workflow object
+model_wflow &lt;-
+  workflow() %&gt;%
+  add_model(model_def_to_tune) %&gt;%
+  add_recipe(rec)
+```
+
+c.  Finalize the hyperparameter set to be tuned. Parameters update will be done via the finalize {dials} function.
+
+
+
+```r
+# Which parameters have been collected ?
+HP_set &lt;- parameters(model_wflow)
+without_output &lt;- select(data_in_scope_train, -G3_final)
+HP_set &lt;- finalize(HP_set, without_output)
+```
+
 
 
 ---
 class: middle
 
-##Conection between forward and boosting
+###Hyperparameter tuning via Grid Search
 
-###Least Square Boosting
+- To perform Grid Search process, we need to call tune_grid() function. Execution time will be estimated via {tictoc} package.
 
-1 - Start with function `\(F_0(x) = 0\)` and 
-residual `\(r = y,\)` `\(m = 0.\)`
 
-2 - `\(m \leftarrow m + 1\)`
 
-3 - Fit a CART regression tree to `\(r\)` 
-giving `\(g(x)\)`
+```r
+grid_parameters = expand.grid(mtry = seq(2,4,8),
+                              trees = 3000,
+                              min_n = c(2,5))
 
-4 - Set `\(f_m(x) \leftarrow \epsilon g(x)\)`
+# Perform Grid Search 
+set.seed(2020)
+tic() 
+results_grid_search &lt;- tune_grid(
+  model_wflow,                       # Model workflow defined above
+  resamples = folds,                 # Resamples defined obove
+  param_info = HP_set,               # HP Parmeter to be tuned (defined above) 
+  grid = grid_parameters,                        # number of candidate parameter sets to be created automatically
+  metrics = metric_set(roc_auc),     # metric
+  control = control_grid(save_pred = TRUE, verbose = TRUE) # controle the tuning process
+)
+results_grid_search
+```
 
-5 - Set `\(F_m(x) \leftarrow F_{m-1}(x) + f_m(x),\)`
-`\(r \leftarrow r - f_m(x)\)` and repeat step 2-5 many times.
 
-- `\(g(x)\)` typically shallow tree; e.g. constrained 
-to have `\(k=3\)` splits only (depth).
 
-- `\(0 &lt; \epsilon \leq 1\)` is shrinkage parameter.
-
-[Source:](https://www.youtube.com/watch?v=wPqtzj5VZus&amp;t=1494s)
 
 ---
 class: middle
 
-##General Boosting Algorithm
+###Hyperparameter tuning via Grid Search
 
-The boosting paradigm can be extended 
-to general loss functions - not only 
-**squared error** or **exponential**.
 
-1.  Initialize `\(F_0(x) = 0.\)`
+```
+## # Tuning results
+## # 5-fold cross-validation repeated 2 times 
+## # A tibble: 10 x 6
+##    splits          id      id2   .metrics       .notes         .predictions     
+##    &lt;list&gt;          &lt;chr&gt;   &lt;chr&gt; &lt;list&gt;         &lt;list&gt;         &lt;list&gt;           
+##  1 &lt;split [389/98… Repeat1 Fold1 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [196 × 8…
+##  2 &lt;split [389/98… Repeat1 Fold2 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [196 × 8…
+##  3 &lt;split [390/97… Repeat1 Fold3 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [194 × 8…
+##  4 &lt;split [390/97… Repeat1 Fold4 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [194 × 8…
+##  5 &lt;split [390/97… Repeat1 Fold5 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [194 × 8…
+##  6 &lt;split [389/98… Repeat2 Fold1 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [196 × 8…
+##  7 &lt;split [389/98… Repeat2 Fold2 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [196 × 8…
+##  8 &lt;split [390/97… Repeat2 Fold3 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [194 × 8…
+##  9 &lt;split [390/97… Repeat2 Fold4 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [194 × 8…
+## 10 &lt;split [390/97… Repeat2 Fold5 &lt;tibble [2 × … &lt;tibble [0 × … &lt;tibble [194 × 8…
+```
 
-2.  For `\(m = 1\)` to `\(M:\)`
+```
+## 27.346 sec elapsed
+```
 
-  a.  Compute
-  `$$(\beta_m, \gamma_m) = \mbox{argmin}_{\beta, \gamma}\sum_{i=1}^N L(y_i, F_{m-1}(x) + \beta_i b(x_i;\gamma))$$`
-  b.  Set `\(F_m(x) = F_{m-1}(x) + \epsilon\beta_m b(x;\gamma_m)\)`
-  
-Sometimes we define `\(\epsilon = 1.\)`
 
-- Here `\(\epsilon\)` is a shrinkage factor; in `gbm` package
-in R, default is `\(\epsilon = 0.001.\)`
 
-- Shrinkage slows the stagewise model-building  even more,
-and tipically leads to better performance.
+---
+class: middle
 
-[Source:](https://www.youtube.com/watch?v=wPqtzj5VZus&amp;t=1494s)
+##Results Grid Search process
 
-[Next:](http://uc-r.github.io/gbm_regression)
+###Select best HP combination:
+
+
+```r
+# Select best HP combination
+best_HP_grid_search &lt;- select_best(results_grid_search, metric = "roc_auc", maximize = TRUE)
+```
+
+
+---
+class: middle
+
+
+### Taking the result of the tuning process, the recipe object, model to tune as arguments, finalize the recipe
+
+
+```r
+# Finalize recipe
+final_rec &lt;- rec %&gt;% finalize_recipe(best_HP_grid_search) %&gt;% prep()
+
+final_model &lt;- model_def_to_tune %&gt;% finalize_model(best_HP_grid_search) %&gt;%
+fit(G3_final  ~ ., data = juice(final_rec))
+
+df_train_after_tuning &lt;- as.data.frame(juice(final_rec)) 
+df_test_after_tuning &lt;- as.data.frame(bake(final_rec, new_data = data_in_scope_test))
+
+
+model_class = predict(final_model, new_data = df_test_after_tuning) %&gt;% pull(.pred_class)
+
+
+model_prob  = predict(final_model, new_data = df_test_after_tuning, type = "prob") %&gt;% pull(.pred_1)
+
+results_ = tibble(
+  G3_final = df_test_after_tuning$G3_final,
+  model_class = model_class,
+  model_prob = model_prob)
+```
+
+
+---
+class: middle
+
+
+###Performance: AUC value, confusion matrix, and the ROC curve (tuned model via Grid Search):
+
+
+
+```r
+confusion_matrix &lt;- conf_mat(results_, truth= G3_final, model_class)
+
+ROCit_obj &lt;- rocit(score=results_$model_prob,class=results_$G3_final)
+plot(ROCit_obj)
+
+ROCit_obj$AUC
+```
+
+---
+class: middle
+
+##Results Grid Search process
+
+
+```
+##           Truth
+## Prediction   0   1
+##          0  29   1
+##          1  26 106
+```
+
+
+####AUC
+
+
+```
+## [1] 0.937808
+```
+
+---
+class: middle
+
+##ROC Curve
+
+![](Lecture_21_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
