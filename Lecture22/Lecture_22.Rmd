@@ -1,6 +1,6 @@
 ---
-title: "Lecture 21 - Ensemble models - part III"
-author: "Material written by Ryan Tibishirani and Presented by Renato Rodrigues Silva"
+title: "Lecture 22 - Ensemble models - part V"
+author: "GREEDY FUNCTION APPROXIMATION: A GRADIENT BOOSTING MACHINE - Jerome Friedman"
 institute: "Federal University of Goias."
 date: "(updated: `r Sys.Date()`)"
 output:
@@ -17,176 +17,601 @@ output:
 ---
 class: middle
 
-##Review: Classification trees
+##Abstract
+
+- Function estimation/approximation is viewed from the perspective of
+numerical optimization in function space, rather than parameter space.
+
+- A connection is made between stagewise additive expansions and steepest descent minimization. 
+
+- A general gradient descent "boosting" paradigm is algorithms are presented for least-squares for regression, and multiclass logistic likelihood for classification.
+
+- Special enhancements are derived for the particular case
+where the individual additive components are regression trees, and tools for interpreting such “TreeBoost” models are presented.
+
+---
+class: middle
+
+##1.  Function estimation "predictive learning"
+
+- Let's consider a random output $y$ and a set of random input variables $\mathbf{x} = \left\{x_1, \ldots, x_n \right\}.$
 
 
-<img src="Lecture_21_files/figure-html/Fig1.png" width="70%" align="center" />
+####Goal
+
+- Obtain  an estimate or approximation of the $F(x)$, denoted by $\hat{F}(\mathbf{x}),$ that minimizes the expected value of some specified loss function $L(y, F(\mathbf{x}))$ over the joint distribution of all $(y, \mathbf{x})$ values.
+
+
+$$F^{*} = \mbox{arg min}_{F} E_{y, \mathbf{x}}L(y, F(\mathbf{x})) = \mbox{arg min}_{F} E_{\mathbf{x}}\left[E_y(L(y, F(\mathbf{x})))|\mathbf{x} \right]$$
+
+- In other words, the goal is to reconstruct the unknown functional dependence $x \xrightarrow[]{f} y,$ minimizing the expected value of loss function $L(y, F(\mathbf{x}))$ over the joint distribution of  $(y,\mathbf{x}).$
+
+[Source:](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/pdf/fnbot-07-00021.pdf)
 
 
 ---
 class: middle
 
-##Review: Classification trees
+##1.  Function estimation "predictive learning"
 
+####Frequently employed loss function $L(y, F)$
 
-####CART algorithm:
+- Squared-error $(y - F)^2$ and absolute error $|y - F|$ for $y \in \mathbb{R}$ (regression).
 
-The algorithm starts splitting on variable $j$ and split point $s$, defining the regions.
+- Negative binomial log-likelihood, $\log\{1 + e^{-2yF}\},$ or adaboost loss function when $y \in \left\{-1, 1\right\}.$
 
-$$R_1 = \left\{ X \in \mathbb{R}^p: X_j \leq s \right\}, \phantom{111} R_2 = \left\{ X \in \mathbb{R}^p: X_j \leq s \right\}.$$
+- Here, $F(\mathbf{x})$ is a member of a parameterized class of functions $F(\mathbf{x};\mathbf{P}),$ where 
+$\mathbf{P} = \left\{P_1, P_2, \ldots\right\}$ is a finite set of parameters whose joint values identify individual class member.
 
+- The focus of the paper is on "additive" expansions as follows
 
+$$F(\mathbf{x}; \left\{ \beta_m, \mathbf{a}_m \right\}_1^M) = \sum_{m=1}^M \beta_m h(\mathbf{x}; \mathbf{a}_m).$$
 
- Proportion of points of class $k$ is given by $\hat{p}_k(R_m) = \frac{1}{n_m}\sum_{x_i \in R_m}I(y_i = k).$ with $n_m$ the number of points in $R_m$. 
  
-The most common class is $c_m = \mbox{argmax}_{k=1,\ldots,K}\hat{p}_k(R_m).$
-
-The feature and split point are chosen recursively by minimizing the misclassification error $\mbox{argmin}_{j,s}\left([1 - \hat{p}_{c_1}(R_1) ] +[1 - \hat{p}_{c_2}(R_2) ]\right).$
-
----
-class: middle
-
-##Classification trees with observation weights
-
-- Now suppose that we are going to add observation weights 
-$w_i, i = 1, \ldots, n$.
-
-- The weigthed proportion of points of class $k$ in region $R_m:$
-
-$$\hat{p}_k(R_m) = \frac{\sum_{x_i \in R_m} w_i I(y_i = k)}{\sum_{x_i \in R_m} w_i},$$
-As before, we let 
-
-$$c_m = \mbox{argmax}_{k=1,\ldots, K} \hat{p}_k (R_m).$$
-and hence $1 - \hat{p}_{c_m}(R_m)$ is the weighted misclassification error.
+[Loss Function:](https://www.analyticsvidhya.com/blog/2019/08/detailed-guide-7-loss-functions-machine-learning-python-code/)
 
 
 ---
 class: middle
 
-##Boosting for Classification
+##1.  Function estimation "predictive learning"
 
-- Boosting is an ensemble algorithm that transforms a set of weak learners into strong ones.
+- The function $h(\mathbf{x}; \mathbf{a})$ is usually a simple parametrized function of the input variables $\mathbf{x},$ characterized by parameters $\mathbf{a} = \left\{a_1, a_2, \ldots,  \right\}.$
 
-- Let's assume the training data $(x_i, y_i), i = 1, \ldots, n.$ and 
-$y_i \in \left\{ -1, 1\right\}$ and $x_i \in \mathbb{R}^p.$
+- The individual terms differ in the joint values $\mathbf{a}_m$ chosen for these parameters.
 
-- Now let's assume that a predicted value of classification tree 
-$\hat{f}^{\mbox{tree}}(x) \in \left\{ -1, 1\right\}$ for an input 
-$x \in \mathbb{R}^p.$
+- Of special interest here is the case where each ofthe functions $h(\mathbf{x};\mathbf{a}_m)$ is a small regression tree, such as those produced by CART.
 
-In boositng we combine a **weighted sum** of $B$ different tree classfiers,
-
-$$\hat{f}^{\mbox{boost}}(x) = \mbox{sign}(\sum_{b=1}^B \alpha_b \hat{f}^{\mbox{tree},b}(x))$$ 
-
- - Unlike in bagging and random forest, boosting use the entire training set.
- 
- 
----
-class: middle
-
-##Boosting
-
-
-<img src="Lecture_21_files/figure-html/Fig2.png" width="70%" align="center" />
+- For a regression tree the parameters $\mathbf{a}_m$ are the splitting variables, split locations and the terminal node means of the individual trees.
 
 
 ---
 class: middle
 
-##AdaBoost
+##1.1  Numerical optimization
 
-- Given training data $(x_i, y_i), i = 1, \ldots, n$ the basic boosting method
-is called **AdaBoost,** and can be described as:
+- In general, choosing a parameterized model $F(\mathbf{x}; \mathbf{P})$ changes the function optimization problem to one of parameter optimization,
 
-- Initialize the weights by $w_i = \frac{1}{n}$ for each $i$
+$$\mathbf{P}^{*} = \mbox{arg min}_{\mathbf{P}} \Phi(\mathbf{P}),$$
+where 
 
-- For $b = 1, \ldots, B:$
+$$  
+\Phi(\mathbf{P}) = E_{y, \mathbf{x}} L(y, F(\mathbf{x}, \mathbf{P}))
+$$
+and then 
 
-1.  Fit a classification tree $\hat{f}^{tree, b}$ to the training data with
-weights $w_1, \ldots, w_n.$
+$$F^{*}(\mathbf{x}) = F(\mathbf{x}; \mathbf{P}^{*}).$$
 
-2.  Compute the weighted misclassification error 
-$e_b = \frac{\sum_{i=1}^n w_i I(y_i \neq \hat{f}^{tree, b}(x_i))}{\sum_{i=1}^n w_i}.$
+---
+class: middle
 
-3.  Let $\alpha_b = \log\left\{ \frac{(1 - e_b)}{e_b} \right\}.$
+##1.1  Numerical optimization
 
-4. Update the weights as  $w_i \leftarrow w_i \exp\left\{ \alpha_b I(y_i \neq \hat{f}^{tree, b}(x_i))\right\}$ for each $i$
 
-Return $\hat{f}^{\mbox{boost}}(x) = \mbox{sign}(\sum_{b=1}^B \alpha_b \hat{f}^{\mbox{tree},b}(x))$
+- For most $F(\mathbf{x}; \mathbf{P})$ and $L,$ numerical optimization methods must be applied to solve the equation above.
+
+- This often involves expressing the solution for the parameters in the form
+
+$$\mathbf{P}^{*} = \sum_{m=0}^M \mathbf{p}_m,$$
+where $\mathbf{p}_0$ is an initial guess and $\left\{ \mathbf{p}_m \right\}_1^M$ are sucessive increments ("steps" or "boost"), each based on the sequence of preceding steps.
+
+- The prescription for computing each step $\mathbf{p}_m$ is defined by the optimization method.
+
+---
+class: middle
+
+##1.2 Steepest-descent
+
+- Steepest-descent  defines the increments $\left\{ \mathbf{p}_m \right\}_1^M$ as follows. 
+- First, the current gradient $\mathbf{g}_m$ is computed:
+
+$$\mathbf{g}_m = \left\{ g_{jm} \right\} = \left\{ \left[ \frac{\partial \Phi(\mathbf{P}) }{\partial P_j}\right]_{\mathbf{P} = \mathbf{P}_{m-1}} \right\},$$
+where $\mathbf{P}_{m-1} = \sum_{i=0}^{m-1}\mathbf{p}_i.$
+
+- The step is taken to be $\mathbf{p}_m = - \rho_m \mathbf{g}_m,$ where $\rho_m = \mbox{arg min}_{\rho} \Phi(\mathbf{P}_{m-1} - \rho \mathbf{g}_m).$
+
+---
+class: middle
+
+##1.2 Steepest-descent
+
+
+- The negative gradient $-\mathbf{g}_m$ is said to define the "steepest-descent" direction.
+
+$$\mathbf{P}_{m-1} = \sum_{i=0}^{m-1} \mathbf{p}_i \Rightarrow \mathbf{P}_m = \sum_{i=0}^m \mathbf{p}_i,$$ 
+
+Therefore, 
+
+$$\mathbf{P}_m = \sum_{i=0}^m \mathbf{p}_i = \sum_{i=0}^{m-1}\mathbf{p}_i +\mathbf{p}_m = \mathbf{P}_{m-1} - \rho_m \mathbf{g}_m.$$
+
+[Source:](https://www.ime.usp.br/~jstern/miscellanea/seminars/EMfast/ParTanLuen08.pdf)
+
+---
+class: middle
+
+##2. Numerical optimization in function space
+
+$$\Phi(F) = E_{y, \mathbf{x}} L(y, F(\mathbf{x})) = E_{\mathbf{x}}[E_y(L(y, F(\mathbf{x})))|\mathbf{x}].$$
+or equivalently,
+
+$$\phi(F(\mathbf{x})) = E_{y}\left[ L(y, F(\mathbf{x}))| \mathbf{x}\right]$$
+at each individual $\mathbf{x},$ directly with respect to $F(\mathbf{x}).$
+
+- In function space there are an infinite number of such parameters, but in datasets only a finite number $\left\{ F(\mathbf{x}_i)\right\}_i^N$ are involved.
+
+- Following the numerical optimization paradigm we take the solution to be
+
+$$F^{*} = \sum_{m=0}^M f_m(\mathbf{x}),$$
+
+where $f_0(\mathbf{x})$ is an initial guess, and $\left\{f_m(\mathbf{x})\right\}_1^M$ are incremental functions ("steps" or "boost") defined.
+
+---
+class: middle
+
+##2. Numerical optimization in function space
+
+For steepest-descent,
+
+$$f_m(\mathbf{x}) = - \rho_m g_m(\mathbf{x})$$
+with 
+
+$$g_m(\mathbf{x}) = \left[ \frac{\partial \phi(F(\mathbf{x}))}{\partial F(\mathbf{x})}\right]\Bigg|_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})} = \left[ \frac{\partial E_y[L(y,(F(\mathbf{x}))\Big|\mathbf{x}]}{\partial F(\mathbf{x})}\right]\Bigg|_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})}$$
+and $F_{m-1}(\mathbf{x}) = \sum_{i=0}^{m-1}f_i(\mathbf{x}).$
+
+- Assuming sufficient regularity that one can interchange differentiation and integration, this becomes
+
+$$g_m(\mathbf{x}) = E_y\left[ \frac{\partial L(y, F(\mathbf{x}))}{\partial F(\mathbf{x})} \Big| \mathbf{x} \right]_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})}.$$
+The multiplier $\rho_m$ is given by the line search 
+
+$$\rho_m = \mbox{arg min}_{\rho} E_{y, \mathbf{x}} L(y, F_{m-1}(\mathbf{x}) - \rho g_m(\mathbf{x})).$$
+
+---
+class: middle
+
+##3. Finite Data
+
+
+- This nonparametric approach breaks down when the joint distribution of $(y, \mathbf{x})$ is estimated by a finite data sample $\left\{y_i, \mathbf{x}_i \right\}_1^N.$
+
+- In this case, $E_y[.|\mathbf{x}]$ cannot be estimated accurately by its data value at each $\mathbf{x}_i,$ and even if it could, one would like to estimate $F^{*}(\mathbf{x})$ at $\mathbf{x}$ values other than the training sample points.
+
+- Strength must be borrowed from nearby data points by imposing smoothness on the solution.
+
+---
+class: middle
+
+##3. Finite Data
+
+
+- One way to do this is to assume a parameterized form such as $F(\mathbf{x}; \left\{ \beta_m, \mathbf{a}_m \right\}_1^M) = \sum_{m=1}^M \beta_m h(\mathbf{x}; \mathbf{a}_m)$ and do parameter optimization to minimize the corresponding data based estimate of expected loss,
+
+$$\left\{ \beta_m, \mathbf{a}_m \right\} = \mbox{arg min}_{\left\{\beta_m^{'}, \mathbf{a}^{'}_m \right\}_1^M} 
+\sum_{i=1}^N L\left(y_i, \sum_{m=1}^M \beta_m^{'}h(\mathbf{x}_i; \mathbf{a}^{'}_m) \right).$$
+
+- In situations where this is infeasible one can try a "greedy stagewise" approach.
+
+- For $m = 1, 2, \ldots, M,$
+
+$$(\beta_m, \mathbf{a}_m) = \mbox{arg min}_{\beta, \mathbf{a}}\sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \beta h(\mathbf{x}; \mathbf{a}_m))$$
+and then
+
+$$F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \beta_m h(\mathbf{x}; \mathbf{a}_m).$$
+
+---
+class: middle
+
+##3. Finite Data
+
+- Note that this *stagewise* strategy is different from *stepwise* approaches that readjust previously entered terms when new ones are added.
+
+- Suppose that for a particular loss $L(y, F)$ and/or base learner $h(\mathbf{x}; \mathbf{a})$ the solution to the parameter estimates is difficult to obtain.
+
+- Given any approximator $F_{m-1}(\mathbf{x})$ the function $\beta_m h(\mathbf{x}; \mathbf{a}_m)$, $(\beta_m, \mathbf{a}_m) = \mbox{arg min}_{\beta, \mathbf{a}}\sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \beta h(\mathbf{x}; \mathbf{a}_m))$ and $F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \beta_m h(\mathbf{x}; \mathbf{a}_m)$ can be viewed as the best greedy step toward the data-based estimate of $F^{*}(\mathbf{x})=  \mbox{arg min}_{F} E_{y, \mathbf{x}}L(y, F(\mathbf{x})) = \mbox{arg min}_{F} E_{\mathbf{x}}\left[E_y(L(y, F(\mathbf{x})))|\mathbf{x} \right],$
+
+- under the constraint that the step "direction" $h(\mathbf{x}; \mathbf{a}_m)$ be a member of the parameterized class of functions $h(\mathbf{x}; \mathbf{a})$.
+
+- It can thus be regarded as a steepest descent step $g_m(\mathbf{x}) = \left[ \frac{\partial \phi(F(\mathbf{x}))}{\partial F(\mathbf{x})}\right]\Bigg|_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})} = \left[ \frac{\partial E_y[L(y,(F(\mathbf{x}))\Big|\mathbf{x}]}{\partial F(\mathbf{x})}\right]\Bigg|_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})}$ under constraint.
+
+---
+class: middle
+
+##3. Finite Data
+
+- By construction, the data-based analogue ofthe unconstrained negative gradient to $g_m(\mathbf{x}) = E_y\left[ \frac{\partial L(y, F(\mathbf{x}))}{\partial F(\mathbf{x})} \Big| \mathbf{x} \right]_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})},$ 
+
+$$-g_m(\mathbf{x}_i) = - \left[ \frac{\partial L(y_i, F(\mathbf{x}_i))}{\partial \mathbf{x}_i}\right],$$
+gives the best steepest-descent step direction $-\mathbf{g}_m = \left\{ -g_m(\mathbf{x}_i) \right\}_1^N$ in the $N-$ dimensional data space at $F_{m-1}(\mathbf{x}).$
+
+- However, this gradient is defined only at the data points $\left\{\mathbf{x}_i \right\}_1^N$ and cannot be generalized to other $\mathbf{x}$-values ( Overffiting problem!!!).
+
 
 
 ---
 class: middle
 
-##Conection between forward and boosting
+##3. Finite Data
 
-###Review: Forward
+- One possibility for generalization is to choose that member of the parametrized class $h(\mathbf{x}; \mathbf{a}_m)$ that produces $\mathbf{h}_m = \left\{ h(\mathbf{x}_i; \mathbf{a}_m) \right\}_1^N$ most parallel to $-\mathbf{g}_m \in \mathbb{R}^N.$
 
-- Given a continuous response  $y \in \mathbb{R}^p$ and predictors
-$X_1, \ldots, X_p \in \mathbb{R}^n,$ we:
+- This is the $h(\mathbf{x};\mathbf{a})$ most highly correlated with $-g_m(\mathbf{x})$ over the data distribution. It can be obtained from the solution
 
-- Choose the predictor $X_j$ giving the  smallest squared error loss 
-$\sum_{i=1}^n (y_i - \hat{\beta}_j X_{ij})^2$  
+$$\mathbf{a}_m = \mbox{arg min}_{\mathbf{a}, \beta} \sum_{i=1}^N\left[ -g_m(\mathbf{x}_i) - \beta h(\mathbf{x}_i; \mathbf{a}) \right]^2.$$
 
-- Choose the predictor $X_k$ giving  the smallest additional loss 
-$\sum_{i=1}^n (r_i - \hat{\beta}_k X_{ik})^2$  where $r$ is the residual defined by 
-$r_i = y_i -  \hat{\beta}_j X_{ij}.$
+- This constrained negative gradient $h(\mathbf{x}; \mathbf{a}_m)$ is used in place of the unconstrained one $-g_m(\mathbf{x})$ in the steepest-descent strategy. The line search is performed
 
-- Repeat the last step.
+$$\rho_m = \mbox{arg min}_{\rho} \sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \rho h(\mathbf{x}_i; \mathbf{a}_m))$$
+and the approximation updated,
+
+$$F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \rho_m h(\mathbf{x}; \mathbf{a}_m).$$
+
+---
+class: middle
+
+##3. Finite Data
+
+- Basically, instead of obtaining the solution under a smoothness constraint, the constraint is applied to the unconstrained (rough) solution by fitting $h(\mathbf{x}; \mathbf{a})$ to the "pseudoresponses" $\left\{ \tilde{y}_i = -g_m(\mathbf{x}_i) \right\}_{i=1}^N.$
+
+- This permits the replacement of the difficult function minimization problem, $(\beta_m, \mathbf{a}_m) = \mbox{arg min}_{\beta, \mathbf{a}}\sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \beta h(\mathbf{x}; \mathbf{a}_m)),$ by least-squares function minimization $\mathbf{a}_m = \mbox{arg min}_{\mathbf{a}, \beta} \sum_{i=1}^N\left[ -g_m(\mathbf{x}_i) - \beta h(\mathbf{x}_i; \mathbf{a}) \right]^2.$
+
+- Followed by only a single parameter optimization based on the original criterion $\rho_m = \mbox{arg min}_{\rho} \sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \rho h(\mathbf{x}_i; \mathbf{a}_m)).$
+
+- This leads to the following (generic) algorithm using steepest-descent
 
 
 ---
 class: middle
 
-##Conection between forward and boosting
+##ALGORITHM 1 (Gradient Boost)
 
-###Least Square Boosting
+1.  $$F_0(\mathbf{x}) = \mbox{arg min}_{\rho} \sum_{i=1}^N L(y_i, \rho),$$
 
-1 - Start with function $F_0(x) = 0$ and 
-residual $r = y,$ $m = 0.$
+2.  For $m = 1$ to $M$ do:
 
-2 - $m \leftarrow m + 1$
+3.  $$\tilde{y}_i = \left[ \frac{\partial L(y_i, F(\mathbf{x}_i))}{\partial F(\mathbf{x}_i)} \right]_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})}, \phantom{111} i = 1, \ldots, N$$
 
-3 - Fit a CART regression tree to $r$ 
-giving $g(x)$
+4.  $$\mathbf{a}_m = \mbox{arg min}_{\mathbf{a}, \beta}\sum_{i=1}^N \left[ \tilde{y}_i - \beta h(\mathbf{x}_i; \mathbf{a}) \right]^2$$
 
-4 - Set $f_m(x) \leftarrow \epsilon g(x)$
+5.  $$\rho_m = \mbox{arg min}_{\rho} \sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \rho h(\mathbf{x}; \mathbf{a}_m))$$
 
-5 - Set $F_m(x) \leftarrow F_{m-1}(x) + f_m(x),$
-$r \leftarrow r - f_m(x)$ and repeat step 2-5 many times.
+6.  $$F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \rho_m h(\mathbf{x}; \mathbf{a}_m)$$
 
-- $g(x)$ typically shallow tree; e.g. constrained 
-to have $k=3$ splits only (depth).
+7.  end For
 
-- $0 < \epsilon \leq 1$ is shrinkage parameter.
+end Algorithm 
 
-[Source:](https://www.youtube.com/watch?v=wPqtzj5VZus&t=1494s)
 
 ---
 class: middle
 
-##General Boosting Algorithm
+##Gradient Boost - Regression Trees
 
-The boosting paradigm can be extended 
-to general loss functions - not only 
-**squared error** or **exponential**.
+1.  $F_0(\mathbf{x}) = \mbox{arg min} \sum_{i=1}^m L(y_i, \gamma)$
 
-1.  Initialize $F_0(x) = 0.$
+2.  For $m = 1$ to $M$
 
-2.  For $m = 1$ to $M:$
-
-  a.  Compute
-  $$(\beta_m, \gamma_m) = \mbox{argmin}_{\beta, \gamma}\sum_{i=1}^N L(y_i, F_{m-1}(x) + \beta_i b(x_i;\gamma))$$
-  b.  Set $F_m(x) = F_{m-1}(x) + \epsilon\beta_m b(x;\gamma_m)$
+    2.1 $\tilde{y}_i = \left[ \frac{\partial L(y_i, F(x_i))}{\partial F(x_i)} \right]_{F(\mathbf{x}) = F_{m-1}(\mathbf{x}).}$
   
-Sometimes we define $\epsilon = 1.$
+    2.2 $\left\{ R_{jm}\right\}_1^{J_m} = J-\mbox{terminal node} \phantom{11} tree(\left\{\tilde{y}_i, \mathbf{x}_i \right\}_1^N)$
+  
+    2.3 $\gamma_{jm} = \mbox{arg min}_{\gamma} \sum_{x \in R_{jm}} L(y_i, F_{m-1}(x_i) + \sum_{j=1}^{J_m} \gamma_{jm} I(x_i \in R_{jm}))$
+  
+    2.4 $F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \nu \sum_{j=1}^{J_m} I(\mathbf{x} \in R_{jm})$
+  
+ end For
+  
+end Algorithm 
 
-- Here $\epsilon$ is a shrinkage factor; in `gbm` package
-in R, default is $\epsilon = 0.001.$
 
-- Shrinkage slows the stagewise model-building  even more,
-and tipically leads to better performance.
+---
+class: middle
 
-[Source:](https://www.youtube.com/watch?v=wPqtzj5VZus&t=1494s)
+##The Ames housing data
 
-[Next:](http://uc-r.github.io/gbm_regression)
+The Ames housing data set contains data on 2,930 properties in Ames, Iowa, including columns related to
+
+- house characteristics (bedrooms, garage, fireplace, pool, porch, etc.),
+
+- location (neighborhood),
+
+- lot information (zoning, shape, size, etc.),
+
+- ratings of condition and quality, and
+
+- sale price.
+
+
+
+---
+class: middle
+
+##Implementation in R
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+
+library(tidyverse)
+library(rsample)
+library(gbm)
+
+# Create training (70%) and test (30%) sets for the AmesHousing::make_ames() data.
+# Use set.seed for reproducibility
+
+set.seed(123)
+ames_split <- initial_split(AmesHousing::make_ames(), prop = .7)
+ames_train <- training(ames_split)
+ames_test  <- testing(ames_split)
+
+head(ames_test)
+
+```
+
+
+
+---
+class: middle
+
+##Create Hyperparameter Grid
+
+```{r, warning=FALSE, message=FALSE, eval= FALSE}
+
+hyper_grid <- expand.grid(
+  shrinkage = c(.01, .05, .1),
+  interaction.depth = c(3, 5, 7),
+  n.minobsinnode = c(5),
+  bag.fraction = c(.65),
+  #n.minobsinnode = c(5, 7, 10),
+  #bag.fraction = c(.65, .8, 1), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                     # a place to dump results
+)
+
+# randomize data
+random_index <- sample(1:nrow(ames_train), nrow(ames_train))
+random_ames_train <- ames_train[random_index, ]
+
+```
+
+
+
+---
+class: middle
+
+##Implementation in R
+
+
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  # reproducibility
+  set.seed(123)
+  # train model
+  gbm.tune <- gbm(
+    formula = Sale_Price ~ .,
+    distribution = "gaussian",
+    data = random_ames_train,
+    n.trees = 6000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+
+```
+
+---
+class: middle
+
+##Implementation in R
+
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+hyper_grid %>% 
+  dplyr::arrange(min_RMSE) %>%
+  head(10)
+```
+
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+# for reproducibility
+set.seed(123)
+
+# train GBM model
+gbm.fit.final <- gbm(
+  formula = Sale_Price ~ .,
+  distribution = "gaussian",
+  data = ames_train,
+  n.trees = 483,
+  interaction.depth = 5,
+  shrinkage = 0.1,
+  n.minobsinnode = 5,
+  bag.fraction = .65, 
+  train.fraction = 1,
+  n.cores = NULL, # will use all cores by default
+  verbose = FALSE
+  )  
+
+```
+
+
+---
+class: middle
+
+##Implementation in R
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+
+par(mar = c(5, 8, 1, 1))
+summary(
+  gbm.fit.final, 
+  cBars = 10,
+  method = permutation.test.gbm, # also can use permutation.test.gbm
+  las = 2
+  )
+```
+
+[Source:](http://uc-r.github.io/gbm_regression)
+
+
+---
+class: middle
+
+##Implementation in R
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+# predict values for test data
+pred <- predict(gbm.fit.final, n.trees = gbm.fit.final$n.trees, ames_test)
+
+# results
+caret::RMSE(pred, ames_test$Sale_Price)
+
+```
+
+---
+class: middle
+
+##Implementation in R
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+
+library(tidyverse)
+library(rsample)
+library(gbm)
+
+# Create training (70%) and test (30%) sets for the AmesHousing::make_ames() data.
+# Use set.seed for reproducibility
+
+set.seed(123)
+ames_split <- initial_split(AmesHousing::make_ames(), prop = .7)
+ames_train <- training(ames_split)
+ames_test  <- testing(ames_split)
+
+hyper_grid <- expand.grid(
+  shrinkage = c(.01, .05, .1),
+  interaction.depth = c(3, 5, 7),
+  n.minobsinnode = c(5),
+  bag.fraction = c(.65),
+  #n.minobsinnode = c(5, 7, 10),
+  #bag.fraction = c(.65, .8, 1), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                     # a place to dump results
+)
+
+# randomize data
+random_index <- sample(1:nrow(ames_train), nrow(ames_train))
+random_ames_train <- ames_train[random_index, ]
+
+
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  # reproducibility
+  set.seed(123)
+  # train model
+  gbm.tune <- gbm(
+    formula = Sale_Price ~ .,
+    distribution = "gaussian",
+    data = random_ames_train ,
+    n.trees = 6000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+
+hyper_grid %>% 
+  dplyr::arrange(min_RMSE) %>%
+  head(9)
+
+
+
+```
+
+
+---
+class: middle
+
+##Implementation in R
+
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+
+
+# for reproducibility
+set.seed(123)
+
+# train GBM model
+gbm.fit.final <- gbm(
+  formula = Sale_Price ~ .,
+  distribution = "gaussian",
+  data = ames_train,
+  n.trees = 483,
+  interaction.depth = 5,
+  shrinkage = 0.1,
+  n.minobsinnode = 5,
+  bag.fraction = .65, 
+  train.fraction = 1,
+  n.cores = NULL, # will use all cores by default
+  verbose = FALSE
+  )  
+
+par(mar = c(5, 8, 1, 1))
+summary(
+  gbm.fit.final, 
+  cBars = 10,
+  method = permutation.test.gbm, # also can use permutation.test.gbm
+  las = 2
+  )
+
+```
+
+
+---
+class: middle
+
+##Implementation in R
+
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
+# predict values for test data
+pred <- predict(gbm.fit.final, n.trees = gbm.fit.final$n.trees, ames_test)
+
+# results
+caret::RMSE(pred, ames_test$Sale_Price)
+
+```
+

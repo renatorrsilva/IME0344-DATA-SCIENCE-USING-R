@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 23 - Deep Learning - part I</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Material based on Deep Learning: A practitioner's approach, Josh Patterson and Adam Gibson and presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 23 - Deep Learning - part I
+### Material based on Deep Learning: A practitioner's approach, Josh Patterson and Adam Gibson and presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-11-25)
+
+---
+
+class: middle
+
+##Neural Networks
+
+- Neural networks are a computational model that shares some properties with the animal brain in which many simple units are working in parallel with no centralized control unit.
+
+- The weights between the units are the primary means of long-term information storage in neural networks. Updating the weights is the primary way the neural network learns new information.
+
+- The behavior of neural networks is shaped by its network architecture. A network's architecture can be defined (in part) by the following:
+
+  - Number of neurons;
+  - Number of layers;
+  - Types of connections between layers.
+
+---
+##Perceptron Algorithm
+
+- The perceptron is a linear-model binary classifier with a simple input-output relationship, using the Heaviside step function for the activation function.
+
+
+###The unit step function  - (a.k.a the Heaviside step function)
+
+`\begin{align}
+f(x) = \left\{\begin{array}{cc} 
+0,   &amp; \mbox{se } x &lt; 0 \\
+1, &amp;  \mbox{se } x \geq 0   
+\end{array}\right.
+\end{align}`
+
+###Shifted unit step
+
+`\begin{align}
+f(x - \theta) = \left\{\begin{array}{cc} 
+0,   &amp; \mbox{se } x &lt; \theta \\
+1, &amp;  \mbox{se } x \geq \theta  
+\end{array}\right.
+\end{align}`
+
+---
+class: middle
+##Topology of the Perceptron Algorithm
+
+&lt;img src="Lecture_23_files/figure-html/Fig1.png" width="90%" align="center" /&gt;
+
+####Typically with perceptrons,the threshold value is equal to 0.5. 
+
+---
+class: middle
+
+## Perceptron Algorithm
+
+.pull-left[
+
+![](Lecture_23_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+]
+
+.pull-right[
+
+###Activation Function
+
+`\begin{align}
+f(z) = \left\{\begin{array}{cc} 
+0,   &amp; \mbox{se } z &lt; 0 \\
+1, &amp;  \mbox{se } z \geq 0.  
+\end{array}\right.
+\end{align}`
+
+where `\(z = \mathbf{w}^{'}\mathbf{x} + b\)` and `\(b = - \theta.\)`
+
+- The derivative of the `\(f(z)\)` does not exists at  `\(z = 0.\)`
+
+- The main limitation of the perceptron is the initial inability to solve nonlinear problemas (e.g., datasets that are not linearly separable).
+]
+
+
+---
+class: middle
+
+##Perceptron, Linear Separability and the XOR Problem
+
+
+.pull-left[
+
+&lt;img src="Lecture_23_files/figure-html/Fig2.gif" width="90%" align="center" /&gt;
+
+
+####Linearly Separable Pattern
+
+]
+
+.pull-right[
+
+&lt;img src="Lecture_23_files/figure-html/Fig3.gif" width="90%" align="center" /&gt;
+
+####Illustration of XOR function that two classes, 0 for black dot and 1 for white dot, cannot be separated with a single line.
+
+]
+
+[Source](http://wwwold.ece.utep.edu/research/webfuzzy/docs/kk-thesis/kk-thesis-html/node19.html)
+
+---
+class: middle
+
+##Learning Rule
+
+a.  Initialize the weights to 0 or small random numbers.
+
+b.  For each training sample `\(x^{i}\)` calculate the output value and update the weights.
+
+c.  The output value is the class label predicted by the unit step function that we defined earlier and the weight update can be written more formally: `\(w_j = w_j + \Delta w_j.\)`
+
+d.  The value for updating the weights at each increment is calculated by the learning rule:
+`\(\Delta w_j = \eta (\mbox{target}^{i} - \mbox{output}^{i})x_{j}^{i},\)` where `\(\eta\)` is the learning rate (a constant between 0.0 and 1.0), target is the true class label, and the output is the predicted class label.
+
+e.  All weights in the weight vector are being updated simultaneously
+
+####The convergence of the perceptron is only guaranteed if the two classes are linearly separable.
+
+[Source:](https://anshdaviddev.com/2020/04/14/slp-activation-function/)
+
+---
+class: middle
+
+##Evolution of the artificial neuron  - Multilayer Perceptron
+
+
+
+.pull-left[
+
+&lt;img src="Lecture_23_files/figure-html/Fig4.png" width="120%" align="center" /&gt;
+
+####Example of the Shallow Neural Network. 
+]
+
+
+.pull-right[
+
+&lt;img src="Lecture_23_files/figure-html/Fig5.png" width="120%" align="center" /&gt;
+
+
+[Source:](https://missinglink.ai/guides/neural-network-concepts/perceptrons-and-multi-layer-perceptrons-the-artificial-neuron-at-the-core-of-deep-learning/#:~:text=One%20difference%20between%20an%20MLP,or%20between%20%2D1%20and%201.)
+]
+
+`$$a_i = g(z_i) = g(\mathbf{w}_i^{'}\mathbf{x}_i + b).$$`
+
+---
+class: middle
+## Feed-forward neural network architecture
+
+
+&lt;img src="Lecture_23_files/figure-html/Fig6.png" width="120%" align="center" /&gt;
+
+---
+class: middle
+##Training Neural Networks - Feed-Forward part
+
+
+
+- First of all, the linear predictor to map the inputs into the `\(kth\)` hidden neuron is given by
+
+`$$z_{ik}^{(h)} = \sum_{p=1}^P w_{kp}^{(h)} x_{ip},$$`
+where `\(P\)` is the weight from input unit `\(p\)` to hidden unit `\(k\)` and `\(x_{ip}\)` 
+is the value of the `\(pth\)` input for the `\(ith\)` instance.
+
+- The output of the `\(kth\)` neuron resulting of applying an activation function 
+to its linear predictor (net input) is defined by
+
+`$$V_{ik}^{(h)} = g_{k}^{(h)}(z_{ik}^{(h)}),$$`
+where `\(g_k^{(h)}\)` is the activaction function that is applied to the net input 
+of neuron `\(kth\)` of the hidden layer.
+
+---
+class: middle
+##Training Neural Networks - Feed-Forward part
+
+
+- The net input of the `\(jth\)` neuron of the output unit `\(j\)` as:
+`$$z_{ij}^{(l)} = \sum_{k=1}^M w_{jk}^{(l)}V_{ik}^{(h)},$$`
+where `\(M\)` is the number of neurons of the hidden layer `\(w_{jk}^{(l)}\)` represent 
+the weights from hidden unit `\(k\)` to output `\(j\)` and `\(b_j\)` is the bias of neuron `\(j\)` 
+of the output.
+
+- Applying the activation function to the output of the `\(jth\)` neuron of the output 
+layer we get the predicted value to the output
+
+`$$\hat{y}_{ij} = g^{(l)}(z_{ij}^{(l)}),$$`
+where `\(\hat{y}_{ij}\)` the predicted value of individual `\(i\)` in output `\(j\)`.
+
+
+---
+class: middle
+##Training Neural Networks - Backpropagation Learning
+
+###Goal
+
+- We are interested in learning the weights `\((w_{kp}^{(h)}, w_{jk}^{(h)})\)` that minimize the cost function
+
+###Method
+
+- To explain the backpropagation algorithm, let's assume as cost 
+function the error sum of square.
+
+`$$E = \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^L ( y_{ij} - \hat{y}_{ij})^2.$$`
+
+---
+class: middle
+##Training Neural Networks - Backpropagation Learning
+
+- Let's suppose a shallow neural network with one input layer, one hidden layer, and an output layer.
+
+- We can redefine the cost function as
+
+`$$E =  \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^L\left( y_{ij} - g_j^{(l)}\left(\sum_{k=1}^M w_{jk}^{(l)}g_k^{(h)}\left(\sum_{p=1}^P w_{kp}^{(h)} x_{ip} \right) \right)\right)^2$$`
+- The gradient of the cost function with respect to `\(w_{jk}^{(l)}\)` is given by
+
+`$$\Delta w_{jk}^{(l)} = \eta \frac{\partial E}{\partial w_{jk}^{(l)}}= \eta \frac{\partial E}{\partial \hat{y}_{ij}} \frac{\partial \hat{y}_{ij}}{\partial z_{ij}^{(l)}} \frac{\partial z_{ij}^{(l)} }{\partial w_{jk}^{(l)}}$$`
+
+---
+class: middle
+##Training Neural Networks - Backpropagation Learning
+
+
+- Here, I present each partial derivative:
+
+`\begin{align}
+\frac{\partial E}{\partial \hat{y}_{ij}} =&amp;  - (y_{ij} - \hat{y}_{ij}); \phantom{111}
+\frac{\partial \hat{y}_{ij}}{\partial z_{ij}^{(l)}} =&amp; g_j^{(l) '}(z_{ij}^{(l)}) ; \phantom{111}
+\frac{\partial z_{ij}^{(l)}}{\partial w_{jk}^{(l)}} =&amp; V_{ik}^{(h)}.
+\end{align}`
+
+- Substituting this partial derivatives into `\(\Delta w_{jk}^{(l)} = \eta \frac{\partial E}{\partial w_{jk}^{(l)}}= \eta \frac{\partial E}{\partial \hat{y}_{ij}} \frac{\partial \hat{y}_{ij}}{\partial z_{ij}^{(l)}} \frac{\partial z_{ij}^{(l)} }{\partial w_{jk}^{(l)}}\)`, yields
+
+`$$\Delta w_{jk}^{(l)} = \eta(y_{ij} - \hat{y}_{ij})g_j^{(l) '}(z_{ij}^{(l)})V_{ik}^{(h)} = \eta \delta_{ij} V_{ik}^{(h)},$$`
+where `\(\delta_{ij} = (y_{ij} - \hat{y}_{ij}) g_j^{(l) '}.\)`
+
+- The formula to update the weights from hidden units to the output units is 
+
+`$$w_{jk}^{(l)(t+1)} = w_{jk}^{(l)(t)} + \Delta w_{jk}^{(l)} =  w_{jk}^{(l)(t)} + \eta \delta_{ij} V_{ik}^{(h)}.$$`
+
+---
+class: middle
+##Training Neural Networks - Backpropagation Learning
+
+- The update of the weights connecting the input units to the hidden units follows
+
+`$$\Delta w_{kp}^{(h)} = - \eta \frac{\partial E}{\partial w_{kp}^{(h)}}$$`
+
+- Using the chain rule, yields
+
+`$$- \eta \frac{\partial E}{\partial w_{kp}^{(h)}} = \frac{\partial E}{\partial \hat{y}_{ij}}\frac{\partial\hat{y}_{ij}}{\partial z_{ij}^{(l)}} \frac{\partial z_{ij}^{(l)}}{\partial V_{ik}^{(h)}}\frac{\partial V_{ik}^{h}}{z_{ik}^{(h)}}
+\frac{\partial z_{ik}^{(h)}}{\partial w_{kp}^{(h)}},$$`
+
+
+
+where `\(\frac{\partial E}{\partial \hat{y}_{ij}}\)` and `\(\frac{\partial \hat{y}_{ij}}{\partial z_{ij}^{(l)}}\)` are the same already presented, while
+
+`\begin{align}
+\frac{\partial z_{ij}^{(l)}}{\partial V_{ik}^{(h)}} = w_{jk}^{(l)}; \phantom{111}
+\frac{\partial V_{ik}^{(h)}}{\partial z_{ik}^{(h)}} = g^{(h) '}(z_{ik}^{(h)}) ; \phantom{111}
+\frac{\partial z_{ik}^{(h)}}{\partial w_{kp}^{(h)}} = x_{ip}.
+\end{align}`
+
+
+
+---
+class: middle
+##Training Neural Networks - Backpropagation Learning
+
+- Substituing back into gradient equation we obtain the change in the weigths from input units to hidden units
+
+
+`$$\Delta w_{kp}^{(h)} = \eta \sum_{j=1}^L \delta_{ij} w_{jk}^{(h)} g_k^{(h) '}(z_{ik}^{(h)})x_{ip} = \eta \varphi_{ik}x_{ip},$$`
+where `\(\varphi_{ik} = \sum_{j=1}^L \delta_{ij} w_{jk}^{(l)} g_k^{(h) '}(z_{ik}^{(h)}).\)`
+
+Therefore, 
+
+`$$w_{kp}^{(h)(t+1)} = w_{kp}^{(h)(t)} + \Delta w_{kp}^{(h)} =  w_{kp}^{(h)(t)} + \eta \varphi_{ik}x_{ip}.$$`
+
+---
+class: middle
+##Cost functions
+
+###Cost functions for continuous outcomes
+
+- Sum of square error: `\(L(\mathbf{w}) = \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^L \left(y_{ij} - \hat{y}_{ij} \right)^2;\)`
+
+- Sum of absolute percentage error: `\(L(\mathbf{w}) = \sum_{i=1}^n \sum_{j=1}^L \left|\frac{y_{ij} - \hat{y}_{ij}}{y_{ij}}\right|;\)`
+
+- Sum of absolute error: `\(L(\mathbf{w}) = \frac{1}{2}\sum_{i=1}^n\sum_{j=1}^L|y_{ij} - \hat{y}_{ij}|;\)`
+
+- Sum of squared log error: `\(L(\mathbf{w}) = \sum_{i=1}^n \sum_{j=1}^L \left(\log{y_{ij}} - \log{\hat{y}_{ij}}\right).\)`
+
+
+---
+class: middle
+##Cost functions
+
+###Cost functions for binary, ordinal and couting outcomes
+
+- Hunge: `\(L(\mathbf{w}) = \sum_{i=1}^n \sum_{j=1}^L \mbox{max}\left(0, y_{ij} \times \hat{y}_{ij}\right);\)`
+
+- Logistic: `\(L(\mathbf{w}) = - \sum_{i=1}^n \sum_{j=1}^L \left[ y_{ij} \log(\hat{y}_{ij}) + (1 - y_{ij})\log(1 - \hat{y}_{ij})\right];\)`
+
+- Ordinal Logistic: `\(L(\mathbf{w}) = - \sum_{i=1}^n \sum_{j=1}^L \left[ y_{ij}\log(\hat{y}_{ij}) \right];\)`
+
+- Poisson: `\(L(\mathbf{w}) = \sum_{i=1}^n \sum_{j=1}^L \left[ - \mu_{ij}(\mathbf{x},\mathbf{w}) + y_{ij}\log\left(\mu_{ij}(\mathbf{x},\mathbf{w})\right)\right]\)` 
+
+
+
+
+---
+class: middle
+##Activation functions
+
+.pull-left[
+
+![](Lecture_23_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
+
+[Source:](https://medium.com/analytics-vidhya/activation-functions-why-tanh-outperforms-logistic-sigmoid-3f26469ac0d1#:~:text=Infact%2C%20tanh%20is%20a%20wide,lies%20between%201%20and%20%2D1.)
+
+]
+
+.pull-right[
+
+- Rectifier linear unit (ReLU): `\(g(z) = \mbox{max}\left(0, z\right);\)`
+
+- Sigmoid: `\(g(z) = \left( 1 + e^{-z} \right)^{-1};\)`
+
+- Hyperbolic tangent: `\(tanh(z) = \frac{sinh(z)}{cosh(z)} = \frac{e^z - e^{-z}}{e^z + e^{-z}}\)`
+
+
+]
+
+---
+class: middle
+##Regularization
+
+###Concept: 
+
+- Regularization is a way to avoid overffiting by penalizing high-valued regression coefficients:
+
+
+###Types of Regularization:
+
+- Lasso penalization:  `\(L_1 = \sum_{p=1}^P |w_p|;\)`
+
+- Ridge penalty:  `\(L_2 = \mathbf{w}^{'} \mathbf{w}.\)`
+
+
+---
+class: middle
+##Dropout Regularization
+
+
+- Dropout is a regularization method that during training, some number of layer outputs are randomly ignored or “dropped out.”  ([Source:](https://machinelearningmastery.com/dropout-for-regularizing-deep-neural-networks/)).
+
+- This has the effect of making the layer look-like and be treated-like a layer with a different number of nodes and connectivity to the prior layer ([Source:](https://machinelearningmastery.com/dropout-for-regularizing-deep-neural-networks/)).. 
+
+
+- "By dropping a unit out, we mean temporarily removing it from the network, along with all its incoming and outgoing connections" ([Source:](https://jmlr.org/papers/v15/srivastava14a.html)).
+
+- ... units may change in a way that they fix up the mistakes of the other units. This may lead to complex co-adaptations. This in turn leads to overfitting because these co-adaptations do not generalize to unseen data.
+
+---
+class: middle
+## Regularization Dropout
+
+
+&lt;img src="Lecture_23_files/figure-html/Fig7.png" width="120%" align="center" /&gt;
+
+
+---
+class: middle
+## Regularization Dropout
+
+
+- Dropout regularization is very simple and there are a lot of empirical evidence of his power to avoid overfitting (Montesinos, 2018).
+
+- There are not unique rules to chose the percentage of neurons that will be dropped out. Some tips are given next to chose the % of dropout (Montesinos, 2018).
+
+- Usually a a good starting point is to use a 20% of dropout but value between the range 20%-50% is reasonable. 
+
+- A percentage too low has minimal effect and a value too high results in underfitting the network.
+
+- Application of dropout is not restricted to hidden neurons also can be applied in input layer and in both cases there is evidence that improve the performance of the ANN model.
+
+
+---
+class: middle
+## Batches and Epochs
+
+
+- The batch size is a number of samples processed before the model is updated.
+
+- The number of epochs is the number of complete passes through the training dataset.
+
+- The size of a batch must be more than or equal to one and less than or equal to the number of samples in the training dataset.
+
+- The number of epochs can be set to an integer value between one and infinity. 
+
+[Source:](https://machinelearningmastery.com/difference-between-a-batch-and-an-epoch/#:~:text=The%20batch%20size%20is%20a%20number%20of%20samples%20processed%20before,samples%20in%20the%20training%20dataset.)
+
+---
+class: middle
+## Batches and Epochs
+
+###Small Examples
+
+- Assume you have a dataset with 200 samples (rows of data) and you choose a batch size of 5 and 1,000 epochs.
+
+- This means that the dataset will be divided into 40 batches, each with five samples. The model weights will be updated after each batch of five samples.
+
+- This also means that one epoch will involve 40 batches or 40 updates to the model.
+
+- With 1,000 epochs, the model will be exposed to or pass through the whole dataset 1,000 times. That is a total of 40,000 batches during the entire training process.
+
+
+[Source:](https://machinelearningmastery.com/difference-between-a-batch-and-an-epoch/#:~:text=The%20batch%20size%20is%20a%20number%20of%20samples%20processed%20before,samples%20in%20the%20training%20dataset.)
+
+
+---
+class: middle
+## Early Stopping
+
+- When training a large network, there will be a point during training when the model will stop generalizing and start learning the statistical noise in the training dataset.
+
+- This overfitting of the training dataset will result in an increase in generalization error, making the model less useful at making predictions on new data.
+
+- An alternative approach is to train the model once for a large number of training epochs. During training, the model is evaluated on a holdout validation dataset after each epoch.
+
+- If the performance of the model on the validation dataset starts to degrade (e.g. loss begins to increase or accuracy begins to decrease), then the training process is stopped.
+
+- The model at the time that training is stopped is then used and is known to have good generalization performance.
+
+- This procedure is called “early stopping” and is perhaps one of the oldest and most widely used forms of neural network regularization.
+
+
+[Source:](https://machinelearningmastery.com/early-stopping-to-avoid-overtraining-neural-network-models/)
+
+
+---
+class: middle
+## Early Stopping
+
+&lt;img src="Lecture_23_files/figure-html/Fig8.png" width="120%" align="center" /&gt;
+
+
+
+---
+class: middle
+## Hyperparameter selection in neural Networks
+
+a.  Network topology;
+
+b.  Activation functions;
+
+c.  Number of hidden layers;
+
+d.  Number of neurons in each layer;
+
+e.  Regularization type;
+
+f.  Learning rate;
+
+g.  Number of epochs and number of batches;
+
+h.  Normalization scheme for input data.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

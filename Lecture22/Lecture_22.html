@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 22 - Ensemble models - part V</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="GREEDY FUNCTION APPROXIMATION: A GRADIENT BOOSTING MACHINE - Jerome Friedman" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 22 - Ensemble models - part V
+### GREEDY FUNCTION APPROXIMATION: A GRADIENT BOOSTING MACHINE - Jerome Friedman
+### Federal University of Goias.
+### (updated: 2020-11-18)
+
+---
+
+class: middle
+
+##Abstract
+
+- Function estimation/approximation is viewed from the perspective of
+numerical optimization in function space, rather than parameter space.
+
+- A connection is made between stagewise additive expansions and steepest descent minimization. 
+
+- A general gradient descent "boosting" paradigm is algorithms are presented for least-squares for regression, and multiclass logistic likelihood for classification.
+
+- Special enhancements are derived for the particular case
+where the individual additive components are regression trees, and tools for interpreting such “TreeBoost” models are presented.
+
+---
+class: middle
+
+##1.  Function estimation "predictive learning"
+
+- Let's consider a random output `\(y\)` and a set of random input variables `\(\mathbf{x} = \left\{x_1, \ldots, x_n \right\}.\)`
+
+
+####Goal
+
+- Obtain  an estimate or approximation of the `\(F(x)\)`, denoted by `\(\hat{F}(\mathbf{x}),\)` that minimizes the expected value of some specified loss function `\(L(y, F(\mathbf{x}))\)` over the joint distribution of all `\((y, \mathbf{x})\)` values.
+
+
+`$$F^{*} = \mbox{arg min}_{F} E_{y, \mathbf{x}}L(y, F(\mathbf{x})) = \mbox{arg min}_{F} E_{\mathbf{x}}\left[E_y(L(y, F(\mathbf{x})))|\mathbf{x} \right]$$`
+
+- In other words, the goal is to reconstruct the unknown functional dependence `\(x \xrightarrow[]{f} y,\)` minimizing the expected value of loss function `\(L(y, F(\mathbf{x}))\)` over the joint distribution of  `\((y,\mathbf{x}).\)`
+
+[Source:](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/pdf/fnbot-07-00021.pdf)
+
+
+---
+class: middle
+
+##1.  Function estimation "predictive learning"
+
+####Frequently employed loss function `\(L(y, F)\)`
+
+- Squared-error `\((y - F)^2\)` and absolute error `\(|y - F|\)` for `\(y \in \mathbb{R}\)` (regression).
+
+- Negative binomial log-likelihood, `\(\log\{1 + e^{-2yF}\},\)` or adaboost loss function when `\(y \in \left\{-1, 1\right\}.\)`
+
+- Here, `\(F(\mathbf{x})\)` is a member of a parameterized class of functions `\(F(\mathbf{x};\mathbf{P}),\)` where 
+`\(\mathbf{P} = \left\{P_1, P_2, \ldots\right\}\)` is a finite set of parameters whose joint values identify individual class member.
+
+- The focus of the paper is on "additive" expansions as follows
+
+`$$F(\mathbf{x}; \left\{ \beta_m, \mathbf{a}_m \right\}_1^M) = \sum_{m=1}^M \beta_m h(\mathbf{x}; \mathbf{a}_m).$$`
+
+ 
+[Loss Function:](https://www.analyticsvidhya.com/blog/2019/08/detailed-guide-7-loss-functions-machine-learning-python-code/)
+
+
+---
+class: middle
+
+##1.  Function estimation "predictive learning"
+
+- The function `\(h(\mathbf{x}; \mathbf{a})\)` is usually a simple parametrized function of the input variables `\(\mathbf{x},\)` characterized by parameters `\(\mathbf{a} = \left\{a_1, a_2, \ldots,  \right\}.\)`
+
+- The individual terms differ in the joint values `\(\mathbf{a}_m\)` chosen for these parameters.
+
+- Of special interest here is the case where each ofthe functions `\(h(\mathbf{x};\mathbf{a}_m)\)` is a small regression tree, such as those produced by CART.
+
+- For a regression tree the parameters `\(\mathbf{a}_m\)` are the splitting variables, split locations and the terminal node means of the individual trees.
+
+
+---
+class: middle
+
+##1.1  Numerical optimization
+
+- In general, choosing a parameterized model `\(F(\mathbf{x}; \mathbf{P})\)` changes the function optimization problem to one of parameter optimization,
+
+`$$\mathbf{P}^{*} = \mbox{arg min}_{\mathbf{P}} \Phi(\mathbf{P}),$$`
+where 
+
+$$  
+\Phi(\mathbf{P}) = E_{y, \mathbf{x}} L(y, F(\mathbf{x}, \mathbf{P}))
+$$
+and then 
+
+`$$F^{*}(\mathbf{x}) = F(\mathbf{x}; \mathbf{P}^{*}).$$`
+
+---
+class: middle
+
+##1.1  Numerical optimization
+
+
+- For most `\(F(\mathbf{x}; \mathbf{P})\)` and `\(L,\)` numerical optimization methods must be applied to solve the equation above.
+
+- This often involves expressing the solution for the parameters in the form
+
+`$$\mathbf{P}^{*} = \sum_{m=0}^M \mathbf{p}_m,$$`
+where `\(\mathbf{p}_0\)` is an initial guess and `\(\left\{ \mathbf{p}_m \right\}_1^M\)` are sucessive increments ("steps" or "boost"), each based on the sequence of preceding steps.
+
+- The prescription for computing each step `\(\mathbf{p}_m\)` is defined by the optimization method.
+
+---
+class: middle
+
+##1.2 Steepest-descent
+
+- Steepest-descent  defines the increments `\(\left\{ \mathbf{p}_m \right\}_1^M\)` as follows. 
+- First, the current gradient `\(\mathbf{g}_m\)` is computed:
+
+`$$\mathbf{g}_m = \left\{ g_{jm} \right\} = \left\{ \left[ \frac{\partial \Phi(\mathbf{P}) }{\partial P_j}\right]_{\mathbf{P} = \mathbf{P}_{m-1}} \right\},$$`
+where `\(\mathbf{P}_{m-1} = \sum_{i=0}^{m-1}\mathbf{p}_i.\)`
+
+- The step is taken to be `\(\mathbf{p}_m = - \rho_m \mathbf{g}_m,\)` where `\(\rho_m = \mbox{arg min}_{\rho} \Phi(\mathbf{P}_{m-1} - \rho \mathbf{g}_m).\)`
+
+---
+class: middle
+
+##1.2 Steepest-descent
+
+
+- The negative gradient `\(-\mathbf{g}_m\)` is said to define the "steepest-descent" direction.
+
+`$$\mathbf{P}_{m-1} = \sum_{i=0}^{m-1} \mathbf{p}_i \Rightarrow \mathbf{P}_m = \sum_{i=0}^m \mathbf{p}_i,$$` 
+
+Therefore, 
+
+`$$\mathbf{P}_m = \sum_{i=0}^m \mathbf{p}_i = \sum_{i=0}^{m-1}\mathbf{p}_i +\mathbf{p}_m = \mathbf{P}_{m-1} - \rho_m \mathbf{g}_m.$$`
+
+[Source:](https://www.ime.usp.br/~jstern/miscellanea/seminars/EMfast/ParTanLuen08.pdf)
+
+---
+class: middle
+
+##2. Numerical optimization in function space
+
+`$$\Phi(F) = E_{y, \mathbf{x}} L(y, F(\mathbf{x})) = E_{\mathbf{x}}[E_y(L(y, F(\mathbf{x})))|\mathbf{x}].$$`
+or equivalently,
+
+`$$\phi(F(\mathbf{x})) = E_{y}\left[ L(y, F(\mathbf{x}))| \mathbf{x}\right]$$`
+at each individual `\(\mathbf{x},\)` directly with respect to `\(F(\mathbf{x}).\)`
+
+- In function space there are an infinite number of such parameters, but in datasets only a finite number `\(\left\{ F(\mathbf{x}_i)\right\}_i^N\)` are involved.
+
+- Following the numerical optimization paradigm we take the solution to be
+
+`$$F^{*} = \sum_{m=0}^M f_m(\mathbf{x}),$$`
+
+where `\(f_0(\mathbf{x})\)` is an initial guess, and `\(\left\{f_m(\mathbf{x})\right\}_1^M\)` are incremental functions ("steps" or "boost") defined.
+
+---
+class: middle
+
+##2. Numerical optimization in function space
+
+For steepest-descent,
+
+`$$f_m(\mathbf{x}) = - \rho_m g_m(\mathbf{x})$$`
+with 
+
+`$$g_m(\mathbf{x}) = \left[ \frac{\partial \phi(F(\mathbf{x}))}{\partial F(\mathbf{x})}\right]\Bigg|_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})} = \left[ \frac{\partial E_y[L(y,(F(\mathbf{x}))\Big|\mathbf{x}]}{\partial F(\mathbf{x})}\right]\Bigg|_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})}$$`
+and `\(F_{m-1}(\mathbf{x}) = \sum_{i=0}^{m-1}f_i(\mathbf{x}).\)`
+
+- Assuming sufficient regularity that one can interchange differentiation and integration, this becomes
+
+`$$g_m(\mathbf{x}) = E_y\left[ \frac{\partial L(y, F(\mathbf{x}))}{\partial F(\mathbf{x})} \Big| \mathbf{x} \right]_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})}.$$`
+The multiplier `\(\rho_m\)` is given by the line search 
+
+`$$\rho_m = \mbox{arg min}_{\rho} E_{y, \mathbf{x}} L(y, F_{m-1}(\mathbf{x}) - \rho g_m(\mathbf{x})).$$`
+
+---
+class: middle
+
+##3. Finite Data
+
+
+- This nonparametric approach breaks down when the joint distribution of `\((y, \mathbf{x})\)` is estimated by a finite data sample `\(\left\{y_i, \mathbf{x}_i \right\}_1^N.\)`
+
+- In this case, `\(E_y[.|\mathbf{x}]\)` cannot be estimated accurately by its data value at each `\(\mathbf{x}_i,\)` and even if it could, one would like to estimate `\(F^{*}(\mathbf{x})\)` at `\(\mathbf{x}\)` values other than the training sample points.
+
+- Strength must be borrowed from nearby data points by imposing smoothness on the solution.
+
+---
+class: middle
+
+##3. Finite Data
+
+
+- One way to do this is to assume a parameterized form such as `\(F(\mathbf{x}; \left\{ \beta_m, \mathbf{a}_m \right\}_1^M) = \sum_{m=1}^M \beta_m h(\mathbf{x}; \mathbf{a}_m)\)` and do parameter optimization to minimize the corresponding data based estimate of expected loss,
+
+`$$\left\{ \beta_m, \mathbf{a}_m \right\} = \mbox{arg min}_{\left\{\beta_m^{'}, \mathbf{a}^{'}_m \right\}_1^M} 
+\sum_{i=1}^N L\left(y_i, \sum_{m=1}^M \beta_m^{'}h(\mathbf{x}_i; \mathbf{a}^{'}_m) \right).$$`
+
+- In situations where this is infeasible one can try a "greedy stagewise" approach.
+
+- For `\(m = 1, 2, \ldots, M,\)`
+
+`$$(\beta_m, \mathbf{a}_m) = \mbox{arg min}_{\beta, \mathbf{a}}\sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \beta h(\mathbf{x}; \mathbf{a}_m))$$`
+and then
+
+`$$F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \beta_m h(\mathbf{x}; \mathbf{a}_m).$$`
+
+---
+class: middle
+
+##3. Finite Data
+
+- Note that this *stagewise* strategy is different from *stepwise* approaches that readjust previously entered terms when new ones are added.
+
+- Suppose that for a particular loss `\(L(y, F)\)` and/or base learner `\(h(\mathbf{x}; \mathbf{a})\)` the solution to the parameter estimates is difficult to obtain.
+
+- Given any approximator `\(F_{m-1}(\mathbf{x})\)` the function `\(\beta_m h(\mathbf{x}; \mathbf{a}_m)\)`, `\((\beta_m, \mathbf{a}_m) = \mbox{arg min}_{\beta, \mathbf{a}}\sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \beta h(\mathbf{x}; \mathbf{a}_m))\)` and `\(F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \beta_m h(\mathbf{x}; \mathbf{a}_m)\)` can be viewed as the best greedy step toward the data-based estimate of `\(F^{*}(\mathbf{x})=  \mbox{arg min}_{F} E_{y, \mathbf{x}}L(y, F(\mathbf{x})) = \mbox{arg min}_{F} E_{\mathbf{x}}\left[E_y(L(y, F(\mathbf{x})))|\mathbf{x} \right],\)`
+
+- under the constraint that the step "direction" `\(h(\mathbf{x}; \mathbf{a}_m)\)` be a member of the parameterized class of functions `\(h(\mathbf{x}; \mathbf{a})\)`.
+
+- It can thus be regarded as a steepest descent step `\(g_m(\mathbf{x}) = \left[ \frac{\partial \phi(F(\mathbf{x}))}{\partial F(\mathbf{x})}\right]\Bigg|_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})} = \left[ \frac{\partial E_y[L(y,(F(\mathbf{x}))\Big|\mathbf{x}]}{\partial F(\mathbf{x})}\right]\Bigg|_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})}\)` under constraint.
+
+---
+class: middle
+
+##3. Finite Data
+
+- By construction, the data-based analogue ofthe unconstrained negative gradient to `\(g_m(\mathbf{x}) = E_y\left[ \frac{\partial L(y, F(\mathbf{x}))}{\partial F(\mathbf{x})} \Big| \mathbf{x} \right]_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})},\)` 
+
+`$$-g_m(\mathbf{x}_i) = - \left[ \frac{\partial L(y_i, F(\mathbf{x}_i))}{\partial \mathbf{x}_i}\right],$$`
+gives the best steepest-descent step direction `\(-\mathbf{g}_m = \left\{ -g_m(\mathbf{x}_i) \right\}_1^N\)` in the `\(N-\)` dimensional data space at `\(F_{m-1}(\mathbf{x}).\)`
+
+- However, this gradient is defined only at the data points `\(\left\{\mathbf{x}_i \right\}_1^N\)` and cannot be generalized to other `\(\mathbf{x}\)`-values ( Overffiting problem!!!).
+
+
+
+---
+class: middle
+
+##3. Finite Data
+
+- One possibility for generalization is to choose that member of the parametrized class `\(h(\mathbf{x}; \mathbf{a}_m)\)` that produces `\(\mathbf{h}_m = \left\{ h(\mathbf{x}_i; \mathbf{a}_m) \right\}_1^N\)` most parallel to `\(-\mathbf{g}_m \in \mathbb{R}^N.\)`
+
+- This is the `\(h(\mathbf{x};\mathbf{a})\)` most highly correlated with `\(-g_m(\mathbf{x})\)` over the data distribution. It can be obtained from the solution
+
+`$$\mathbf{a}_m = \mbox{arg min}_{\mathbf{a}, \beta} \sum_{i=1}^N\left[ -g_m(\mathbf{x}_i) - \beta h(\mathbf{x}_i; \mathbf{a}) \right]^2.$$`
+
+- This constrained negative gradient `\(h(\mathbf{x}; \mathbf{a}_m)\)` is used in place of the unconstrained one `\(-g_m(\mathbf{x})\)` in the steepest-descent strategy. The line search is performed
+
+`$$\rho_m = \mbox{arg min}_{\rho} \sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \rho h(\mathbf{x}_i; \mathbf{a}_m))$$`
+and the approximation updated,
+
+`$$F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \rho_m h(\mathbf{x}; \mathbf{a}_m).$$`
+
+---
+class: middle
+
+##3. Finite Data
+
+- Basically, instead of obtaining the solution under a smoothness constraint, the constraint is applied to the unconstrained (rough) solution by fitting `\(h(\mathbf{x}; \mathbf{a})\)` to the "pseudoresponses" `\(\left\{ \tilde{y}_i = -g_m(\mathbf{x}_i) \right\}_{i=1}^N.\)`
+
+- This permits the replacement of the difficult function minimization problem, `\((\beta_m, \mathbf{a}_m) = \mbox{arg min}_{\beta, \mathbf{a}}\sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \beta h(\mathbf{x}; \mathbf{a}_m)),\)` by least-squares function minimization `\(\mathbf{a}_m = \mbox{arg min}_{\mathbf{a}, \beta} \sum_{i=1}^N\left[ -g_m(\mathbf{x}_i) - \beta h(\mathbf{x}_i; \mathbf{a}) \right]^2.\)`
+
+- Followed by only a single parameter optimization based on the original criterion `\(\rho_m = \mbox{arg min}_{\rho} \sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \rho h(\mathbf{x}_i; \mathbf{a}_m)).\)`
+
+- This leads to the following (generic) algorithm using steepest-descent
+
+
+---
+class: middle
+
+##ALGORITHM 1 (Gradient Boost)
+
+1.  `$$F_0(\mathbf{x}) = \mbox{arg min}_{\rho} \sum_{i=1}^N L(y_i, \rho),$$`
+
+2.  For `\(m = 1\)` to `\(M\)` do:
+
+3.  `$$\tilde{y}_i = \left[ \frac{\partial L(y_i, F(\mathbf{x}_i))}{\partial F(\mathbf{x}_i)} \right]_{F(\mathbf{x}) = F_{m-1}(\mathbf{x})}, \phantom{111} i = 1, \ldots, N$$`
+
+4.  `$$\mathbf{a}_m = \mbox{arg min}_{\mathbf{a}, \beta}\sum_{i=1}^N \left[ \tilde{y}_i - \beta h(\mathbf{x}_i; \mathbf{a}) \right]^2$$`
+
+5.  `$$\rho_m = \mbox{arg min}_{\rho} \sum_{i=1}^N L(y_i, F_{m-1}(\mathbf{x}_i) + \rho h(\mathbf{x}; \mathbf{a}_m))$$`
+
+6.  `$$F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \rho_m h(\mathbf{x}; \mathbf{a}_m)$$`
+
+7.  end For
+
+end Algorithm 
+
+
+---
+class: middle
+
+##Gradient Boost - Regression Trees
+
+1.  `\(F_0(\mathbf{x}) = \mbox{arg min} \sum_{i=1}^m L(y_i, \gamma)\)`
+
+2.  For `\(m = 1\)` to `\(M\)`
+
+    2.1 `\(\tilde{y}_i = \left[ \frac{\partial L(y_i, F(x_i))}{\partial F(x_i)} \right]_{F(\mathbf{x}) = F_{m-1}(\mathbf{x}).}\)`
+  
+    2.2 `\(\left\{ R_{jm}\right\}_1^{J_m} = J-\mbox{terminal node} \phantom{11} tree(\left\{\tilde{y}_i, \mathbf{x}_i \right\}_1^N)\)`
+  
+    2.3 `\(\gamma_{jm} = \mbox{arg min}_{\gamma} \sum_{x \in R_{jm}} L(y_i, F_{m-1}(x_i) + \sum_{j=1}^{J_m} \gamma_{jm} I(x_i \in R_{jm}))\)`
+  
+    2.4 `\(F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \nu \sum_{j=1}^{J_m} I(\mathbf{x} \in R_{jm})\)`
+  
+ end For
+  
+end Algorithm 
+
+
+---
+class: middle
+
+##The Ames housing data
+
+The Ames housing data set contains data on 2,930 properties in Ames, Iowa, including columns related to
+
+- house characteristics (bedrooms, garage, fireplace, pool, porch, etc.),
+
+- location (neighborhood),
+
+- lot information (zoning, shape, size, etc.),
+
+- ratings of condition and quality, and
+
+- sale price.
+
+
+
+---
+class: middle
+
+##Implementation in R
+
+
+```r
+library(tidyverse)
+library(rsample)
+library(gbm)
+
+# Create training (70%) and test (30%) sets for the AmesHousing::make_ames() data.
+# Use set.seed for reproducibility
+
+set.seed(123)
+ames_split &lt;- initial_split(AmesHousing::make_ames(), prop = .7)
+ames_train &lt;- training(ames_split)
+ames_test  &lt;- testing(ames_split)
+
+head(ames_test)
+```
+
+
+
+---
+class: middle
+
+##Create Hyperparameter Grid
+
+
+```r
+hyper_grid &lt;- expand.grid(
+  shrinkage = c(.01, .05, .1),
+  interaction.depth = c(3, 5, 7),
+  n.minobsinnode = c(5),
+  bag.fraction = c(.65),
+  #n.minobsinnode = c(5, 7, 10),
+  #bag.fraction = c(.65, .8, 1), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                     # a place to dump results
+)
+
+# randomize data
+random_index &lt;- sample(1:nrow(ames_train), nrow(ames_train))
+random_ames_train &lt;- ames_train[random_index, ]
+```
+
+
+
+---
+class: middle
+
+##Implementation in R
+
+
+
+
+```r
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  # reproducibility
+  set.seed(123)
+  # train model
+  gbm.tune &lt;- gbm(
+    formula = Sale_Price ~ .,
+    distribution = "gaussian",
+    data = random_ames_train,
+    n.trees = 6000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] &lt;- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] &lt;- sqrt(min(gbm.tune$valid.error))
+}
+```
+
+---
+class: middle
+
+##Implementation in R
+
+
+
+```r
+hyper_grid %&gt;% 
+  dplyr::arrange(min_RMSE) %&gt;%
+  head(10)
+```
+
+
+
+```r
+# for reproducibility
+set.seed(123)
+
+# train GBM model
+gbm.fit.final &lt;- gbm(
+  formula = Sale_Price ~ .,
+  distribution = "gaussian",
+  data = ames_train,
+  n.trees = 483,
+  interaction.depth = 5,
+  shrinkage = 0.1,
+  n.minobsinnode = 5,
+  bag.fraction = .65, 
+  train.fraction = 1,
+  n.cores = NULL, # will use all cores by default
+  verbose = FALSE
+  )  
+```
+
+
+---
+class: middle
+
+##Implementation in R
+
+
+```r
+par(mar = c(5, 8, 1, 1))
+summary(
+  gbm.fit.final, 
+  cBars = 10,
+  method = permutation.test.gbm, # also can use permutation.test.gbm
+  las = 2
+  )
+```
+
+[Source:](http://uc-r.github.io/gbm_regression)
+
+
+---
+class: middle
+
+##Implementation in R
+
+
+```r
+# predict values for test data
+pred &lt;- predict(gbm.fit.final, n.trees = gbm.fit.final$n.trees, ames_test)
+
+# results
+caret::RMSE(pred, ames_test$Sale_Price)
+```
+
+---
+class: middle
+
+##Implementation in R
+
+
+```
+##   shrinkage interaction.depth n.minobsinnode bag.fraction optimal_trees
+## 1      0.01                 7              5         0.65          5922
+## 2      0.05                 5              5         0.65          1698
+## 3      0.05                 7              5         0.65          1013
+## 4      0.01                 5              5         0.65          5660
+## 5      0.10                 5              5         0.65           388
+## 6      0.05                 3              5         0.65          1808
+## 7      0.01                 3              5         0.65          5992
+## 8      0.10                 7              5         0.65           376
+## 9      0.10                 3              5         0.65          1504
+##   min_RMSE
+## 1 20686.28
+## 2 20938.74
+## 3 20961.86
+## 4 21059.60
+## 5 21535.02
+## 6 21652.27
+## 7 21774.94
+## 8 21977.79
+## 9 22443.33
+```
+
+
+---
+class: middle
+
+##Implementation in R
+
+
+![](Lecture_22_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+```
+##                   var      rel.inf
+## 1        Overall_Qual 2.938971e+01
+## 2         Gr_Liv_Area 2.577802e+01
+## 3        Neighborhood 1.160150e+01
+## 4       Total_Bsmt_SF 7.565199e+00
+## 5            Lot_Area 2.495604e+00
+## 6         Bsmt_Unf_SF 1.774375e+00
+## 7        Overall_Cond 1.625385e+00
+## 8        First_Flr_SF 1.568542e+00
+## 9       Second_Flr_SF 1.207597e+00
+## 10        Garage_Area 1.101118e+00
+## 11     Year_Remod_Add 1.062900e+00
+## 12        Garage_Cars 1.013563e+00
+## 13         Year_Built 9.657017e-01
+## 14        MS_SubClass 9.482790e-01
+## 15       Exterior_1st 8.624562e-01
+## 16     Sale_Condition 7.553678e-01
+## 17     BsmtFin_Type_1 6.866176e-01
+## 18          Sale_Type 6.736741e-01
+## 19         Exter_Qual 6.105075e-01
+## 20      Bsmt_Exposure 5.955015e-01
+## 21       Screen_Porch 5.329765e-01
+## 22          Full_Bath 5.014152e-01
+## 23       Wood_Deck_SF 4.944711e-01
+## 24       Fireplace_Qu 4.042060e-01
+## 25      Open_Porch_SF 3.948100e-01
+## 26        Condition_1 3.819671e-01
+## 27          Longitude 3.783456e-01
+## 28          Bsmt_Qual 3.594891e-01
+## 29       Exterior_2nd 3.263716e-01
+## 30     Bsmt_Full_Bath 3.232095e-01
+## 31           Latitude 3.182181e-01
+## 32         Functional 2.822032e-01
+## 33         Fireplaces 2.731041e-01
+## 34       Kitchen_Qual 2.519087e-01
+## 35            Mo_Sold 2.454092e-01
+## 36       Mas_Vnr_Area 2.419304e-01
+## 37       Lot_Frontage 2.321091e-01
+## 38        Garage_Type 1.693555e-01
+## 39         Heating_QC 1.544799e-01
+## 40         Lot_Config 1.143564e-01
+## 41      TotRms_AbvGrd 1.133758e-01
+## 42       Land_Contour 1.110686e-01
+## 43          Year_Sold 1.106588e-01
+## 44     Enclosed_Porch 1.098497e-01
+## 45     BsmtFin_Type_2 7.553084e-02
+## 46              Alley 7.462395e-02
+## 47       Mas_Vnr_Type 6.623695e-02
+## 48      Bedroom_AbvGr 5.821005e-02
+## 49         Roof_Style 5.693803e-02
+## 50         Foundation 5.050232e-02
+## 51          MS_Zoning 4.539626e-02
+## 52          Half_Bath 4.410031e-02
+## 53    Low_Qual_Fin_SF 3.981611e-02
+## 54          Bsmt_Cond 3.798369e-02
+## 55      Garage_Finish 3.391531e-02
+## 56            Pool_QC 3.365751e-02
+## 57        Paved_Drive 2.740381e-02
+## 58          Roof_Matl 2.735933e-02
+## 59        Central_Air 2.557337e-02
+## 60              Fence 2.171193e-02
+## 61     Bsmt_Half_Bath 2.010655e-02
+## 62        Garage_Cond 1.868419e-02
+## 63 Three_season_porch 1.821977e-02
+## 64       BsmtFin_SF_2 1.747698e-02
+## 65        Condition_2 1.328623e-02
+## 66        House_Style 1.328094e-02
+## 67         Exter_Cond 1.226074e-02
+## 68         Land_Slope 1.153873e-02
+## 69        Garage_Qual 1.018635e-02
+## 70             Street 1.006063e-02
+## 71         Electrical 9.959030e-03
+## 72       BsmtFin_SF_1 6.293099e-03
+## 73           Misc_Val 5.266034e-03
+## 74          Pool_Area 3.562971e-03
+## 75          Lot_Shape 3.403864e-03
+## 76       Misc_Feature 5.459487e-04
+## 77          Utilities 0.000000e+00
+## 78          Bldg_Type 0.000000e+00
+## 79            Heating 0.000000e+00
+## 80      Kitchen_AbvGr 0.000000e+00
+```
+
+
+---
+class: middle
+
+##Implementation in R
+
+
+```r
+# predict values for test data
+pred &lt;- predict(gbm.fit.final, n.trees = gbm.fit.final$n.trees, ames_test)
+
+# results
+caret::RMSE(pred, ames_test$Sale_Price)
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
