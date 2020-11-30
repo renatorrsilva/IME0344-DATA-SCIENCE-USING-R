@@ -1,0 +1,394 @@
+---
+title: "Lecture 24 - Deep Learning - part II"
+author: "Material based on An overview of gradient descent optimization algorithms (Sebastian Ruder) and presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+
+
+
+---
+class: middle
+
+##Introduction
+
+- Gradient descent is one of the most popular algorithms to perform optimization and by far the most common way to optimize neural networks.
+
+- Gradient descent is a way to minimize an objective function $J(\theta)$ parameterized by a model’s parameters $\theta \in \mathbb{R}^d$  by updating the parameters in the opposite direction of the gradient of the objective function $\nabla_{\theta} J(\theta)$ w.r.t. to the parameters.
+
+- The learning rate $\eta$ determines the size of the steps we take to reach a (local) minimum.
+
+
+---
+class: middle
+
+##Introduction
+
+- For a linear neuron with a squared error, it is a quadratic bowl function.
+
+- Vertical cross-sections are parabolas.
+
+- Horizontal cross-sections are ellipses.
+
+- For multi-layer, non-linear nets the error surface is much more complicated.
+
+- But locally, a piece of a quadratic bowl is usually a very good approximation.
+
+
+---
+class: middle
+
+##Gradient descent variants
+
+- There are three variants of gradient descent, which differ in how much data we use to compute the gradient of the objective function. 
+
+- Depending on the amount of data, we make a trade-off between
+the accuracy of the parameter update and the time it takes to perform an update.
+
+
+---
+class: middle
+
+##Batch gradient descent
+
+-   Vanilla gradient descent, aka batch gradient descent, computes the gradient of the cost function w.r.t. to the parameters $\theta$ for the **entire training dataset**:
+
+$$\theta  = \theta - \eta \nabla_{\theta} J(\theta).$$
+
+-   As we need to calculate the **gradients** for the **whole dataset** to perform just one update, **batch gradient descent** can be **very slow** and is **intractable** for datasets that do not fit in memory. 
+
+-   Batch gradient descent also does not allow us to update our model online, i.e. with new examples on-the-fly.
+
+---
+class: middle
+
+## Stochastic gradient descent
+
+-   Stochastic gradient descent (SGD) in contrast performs a parameter update for each training example $x^{(i)}$ and label $y^{(i)}$.
+
+$$\theta  = \theta - \eta \nabla_{\theta} J(\theta; x^{(i)}; y^{(i)}).$$
+###Strength and drawback
+
+- Batch gradient descent performs redundant computations for large datasets, as it recomputes gradients for similar examples before each parameter update.  
+
+- While SGD does away with this redundancy by performing one update at a time.
+
+- However, SGD can perform frequent updates with a high variance that causes the objective function to fluctuate heavily.
+
+- Moreover, it has been shown that when we slowly decrease the learning rate, SGD
+shows the same convergence behaviour as batch gradient descent, almost certainly converging to a local or the global minimum for non-convex and convex optimization respectively. 
+
+
+---
+class: middle
+
+##Mini-batch gradient descent
+
+-   Mini-batch gradient descent finally takes the best of both worlds and performs an update for every mini-batch of $n$ training examples:
+
+$$\theta  = \theta - \eta \nabla_{\theta} J(\theta; x^{(i;i+n)}; y^{(i;i+n)})$$
+
+####Strength and drawback
+
+- Reduces the variance of the parameter updates, which can lead to more stable convergence
+
+
+####Recomendations
+
+- Common mini-batch sizes range between 50 and 256, but can vary for different applications
+
+
+---
+class: middle
+
+##Challenges
+
+- Going downhill reduces the error, but the direction of steepest descent does not point at the minimum unless the ellipse is a circle.
+
+- The gradient is big in the direction in which we only want to travel a small distance.
+
+-   The gradient is small in the direction in which we want to travel a large distance.
+
+[Source:](http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf)
+
+---
+class: middle
+
+##Challenges
+
+-   A learning rate that is too small leads to  slow convergence, while a learning rate that is too large can hinder convergence and cause the loss function to fluctuate around the minimum or even to diverge.
+
+- Additionally, the same learning rate applies to all parameter updates. 
+
+- If our data is sparse and our features have very different frequencies, we might not want to update all of them to the same extent, but perform a larger update for rarely occurring features.
+
+-   Another key challenge is minimizing highly non-convex error functions common for neural networks is avoiding getting trapped in their numerous suboptimal local minima and/or saddle points.
+
+- These saddle points are usually surrounded by a plateau of the same error, which makes it notoriously hard for SGD to escape, as the gradient is close to zero in all dimensions.
+
+
+---
+class: middle
+
+##Challenges
+
+<img src="Lecture_24_files/figure-html/Fig1.png" width="120%" align="center" />
+
+
+
+
+---
+class: middle
+
+##Momentum - Intuition
+
+
+-   Momentum is a method that helps accelerate SGD in the relevant direction and dampens oscillations.
+
+-   Essentially, when using momentum, we push a ball down a hill. The ball accumulates momentum as it rolls downhill, becoming faster and faster on the way (until it reaches its terminal velocity, if there is air resistance i.e. $\gamma < 1.$) 
+
+-   Momentum	damps	oscillations	in	directions	of	high	curvature	by	combining	gradients	with	opposite	signs.
+
+
+
+---
+class: middle
+
+##Momentum
+
+-  The	effect of the	gradient is	to increment	the	previous	velocity.	The	
+velocity also decays by $\alpha$	which	is slightly	less	then	1.
+
+
+$$\nu_t = \gamma \nu_{t-1} + \eta \nabla_{\theta} J(\theta).$$
+- The	weight change	is equal to	the	current	velocity.	
+
+
+$$\Delta \theta_t = \theta_t - \theta_{t-1} = \nu_t$$
+
+- The	weight	change	can	be	expressed	in	terms	of	the	previous	weight	change	and	the	current	gradient., i.e,
+
+\begin{align}
+\Delta \theta_t =& \nu_t \\
+=& \gamma \nu_{t-1} + \eta \nabla_{\theta} J(\theta) \\
+=& \gamma \Delta \theta_{t-1} + \eta \nabla_{\theta} J(\theta).
+\end{align}
+
+
+
+---
+class: middle
+
+##Momentum - Summary
+
+.pull-left[
+
+###Mathematical Expression
+
+\begin{align}
+\nu_t =& \gamma \nu_{t-1} + \eta \nabla_{\theta} J(\theta) \\
+\theta_t =& \theta_{t-1} - \nu_t.
+\end{align}
+
+]
+
+.pull-right[
+
+
+
+
+<img src="Lecture_24_files/figure-html/Fig2.jpeg" width="140%" align="center" />
+
+
+
+]
+
+-   However, a ball that rolls down a hill, blindly following the slope, is highly unsatisfactory.
+-   We would like to have a smarter ball, a ball that has a notion of where it is going so that it knows to slow down before the hill slopes up again.
+
+---
+class: middle
+
+##Nesterov accelerated gradient
+
+- Nesterov accelerated gradient (NAG) is a way to give our momentum term this kind of foresight.
+
+- We know that we will use our momentum term $\gamma \nu_{t-1}$ to move the parameters $\theta.$
+
+- Computing $\theta - \gamma \nu_{t-1}$ thus gives us an approximation of the next position of the parameters (the gradient is missing for the full update), a rough idea where our parameters are going to be. 
+
+- We can now effectively look ahead by calculating the gradient not w.r.t. to our current parameter $\theta$ but w.r.t. the approximate future
+position of our parameters:
+
+- It dampens oscillations in	directions of high	curvature by	combining
+gradients with opposite signs.
+
+
+[Source:](http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf)
+
+
+---
+class: middle
+
+##Nesterov accelerated gradient
+
+
+.pull-left[
+
+####Mathematical Expression
+
+\begin{align}
+\nu_t =& \gamma \nu_{t-1} + \eta \nabla_{\theta} J(\theta-\gamma \nu_{t-1}) \\
+\theta_t =& \theta_{t-1} - \nu_t.
+\end{align}
+
+
+]
+
+
+.pull-right[
+
+<img src="Lecture_24_files/figure-html/Fig3.png" width="100%" align="center" />
+
+
+
+]
+
+-   While Momentum first computes the current gradient (small blue vector in Figure 3) and then takes a big jump in the direction of the updated accumulated gradient (big blue vector).
+
+-   NAG first makes a big jump in the direction of the previous accumulated gradient (brown vector), measures the gradient and then makes a correction
+(green vector).
+
+
+---
+class: middle
+
+##Rprop:
+
+
+- The magnitude of the gradient can be very different for 
+different weights and can change during learning.
+
+- It makes hard to choose a single global learning rate.
+
+- For full batch learning, we can deal with this variation by only
+using the sign of the gradient.
+
+- The weight updates are all of the same magnitude.
+
+- This escapes from saddle points and plateaus  with tiny gradients quickly.
+
+- Rprop combines the idea of only using the sign of the gradient with the idea of adapting the step size individually for each weight
+
+
+---
+class: middle
+##Rprop
+
+- Full batch only 
+
+- Motivation: Gradient variance is big, hard to choose global learning rate
+
+- Use gradient sign and depend on local learning rates
+
+-   To adjust the step size for some weight, the following algorithm is used:
+
+a.    Check last two signs, if they are the same, multiply by 1.2 otherwise by 0.5
+
+b.    Now we can apply the weight update. $\theta_t = \theta_{t-1} -\mbox{sign}(\nabla J(\theta)) s$, where $s$ is the step size.
+
+[Source 1:](https://towardsdatascience.com/understanding-rmsprop-faster-neural-network-learning-62e116fcf29a)
+
+[Source: 2](https://courses.cs.ut.ee/MTAT.03.277/2014_fall/uploads/Main/deep-learning-lecture-5-Optimization-how-to-make-the-learning-go-faster-hans%20-peeter-tulmin.pdf)
+
+---
+class: middle
+
+##Rprop - Challenge
+
+- Rprop doesn’t really work when we have very large datasets and need to perform mini-batch weights updates. 
+
+-  The reason it doesn’t work is that it violates the central idea behind stochastic gradient descent, which is when we have small enough learning rate, it averages the gradients over successive mini-batches.
+
+- Consider the weight, that gets the gradient 0.1 on nine mini-batches, and the gradient of -0.9 on tenths mini-batch. What we’d like is to those gradients to roughly cancel each other out, so that the stay approximately the same.
+
+-  With Rprop, we increment the weight 9 times and decrement only once, so the weight grows much larger.
+
+
+---
+class: middle
+
+##RMSprop
+
+
+- The central idea of RMSprop is keep the moving average of the squared gradients for each weight. 
+
+- And then we divide the gradient by square root the mean square. The equation as follows
+
+\begin{align}
+E[g^2]_t =& 0.9 E[g^2]_{t-1} + 0.1 g_t^2 \\
+\theta_{t+1} =& \theta_t - \frac{\eta}{\sqrt{E[g^2_t] + \epsilon}} g_t
+\end{align}
+where $E[g^2]$ is the exponential decaying average of squared gradients.
+
+- Hinton suggests $\gamma$ to be set to 0.9. [Other Sources:](https://d2l.ai/chapter_optimization/rmsprop.html)
+
+
+---
+class: middle
+
+##Adagrad
+
+- Adagrad is an algorithm for gradient-based optimization that does just this: It adapts the learning rate to the parameters, performing larger updates for infrequent and smaller updates for frequent parameters.
+
+- For this reason, it is well-suited for dealing with sparse data (NLP and image recognition problem).
+
+- Previously, we performed an update for all parameters $\theta$ at once as every parameter $\theta_i$ used the same learning rate $\eta.$
+
+- Adagrad uses a different learning rate for every parameter $\theta_i$ at every time step $t,$
+
+---
+class: middle
+
+##Adagrad
+
+- For brevity we set $g_{t,i}$ to be the gradient of the objective function w.r.t to the parameter $\theta_i$ at time step $t:$
+
+$$g_{t,i} = \nabla_{\theta_i} J(\theta_{t,i}).$$
+
+- The SGD update for every parameter $\theta_i$ at each time step $t$ then becomes:
+
+$$\theta_{t+1,i} = \theta_{t,i} - \eta g_{t,i}.$$
+- In its update rule, Adagrad modifies the general learning rate $\eta$ at each time step $t$ for every parameter $\theta_i$ based on the past gradients that have been computed for $\theta_i:$
+
+
+$$\theta_{t+1,i} = \theta_{t,i} - \frac{\eta}{\sqrt{G_{t,{ii}}+\epsilon}} g_{t,i},$$
+where $G_t \in \mathbb{R}^{d \times d}$ here is a diagonal matrix where each diagonal element $i,i$ is the sum of the squares of the gradients w.r.t $\theta_i$ up to time step $t,$ while $\epsilon$ is a smoothing term that avoids division by zero. 
+
+
+---
+class: middle
+
+##Adam
+
+- Combine the advantages of AdaGrad (works well with sparse gradients) and RMSProp (works well in non-stationary settings (e.g noisy)).
+
+- Adam also keeps an exponentially decaying average of past gradients $m_t$ similar to momentum:
+
+\begin{align}
+m_t =& \beta_1 m_{t-1} + (1 - \beta_1) g_t \\
+\nu_t =& \beta_2 \nu_{t-1} + (1 - \beta_2)g_t^2,
+\end{align}
+where $m_t$ and $\nu_t$ are estimates of the first moment (mean) and the second moments (the uncentered variance) of the gradients, respectively.
+
+- The authors of Adam observe that $m_t$ and $\nu_t$ are biased towards zero, which can be corrected via
+
+$$\hat{m}_t = \frac{m_t}{1 - \beta^{t}_1}; \phantom{111} \hat{\nu}_t = \frac{\nu_t}{1 - \beta^{t}_2}.$$
+- The paramaters update can be done as follows: $\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\hat{\nu}_t + \epsilon}}\hat{m}_t.$
