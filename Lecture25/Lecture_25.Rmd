@@ -1,0 +1,1085 @@
+---
+title: "Lecture 25 - torch for R"
+author: "Material written by Daniel Falbel and Javier Luraschi. Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+
+---
+class: middle
+
+##Installation
+
+-   The package torch can be installed from CRAN with:
+
+```{r, eval = FALSE, warning = FALSE, message = FALSE}
+install.packages("torch")
+```
+
+- Alternatively, the development version of the  package also can be installed  with:
+
+```{r, eval = FALSE, warning = FALSE, message = FALSE}
+remotes::install_github("mlverse/torch")
+```
+
+
+---
+class: middle
+
+##Warm-up
+
+###Example
+
+
+-   A fully-connected ReLU network with one hidden layer and no biases, trained to predict y from x using mean squared error as cost function.
+
+- In other words, ReLU function was used as activation function for hidden layer and linear function as activation function for output layer.
+
+-   This implementation uses pure R to manually compute the forward pass, loss, and backward pass.
+
+-   An R array is a generic n-dimensional array; it does not know anything about deep learning or gradients or computational graphs, and is just a way to perform generic numeric computations.
+
+
+---
+class: middle
+
+
+####Forward pass  - For each instance we have:
+
+\begin{align}
+\mathbf{Z} =& \mathbf{X}_{n \times p}\mathbf{W}_{1 \phantom{1} p \times q} \\
+\mathbf{A} =& g(\mathbf{Z})_{n \times q}    \\
+\hat{\mathbf{y}} =&  \mathbf{A}_{n \times q}  \mathbf{W}_{2 \phantom{1} q \times 1} .
+\end{align}
+
+
+####Cost Function
+
+$$L = (\mathbf{y} - \hat{\mathbf{y}})^{'}(\mathbf{y} - \hat{\mathbf{y}}) = (  \hat{\mathbf{y}} - \mathbf{y})^{'}( \hat{\mathbf{y}} - \mathbf{y} ) = \sum_{i=1}^n(y_i - \hat{y}_i)^2.$$
+
+####Backpropagation ("Vectorized")
+
+
+\begin{align}
+\frac{\partial L}{\partial \mathbf{W}_2} = \frac{\partial L}{\partial \hat{\mathbf{y}}} \frac{\partial \hat{\mathbf{y}}}{\partial \mathbf{W}_2} = 2 \mathbf{A}^{'}(\hat{\mathbf{y}} - \mathbf{y}). 
+\end{align}
+
+\begin{align}
+\frac{\partial L}{\partial \mathbf{W}_1} =\frac{\partial L}{\partial \hat{\mathbf{y}}} \frac{\partial \hat{\mathbf{y}}}{\partial \mathbf{A}} \frac{\partial \mathbf{A}}{\partial \mathbf{Z}} \frac{\partial \mathbf{Z}}{\partial \mathbf{W}_1} =& 2\mathbf{X}^{'} \frac{\partial g^{'}(\mathbf{Z})}{\partial \mathbf{Z}} \left[\left(\hat{\mathbf{y}} - \mathbf{y}\right)\mathbf{W}_2^{'} \right]  \\
+=& 
+2\mathbf{X}^{'}\left[\left(\hat{\mathbf{y}} - \mathbf{y}\right)\mathbf{W}_2^{'} \right]. 
+\end{align}
+
+[Source:](https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf)
+
+---
+class: middle
+
+##Warm-up
+
+- R code to simulate data and Randomly initialize weights
+
+```{r, eval= FALSE, warning = FALSE, message = FALSE}
+
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 1
+
+# Create random input and output data
+x <- array(rnorm(N*D_in), dim = c(N, D_in))
+y <- array(rnorm(N*D_out), dim = c(N, D_out))
+
+# Randomly initialize weights
+w1 <- array(rnorm(D_in*H), dim = c(D_in, H))
+w2 <- array(rnorm(H*D_out), dim = c(H, D_out))
+
+
+```
+
+
+---
+class:
+
+##Warm-up
+
+```{r, eval= FALSE, warning = FALSE, message = FALSE}
+learning_rate <- 1e-6
+for (t in seq_len(500)) {
+   # Forward pass: compute predicted y
+   h <- x %*% w1
+   h_relu <- ifelse(h < 0, 0, h)
+   y_pred <- h_relu %*% w2
+   # Compute and print loss
+   loss <- sum((y_pred - y)^2)
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", loss, "\n")
+   # Backprop to compute gradients of w1 and w2 with respect to loss
+   grad_y_pred <- 2 * (y_pred - y)
+   grad_w2 <- t(h_relu) %*% grad_y_pred
+   grad_h_relu <- grad_y_pred %*% t(w2)
+   grad_h <- grad_h_relu
+   grad_h[h < 0] <- 0
+   grad_w1 <- t(x) %*% grad_h
+   # Update weights
+   w1 <- w1 - learning_rate * grad_w1
+   w2 <- w2 - learning_rate * grad_w2
+}
+
+
+```
+
+
+---
+class: middle
+
+##Warm-up
+
+- The output of the R code as follows
+
+```{r, echo= FALSE, warning = FALSE, message = FALSE}
+
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 1
+
+# Create random input and output data
+x <- array(rnorm(N*D_in), dim = c(N, D_in))
+y <- array(rnorm(N*D_out), dim = c(N, D_out))
+
+# Randomly initialize weights
+w1 <- array(rnorm(D_in*H), dim = c(D_in, H))
+w2 <- array(rnorm(H*D_out), dim = c(H, D_out))
+
+learning_rate <- 1e-6
+for (t in seq_len(500)) {
+   # Forward pass: compute predicted y
+   h <- x %*% w1
+   h_relu <- ifelse(h < 0, 0, h)
+   y_pred <- h_relu %*% w2
+   
+   # Compute and print loss
+   loss <- sum((y_pred - y)^2)
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", loss, "\n")
+   
+   # Backprop to compute gradients of w1 and w2 with respect to loss
+   grad_y_pred <- 2 * (y_pred - y)
+   grad_w2 <- t(h_relu) %*% grad_y_pred
+   grad_h_relu <- grad_y_pred %*% t(w2)
+   grad_h <- grad_h_relu
+   grad_h[h < 0] <- 0
+   grad_w1 <- t(x) %*% grad_h
+   
+   # Update weights
+   w1 <- w1 - learning_rate * grad_w1
+   w2 <- w2 - learning_rate * grad_w2
+}
+
+
+```
+
+- Now, we will replace the R array with a torch Tensor.
+
+- However, we need to learn what is torch Tensor first.
+
+---
+class: middle
+
+##Tensors
+
+-    A tensor is a multidimensional array, in other words, tensors is a general mathematical structure that could have more than two dimensions.
+
+###Torch Tensor
+
+-   Unfortunately, R arrays cannot utilize GPUs to accelerate its numerical computations. For modern deep neural networks, GPUs often provide speedups of 50x or greater.
+
+- To deal with this problem, we can use the torch tensor. A torch tensor is an n-dimensional array, which has many functions for mathematical /computational operations. 
+
+- Unlike R, torch Tensors can utilize GPUs to accelerate their numeric computations. To run a torch Tensor on GPU, you simply need to cast it to a new datatype.
+
+
+
+---
+class: middle
+
+##Creating tensors from R objects
+
+-   The torch_tensor function takes an R vector, matrix or array and creates an equivalent torch_tensor.
+
+```{r, eval = FALSE, message = FALSE, warning = FALSE}
+
+library(torch)
+
+torch_tensor(c(1,2,3))
+
+torch_tensor(matrix(1:10, ncol = 5, nrow = 2, byrow = TRUE))
+
+torch_tensor(array(runif(12), dim = c(2, 2, 3)))
+
+
+```
+
+- By default, we will create tensors in the cpu device, converting their R datatype to the corresponding torch dtype.
+
+- Note currently, only numeric and boolean types are supported.
+
+---
+class: middle
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+
+library(torch)
+
+torch_tensor(c(1,2,3))
+
+torch_tensor(matrix(1:10, ncol = 5, nrow = 2, byrow = TRUE))
+
+torch_tensor(array(runif(12), dim = c(2, 2, 3)))
+
+
+```
+
+---
+class: middle
+
+##Creating tensors from R objects
+
+-   You can always modify dtype and device when converting an R object to a torch tensor. For example:
+
+```{r, message = FALSE, warning = FALSE}
+
+torch_tensor(1, dtype = torch_long())
+
+torch_tensor(1, device = "cpu", dtype = torch_float64())
+
+```
+
+---
+class: middle
+
+##Using creation functions
+
+Here is the full list of functions that can be used to bulk-create tensors in torch:
+
+-   torch_arange: Returns a tensor with a sequence of integers,
+-   torch_empty: Returns a tensor with uninitialized values,
+-   torch_eye: Returns an identity matrix,
+-   torch_full: Returns a tensor filled with a single value,
+-   torch_linspace: Returns a tensor with values linearly spaced in some interval,
+-   torch_logspace: Returns a tensor with values logarithmically spaced in some interval,
+-   torch_ones: Returns a tensor filled with all ones,
+-   torch_rand: Returns a tensor filled with values drawn from a uniform distribution on $[0, 1)$.
+-   torch_randint: Returns a tensor with integers randomly drawn from an interval,
+-   torch_randn: Returns a tensor filled with values drawn from a unit normal distribution,
+-   torch_randperm: Returns a tensor filled with a random permutation of integers in some interval,
+-   torch_zeros: Returns a tensor filled with all zeros.
+
+
+---
+class: middle
+
+##Using creation functions - Examples
+
+```{r, message = FALSE, warning = FALSE}
+x <- torch_randn(5, 3)
+x
+
+x <- torch_ones(2, 4, dtype = torch_int64(), device = "cpu")
+x
+
+```
+
+---
+class: middle
+
+##Conversion - Example
+
+```{r, message = FALSE, warning = FALSE}
+
+x <- torch_tensor(1)
+x
+
+y <- x$to(dtype = torch_int32())
+y
+
+
+```
+
+
+-   You can also copy a tensor to the GPU using:
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+#NOT RUN!!!
+x <- torch_tensor(1)
+
+y <- x$cuda()
+y
+
+```
+
+
+---
+class: middle
+
+##Tensor objects and methods
+
+-   Tensors have a large amount of methods that can be called using the $ operator.
+
+-   A list of all methods that can be called by tensor objects and their documentation can be found [here.](https://torch.mlverse.org/docs/articles/tensor/index.html.)
+
+- You can also look at PyTorch’s documentation for additional details.
+
+
+
+---
+class: middle
+
+##Neural Network revisited using the tensors
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+
+if (cuda_is_available()) {
+   device <- torch_device("cuda")
+} else {
+   device <- torch_device("cpu")
+}
+   
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 1
+
+# Create random input and output data
+x <- torch_randn(N, D_in, device=device)
+y <- torch_randn(N, D_out, device=device)
+
+# Randomly initialize weights
+w1 <- torch_randn(D_in, H, device=device)
+w2 <- torch_randn(H, D_out, device=device)
+
+```
+
+
+
+---
+class: middle
+
+##Neural Network revisited using the tensors
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+
+learning_rate <- 1e-6
+for (t in seq_len(1000)) {
+   # Forward pass: compute predicted y
+   h <- x$mm(w1)
+   h_relu <- h$clamp(min=0)
+   y_pred <- h_relu$mm(w2)
+   # Compute and print loss
+   loss <- as.numeric((y_pred - y)$pow(2)$sum())
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", loss, "\n")
+   # Backprop to compute gradients of w1 and w2 with respect to loss
+   grad_y_pred <- 2.0 * (y_pred - y)
+   grad_w2 <- h_relu$t()$mm(grad_y_pred)
+   grad_h_relu <- grad_y_pred$mm(w2$t())
+   grad_h <- grad_h_relu$clone()
+   grad_h[h < 0] <- 0
+   grad_w1 <- x$t()$mm(grad_h)
+   # Update weights using gradient descent
+   w1 <- w1 - learning_rate * grad_w1
+   w2 <- w2 - learning_rate * grad_w2
+}
+
+```
+
+
+
+
+---
+class: middle
+
+##Neural Network revisited using the tensors
+
+
+- The output of R code as follows:
+
+```{r, echo= FALSE, message = FALSE, warning = FALSE}
+
+if (cuda_is_available()) {
+   device <- torch_device("cuda")
+} else {
+   device <- torch_device("cpu")
+}
+   
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 1
+
+# Create random input and output data
+x <- torch_randn(N, D_in, device=device)
+y <- torch_randn(N, D_out, device=device)
+
+# Randomly initialize weights
+w1 <- torch_randn(D_in, H, device=device)
+w2 <- torch_randn(H, D_out, device=device)
+
+
+learning_rate <- 1e-6
+for (t in seq_len(1000)) {
+   # Forward pass: compute predicted y
+   h <- x$mm(w1)
+   h_relu <- h$clamp(min=0)
+   y_pred <- h_relu$mm(w2)
+   # Compute and print loss
+   loss <- as.numeric((y_pred - y)$pow(2)$sum())
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", loss, "\n")
+   # Backprop to compute gradients of w1 and w2 with respect to loss
+   grad_y_pred <- 2.0 * (y_pred - y)
+   grad_w2 <- h_relu$t()$mm(grad_y_pred)
+   grad_h_relu <- grad_y_pred$mm(w2$t())
+   grad_h <- grad_h_relu$clone()
+   grad_h[h < 0] <- 0
+   grad_w1 <- x$t()$mm(grad_h)
+   # Update weights using gradient descent
+   w1 <- w1 - learning_rate * grad_w1
+   w2 <- w2 - learning_rate * grad_w2
+}
+
+```
+
+-   In the next example, we will use autograd instead of computing the gradients manually.
+
+-   However, let's learn how to autograd works.
+
+
+---
+class: middle
+
+##Tensors and Autograd
+
+
+-   In the previous examples, we had to manually implement both the forward and backward passes of our neural network. 
+
+-   Manually implementing the backward pass is not a big deal for a small two-layer network, but can quickly get very hairy for large complex networks.
+
+-   We can use automatic differentiation to automate the computation of backward passes in neural networks. 
+
+-   The autograd feature in torch provides exactly this functionality. 
+
+-   When using autograd, the forward pass of your network will define a computational graph; nodes in the graph will be Tensors, and edges will be functions that produce output Tensors from input Tensors. 
+
+-   Backpropagating through this graph then allows you to easily compute gradients.
+
+
+
+---
+class: middle
+
+##Tensors and Autograd
+
+
+-   Each Tensor represents a node in a computational graph. If x is a Tensor that has x$requires_grad=TRUE then x$grad is another Tensor holding the gradient of x with respect to some scalar value.
+
+-   Here we use torch Tensors and autograd to implement our two-layer network; now we no longer need to manually implement the backward pass through the network:
+
+
+
+---
+class: middle
+
+##Tensors and Autograd - Loading and Initialization
+
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+if (cuda_is_available()) {
+   device <- torch_device("cuda")
+} else {
+   device <- torch_device("cpu")
+}
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 1
+# Create random input and output data
+# Setting requires_grad=FALSE (the default) indicates that we do not need to 
+# compute gradients with respect to these Tensors during the backward pass.
+x <- torch_randn(N, D_in, device=device)
+y <- torch_randn(N, D_out, device=device)
+# Randomly initialize weights
+# Setting requires_grad=TRUE indicates that we want to compute gradients with
+# respect to these Tensors during the backward pass.
+w1 <- torch_randn(D_in, H, device=device, requires_grad = TRUE)
+w2 <- torch_randn(H, D_out, device=device, requires_grad = TRUE)
+```
+
+
+---
+class: middle
+
+##Tensors and Autograd - Forward pass
+
+
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+
+learning_rate <- 1e-6
+for (t in seq_len(500)) {
+   # Forward pass: compute predicted y using operations on Tensors; these
+   # are exactly the same operations we used to compute the forward pass using
+   # Tensors, but we do not need to keep references to intermediate values since
+   # we are not implementing the backward pass by hand.
+   y_pred <- x$mm(w1)$clamp(min=0)$mm(w2)
+   
+   # Compute and print loss using operations on Tensors.
+   # Now loss is a Tensor of shape (1,)
+   loss <- (y_pred - y)$pow(2)$sum()
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", as.numeric(loss), "\n")
+
+
+```
+
+
+
+---
+class: middle
+
+##Tensors and Autograd - Backpropgation pass
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+
+# Use autograd to compute the backward pass. This call will compute the
+   # gradient of loss with respect to all Tensors with requires_grad=True.
+   # After this call w1$grad and w2$grad will be Tensors holding the gradient
+   # of the loss with respect to w1 and w2 respectively.
+   loss$backward()
+   
+   # Manually update weights using gradient descent. Wrap in `with_no_grad`
+   # because weights have requires_grad=TRUE, but we don't need to track this
+   # in autograd.
+   # You can also use optim_sgd to achieve this.
+   with_no_grad({
+      
+      # operations suffixed with an `_` operates on in-place on the tensor.
+      w1$sub_(learning_rate * w1$grad)
+      w2$sub_(learning_rate * w2$grad)
+      
+      # Manually zero the gradients after updating weights
+      w1$grad$zero_()
+      w2$grad$zero_()
+   })
+}
+
+```
+
+
+
+
+---
+class: middle
+
+##Tensors and Autograd 
+
+- The output of the R code is the following
+
+```{r, echo= FALSE, message = FALSE, warning = FALSE}
+
+if (cuda_is_available()) {
+   device <- torch_device("cuda")
+} else {
+   device <- torch_device("cpu")
+}
+   
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 1
+
+# Create random input and output data
+# Setting requires_grad=FALSE (the default) indicates that we do not need to 
+# compute gradients with respect to these Tensors during the backward pass.
+x <- torch_randn(N, D_in, device=device)
+y <- torch_randn(N, D_out, device=device)
+
+# Randomly initialize weights
+# Setting requires_grad=TRUE indicates that we want to compute gradients with
+# respect to these Tensors during the backward pass.
+w1 <- torch_randn(D_in, H, device=device, requires_grad = TRUE)
+w2 <- torch_randn(H, D_out, device=device, requires_grad = TRUE)
+
+learning_rate <- 1e-6
+for (t in seq_len(500)) {
+   # Forward pass: compute predicted y using operations on Tensors; these
+   # are exactly the same operations we used to compute the forward pass using
+   # Tensors, but we do not need to keep references to intermediate values since
+   # we are not implementing the backward pass by hand.
+   y_pred <- x$mm(w1)$clamp(min=0)$mm(w2)
+   
+   # Compute and print loss using operations on Tensors.
+   # Now loss is a Tensor of shape (1,)
+   loss <- (y_pred - y)$pow(2)$sum()
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", as.numeric(loss), "\n")
+   
+   # Use autograd to compute the backward pass. This call will compute the
+   # gradient of loss with respect to all Tensors with requires_grad=True.
+   # After this call w1$grad and w2$grad will be Tensors holding the gradient
+   # of the loss with respect to w1 and w2 respectively.
+   loss$backward()
+   
+   # Manually update weights using gradient descent. Wrap in `with_no_grad`
+   # because weights have requires_grad=TRUE, but we don't need to track this
+   # in autograd.
+   # You can also use optim_sgd to achieve this.
+   with_no_grad({
+      
+      # operations suffixed with an `_` operates on in-place on the tensor.
+      w1$sub_(learning_rate * w1$grad)
+      w2$sub_(learning_rate * w2$grad)
+      
+      # Manually zero the gradients after updating weights
+      w1$grad$zero_()
+      w2$grad$zero_()
+   })
+}
+
+```
+
+- Now, we will learn we will learn how to use the neural networks abstractions in torch.
+
+
+---
+class: middle
+
+##nn: neural networks with torch
+
+
+-   Computational graphs and autograd are a very powerful paradigm for defining complex operators and automatically taking derivatives; however for large neural networks raw autograd can be a bit too low-level.
+
+-   When building neural networks we frequently think of arranging the computation into layers, some of which have learnable parameters which will be optimized during learning.
+
+-   In torch, the nn functionality serves this same purpose. The nn feature defines a set of Modules, which are roughly equivalent to neural network layers. 
+
+-   A Module receives input Tensors and computes output Tensors, but may also hold internal state such as Tensors containing learnable parameters. 
+
+-   The nn collection also defines a set of useful loss functions that are commonly used when training neural networks.
+
+
+---
+class: middle
+
+
+##nn: neural networks with torch
+
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+
+if (cuda_is_available()) {
+   device <- torch_device("cuda")
+} else {
+   device <- torch_device("cpu")
+}
+   
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 1
+
+# Create random input and output data
+# Setting requires_grad=FALSE (the default) indicates that we do not need to 
+# compute gradients with respect to these Tensors during the backward pass.
+x <- torch_randn(N, D_in, device=device)
+y <- torch_randn(N, D_out, device=device)
+
+```
+
+
+
+---
+class: middle
+
+
+##nn: neural networks with torch
+
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+
+# Use the nn package to define our model as a sequence of layers. nn_sequential
+# is a Module which contains other Modules, and applies them in sequence to
+# produce its output. Each Linear Module computes output from input using a
+# linear function, and holds internal Tensors for its weight and bias.
+model <- nn_sequential(
+    nn_linear(D_in, H),
+    nn_relu(),
+    nn_linear(H, D_out)
+)
+
+# The nn package also contains definitions of popular loss functions; in this
+# case we will use Mean Squared Error (MSE) as our loss function.
+loss_fn <- nnf_mse_loss
+
+
+```
+
+
+
+
+---
+class: middle
+
+
+##nn: neural networks with torch
+
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}
+
+learning_rate <- 1e-6
+for (t in seq_len(500)) {
+   # Forward pass: compute predicted y by passing x to the model. Module objects
+   # can be called like functions. When doing so you pass a Tensor of input
+   # data to the Module and it produces a Tensor of output data.
+   y_pred <- model(x)
+   # Compute and print loss. We pass Tensors containing the predicted and true
+   # values of y, and the loss function returns a Tensor containing the
+   # loss.
+   loss <- loss_fn(y_pred, y)
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", as.numeric(loss), "\n")
+   # Zero the gradients before running the backward pass.
+   model$zero_grad()
+   # Backward pass: compute gradient of the loss with respect to all the learnable
+   # parameters of the model. Internally, the parameters of each Module are stored
+   # in Tensors with requires_grad=TRUE, so this call will compute gradients for
+   # all learnable parameters in the model.
+   loss$backward()
+
+   
+``` 
+     
+---
+class: middle
+
+##nn: neural networks with torch
+
+
+```{r, eval= FALSE, message = FALSE, warning = FALSE}  
+   
+   
+   # Update the weights using gradient descent. Each parameter is a Tensor, so
+   # we can access its gradients like we did before.
+   with_no_grad({
+      for (param in model$parameters) {
+         param$sub_(learning_rate * param$grad)
+      }
+   })
+}
+
+```
+
+
+
+---
+class: middle
+
+##nn: neural networks with torch
+
+- The output of the R code is the following
+
+```{r, echo= FALSE, message = FALSE, warning = FALSE}  
+
+if (cuda_is_available()) {
+   device <- torch_device("cuda")
+} else {
+   device <- torch_device("cpu")
+}
+   
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 1
+
+# Create random input and output data
+# Setting requires_grad=FALSE (the default) indicates that we do not need to 
+# compute gradients with respect to these Tensors during the backward pass.
+x <- torch_randn(N, D_in, device=device)
+y <- torch_randn(N, D_out, device=device)
+
+# Use the nn package to define our model as a sequence of layers. nn_sequential
+# is a Module which contains other Modules, and applies them in sequence to
+# produce its output. Each Linear Module computes output from input using a
+# linear function, and holds internal Tensors for its weight and bias.
+model <- nn_sequential(
+    nn_linear(D_in, H),
+    nn_relu(),
+    nn_linear(H, D_out)
+)
+
+# The nn package also contains definitions of popular loss functions; in this
+# case we will use Mean Squared Error (MSE) as our loss function.
+loss_fn <- nnf_mse_loss
+
+learning_rate <- 1e-6
+for (t in seq_len(500)) {
+   # Forward pass: compute predicted y by passing x to the model. Module objects
+   # can be called like functions. When doing so you pass a Tensor of input
+   # data to the Module and it produces a Tensor of output data.
+   y_pred <- model(x)
+   
+   # Compute and print loss. We pass Tensors containing the predicted and true
+   # values of y, and the loss function returns a Tensor containing the
+   # loss.
+   loss <- loss_fn(y_pred, y)
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", as.numeric(loss), "\n")
+   
+   # Zero the gradients before running the backward pass.
+   model$zero_grad()
+
+   # Backward pass: compute gradient of the loss with respect to all the learnable
+   # parameters of the model. Internally, the parameters of each Module are stored
+   # in Tensors with requires_grad=TRUE, so this call will compute gradients for
+   # all learnable parameters in the model.
+   loss$backward()
+   
+   # Update the weights using gradient descent. Each parameter is a Tensor, so
+   # we can access its gradients like we did before.
+   with_no_grad({
+      for (param in model$parameters) {
+         param$sub_(learning_rate * param$grad)
+      }
+   })
+}
+
+
+
+```
+
+-  Finally, we will learn how to use optimizers implemented in torch.
+
+
+---
+class: middle
+
+##optim: optimizers in torch
+
+- We often train neural networks using more sophisticated optimizers like AdaGrad, RMSProp, Adam, etc.
+
+- The optim package in torch abstracts the idea of an optimization algorithm and provides implementations of commonly used optimization algorithms.
+
+- In this example we will use the nn package to define our model as before, but we will optimize the model using the Adam algorithm provided by optim:
+
+
+---
+class: middle
+
+##optim: optimizers in torch
+
+```{r, eval = FALSE, message = FALSE, warning = FALSE}  
+
+if (cuda_is_available()) {
+   device <- torch_device("cuda")
+} else {
+   device <- torch_device("cpu")
+}
+   
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 10
+
+# Create random input and output data
+# Setting requires_grad=FALSE (the default) indicates that we do not need to 
+# compute gradients with respect to these Tensors during the backward pass.
+x <- torch_randn(N, D_in, device=device)
+y <- torch_randn(N, D_out, device=device)
+
+
+```
+
+
+---
+class: middle
+
+##optim: optimizers in torch
+
+```{r, eval = FALSE, message = FALSE, warning = FALSE}  
+
+##optim: optimizers in torch
+
+# Use the nn package to define our model as a sequence of layers. nn_sequential
+# is a Module which contains other Modules, and applies them in sequence to
+# produce its output. Each Linear Module computes output from input using a
+# linear function, and holds internal Tensors for its weight and bias.
+model <- nn_sequential(
+    nn_linear(D_in, H),
+    nn_relu(),
+    nn_linear(H, D_out)
+)
+
+# The nn package also contains definitions of popular loss functions; in this
+# case we will use Mean Squared Error (MSE) as our loss function.
+loss_fn <- nnf_mse_loss
+
+# Use the optim package to define an Optimizer that will update the weights of
+# the model for us. Here we will use Adam; the optim package contains many other
+# optimization algorithms. The first argument to the Adam constructor tells the
+# optimizer which Tensors it should update.
+learning_rate <- 1e-4
+optimizer <- optim_adam(model$parameters, lr=learning_rate)
+
+
+
+```
+
+
+
+
+---
+class: middle
+
+###optim: optimizers in torch
+
+```{r, eval = FALSE, message = FALSE, warning = FALSE}  
+
+for (t in seq_len(500)) {
+   # Forward pass: compute predicted y by passing x to the model. Module objects
+   # can be called like functions. When doing so you pass a Tensor of input
+   # data to the Module and it produces a Tensor of output data.
+   y_pred <- model(x)
+   # Compute and print loss. We pass Tensors containing the predicted and true
+   # values of y, and the loss function returns a Tensor containing the
+   # loss.
+   loss <- loss_fn(y_pred, y)
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", as.numeric(loss), "\n")
+   # Before the backward pass, use the optimizer object to zero all of the
+   # gradients for the variables it will update (which are the learnable
+   # weights of the model). This is because by default, gradients are
+   # accumulated in buffers( i.e, not overwritten) whenever $backward()
+   # is called. Checkout docs of `autograd_backward` for more details.
+   optimizer$zero_grad()
+   # Backward pass: compute gradient of the loss with respect to model
+   # parameters
+   loss$backward()
+   # Calling the step function on an Optimizer makes an update to its
+   # parameters
+   optimizer$step()
+}
+
+
+```
+
+
+
+---
+class: middle
+
+###optim: optimizers in torch
+
+- The output of the R code is the following
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}  
+
+if (cuda_is_available()) {
+   device <- torch_device("cuda")
+} else {
+   device <- torch_device("cpu")
+}
+   
+# N is batch size; D_in is input dimension;
+# H is hidden dimension; D_out is output dimension.
+N <- 64
+D_in <- 1000
+H <- 100
+D_out <- 10
+
+# Create random input and output data
+# Setting requires_grad=FALSE (the default) indicates that we do not need to 
+# compute gradients with respect to these Tensors during the backward pass.
+x <- torch_randn(N, D_in, device=device)
+y <- torch_randn(N, D_out, device=device)
+
+# Use the nn package to define our model as a sequence of layers. nn_sequential
+# is a Module which contains other Modules, and applies them in sequence to
+# produce its output. Each Linear Module computes output from input using a
+# linear function, and holds internal Tensors for its weight and bias.
+model <- nn_sequential(
+    nn_linear(D_in, H),
+    nn_relu(),
+    nn_linear(H, D_out)
+)
+
+# The nn package also contains definitions of popular loss functions; in this
+# case we will use Mean Squared Error (MSE) as our loss function.
+loss_fn <- nnf_mse_loss
+
+# Use the optim package to define an Optimizer that will update the weights of
+# the model for us. Here we will use Adam; the optim package contains many other
+# optimization algorithms. The first argument to the Adam constructor tells the
+# optimizer which Tensors it should update.
+learning_rate <- 1e-4
+optimizer <- optim_adam(model$parameters, lr=learning_rate)
+
+for (t in seq_len(500)) {
+   # Forward pass: compute predicted y by passing x to the model. Module objects
+   # can be called like functions. When doing so you pass a Tensor of input
+   # data to the Module and it produces a Tensor of output data.
+   y_pred <- model(x)
+   
+   # Compute and print loss. We pass Tensors containing the predicted and true
+   # values of y, and the loss function returns a Tensor containing the
+   # loss.
+   loss <- loss_fn(y_pred, y)
+   if (t %% 100 == 0 || t == 1)
+      cat("Step:", t, ":", as.numeric(loss), "\n")
+   
+   # Before the backward pass, use the optimizer object to zero all of the
+   # gradients for the variables it will update (which are the learnable
+   # weights of the model). This is because by default, gradients are
+   # accumulated in buffers( i.e, not overwritten) whenever $backward()
+   # is called. Checkout docs of `autograd_backward` for more details.
+   optimizer$zero_grad()
+
+   # Backward pass: compute gradient of the loss with respect to model
+   # parameters
+   loss$backward()
+
+   # Calling the step function on an Optimizer makes an update to its
+   # parameters
+   optimizer$step()
+}
+
+```
+
+- Other examples could be found 
+[here](http://www.sharetechnote.com/html/Python_PyTorch_nn_Sequential_01.html) or in [in PyTorch documentation.](https://pytorch.org/docs/stable/nn.html#containers)
