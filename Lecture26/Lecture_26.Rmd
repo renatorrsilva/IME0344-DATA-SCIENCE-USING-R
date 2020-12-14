@@ -107,27 +107,6 @@ class: middle
 [link 1](https://en.wikipedia.org/wiki/Channel_(digital_image)) [link 2](https://en.wikipedia.org/wiki/Pixel) and [link 3](http://www.quoos.com.br/index.php/cursos/desenhista-de-topografia/cartografia/sensoriamento-remoto/fundamentos-da-imagem-digital/37-as-diferenca-entre-imagem-raster-e-imagem-vetor), and [link 4](https://en.wikipedia.org/wiki/Raster_graphics).
 
 
-```{r, eval = FALSE, message = FALSE, warning = FALSE }
-
-library(torch)
-library(torchvision)
-
-train_ds <- kmnist_dataset(
-  ".",
-  download = TRUE,
-  train = TRUE,
-  transform = transform_to_tensor
-)
-
-test_ds <- kmnist_dataset(
-  ".",
-  download = TRUE,
-  train = FALSE,
-  transform = transform_to_tensor
-)
-
-
-```
 
 
 

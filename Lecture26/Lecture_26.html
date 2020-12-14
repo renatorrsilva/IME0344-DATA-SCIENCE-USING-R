@@ -108,25 +108,6 @@ class: middle
 
 
 
-```r
-library(torch)
-library(torchvision)
-
-train_ds &lt;- kmnist_dataset(
-  ".",
-  download = TRUE,
-  train = TRUE,
-  transform = transform_to_tensor
-)
-
-test_ds &lt;- kmnist_dataset(
-  ".",
-  download = TRUE,
-  train = FALSE,
-  transform = transform_to_tensor
-)
-```
-
 
 
 ---
