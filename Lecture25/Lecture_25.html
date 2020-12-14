@@ -14,7 +14,7 @@ class: center, middle, inverse, title-slide
 # Lecture 25 - torch for R
 ### Material written by Daniel Falbel and Javier Luraschi. Presented by Renato Rodrigues Silva
 ### Federal University of Goias.
-### (updated: 2020-12-02)
+### (updated: 2020-12-14)
 
 ---
 
@@ -79,9 +79,7 @@ class: middle
 \end{align}`
 
 `\begin{align}
-\frac{\partial L}{\partial \mathbf{W}_1} =\frac{\partial L}{\partial \hat{\mathbf{y}}} \frac{\partial \hat{\mathbf{y}}}{\partial \mathbf{A}} \frac{\partial \mathbf{A}}{\partial \mathbf{Z}} \frac{\partial \mathbf{Z}}{\partial \mathbf{W}_1} =&amp; 2\mathbf{X}^{'} \frac{\partial g^{'}(\mathbf{Z})}{\partial \mathbf{Z}} \left[\left(\hat{\mathbf{y}} - \mathbf{y}\right)\mathbf{W}_2^{'} \right]  \\
-=&amp; 
-2\mathbf{X}^{'}\left[\left(\hat{\mathbf{y}} - \mathbf{y}\right)\mathbf{W}_2^{'} \right]. 
+\frac{\partial L}{\partial \mathbf{W}_1} =\frac{\partial L}{\partial \hat{\mathbf{y}}} \frac{\partial \hat{\mathbf{y}}}{\partial \mathbf{A}} \frac{\partial \mathbf{A}}{\partial \mathbf{Z}} \frac{\partial \mathbf{Z}}{\partial \mathbf{W}_1} =&amp; 2\mathbf{X}^{'} \frac{\partial g^{'}(\mathbf{Z})}{\partial \mathbf{Z}} \left[\left(\hat{\mathbf{y}} - \mathbf{y}\right)\mathbf{W}_2^{'} \right]  
 \end{align}`
 
 [Source:](https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf)
@@ -152,12 +150,12 @@ class: middle
 
 
 ```
-## Step: 1 : 2814270 
-## Step: 100 : 3.299824 
-## Step: 200 : 0.0002616469 
-## Step: 300 : 3.812738e-08 
-## Step: 400 : 7.14051e-12 
-## Step: 500 : 1.444236e-15
+## Step: 1 : 2205703 
+## Step: 100 : 10.27409 
+## Step: 200 : 0.003475171 
+## Step: 300 : 1.891429e-06 
+## Step: 400 : 1.332992e-09 
+## Step: 500 : 1.099081e-12
 ```
 
 - Now, we will replace the R array with a torch Tensor.
@@ -226,12 +224,12 @@ class: middle
 ```
 ## torch_tensor
 ## (1,.,.) = 
-##   0.1849  0.7043  0.0865
-##   0.8170  0.3616  0.9718
+##   0.3919  0.3215  0.4697
+##   0.9354  0.8784  0.2602
 ## 
 ## (2,.,.) = 
-##   0.7402  0.7653  0.2758
-##   0.4656  0.3816  0.7284
+##   0.5842  0.2285  0.3249
+##   0.8470  0.2749  0.0482
 ## [ CPUFloatType{2,2,3} ]
 ```
 
@@ -297,11 +295,11 @@ x
 
 ```
 ## torch_tensor
-## -0.1367 -0.4344  0.8277
-## -1.6934  0.0964  0.1841
-##  0.5087 -0.9022 -0.5808
-##  0.3609  1.8460  0.5593
-## -0.5427 -1.0853  0.8749
+##  2.2220  0.0474  0.7819
+##  1.3598  0.5843 -0.5822
+##  0.1313  0.4274  1.4245
+##  0.1263  0.6822  0.5374
+## -0.0383  0.1183 -0.7947
 ## [ CPUFloatType{5,3} ]
 ```
 
@@ -445,17 +443,17 @@ class: middle
 
 
 ```
-## Step: 1 : 3594488 
-## Step: 100 : 1.176957 
-## Step: 200 : 5.285491e-05 
-## Step: 300 : 2.821068e-06 
-## Step: 400 : 1.005955e-06 
-## Step: 500 : 5.559957e-07 
-## Step: 600 : 3.786705e-07 
-## Step: 700 : 2.81259e-07 
-## Step: 800 : 2.195071e-07 
-## Step: 900 : 1.786617e-07 
-## Step: 1000 : 1.456999e-07
+## Step: 1 : 7827333 
+## Step: 100 : 3.777105 
+## Step: 200 : 0.0006272839 
+## Step: 300 : 1.163054e-05 
+## Step: 400 : 2.357031e-06 
+## Step: 500 : 1.061318e-06 
+## Step: 600 : 6.872449e-07 
+## Step: 700 : 4.982425e-07 
+## Step: 800 : 4.068166e-07 
+## Step: 900 : 3.245668e-07 
+## Step: 1000 : 2.538971e-07
 ```
 
 -   In the next example, we will use autograd instead of computing the gradients manually.
@@ -595,12 +593,12 @@ class: middle
 
 
 ```
-## Step: 1 : 2863420 
-## Step: 100 : 3.088387 
-## Step: 200 : 0.0005594775 
-## Step: 300 : 1.441854e-05 
-## Step: 400 : 3.385442e-06 
-## Step: 500 : 1.705705e-06
+## Step: 1 : 2763727 
+## Step: 100 : 5.158395 
+## Step: 200 : 0.0009943144 
+## Step: 300 : 1.435173e-05 
+## Step: 400 : 2.583899e-06 
+## Step: 500 : 1.272232e-06
 ```
 
 - Now, we will learn we will learn how to use the neural networks abstractions in torch.
@@ -740,12 +738,12 @@ class: middle
 
 
 ```
-## Step: 1 : 0.8112054 
-## Step: 100 : 0.8100816 
-## Step: 200 : 0.8089489 
-## Step: 300 : 0.8078183 
-## Step: 400 : 0.8066901 
-## Step: 500 : 0.8055646
+## Step: 1 : 1.269694 
+## Step: 100 : 1.268204 
+## Step: 200 : 1.266704 
+## Step: 300 : 1.265206 
+## Step: 400 : 1.263711 
+## Step: 500 : 1.262218
 ```
 
 -  Finally, we will learn how to use optimizers implemented in torch.
@@ -869,12 +867,12 @@ class: middle
 
 
 ```
-## Step: 1 : 1.090729 
-## Step: 100 : 0.0938213 
-## Step: 200 : 0.001892732 
-## Step: 300 : 9.958456e-06 
-## Step: 400 : 1.684783e-08 
-## Step: 500 : 1.943489e-11
+## Step: 1 : 1.013422 
+## Step: 100 : 0.07334237 
+## Step: 200 : 0.001026323 
+## Step: 300 : 6.560325e-06 
+## Step: 400 : 5.205533e-08 
+## Step: 500 : 1.66471e-10
 ```
 
 - Other examples could be found 

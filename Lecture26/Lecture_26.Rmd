@@ -1,0 +1,409 @@
+---
+title: "Lecture 26 - torch for R part II"
+author: "Material written by Sigrid Keydana. Presented by Renato Rodrigues Silva"
+institute: "Federal University of Goias."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+
+---
+class: middle
+
+##Introduction
+
+- This lecture is based on material written by Sigrid Keydana entitled "Please allow me to introduce myself: Torch for R".Avaliable at this [link](https://blogs.rstudio.com/ai/posts/2020-09-29-introducing-torch-for-r/) 
+
+---
+class: middle
+
+##Tourchvision library
+
+
+-   Whereas torch is where tensors, network modules, and generic data loading functionality live, datatype-specific capabilities are – or will be – provided by dedicated packages.
+
+-   In general, these capabilities comprise three types of things: datasets, tools for pre-processing and data loading, and pre-trained models.
+
+-   As of this writing, PyTorch has dedicated libraries for three domain areas: vision, text, and audio. In R, we plan to proceed analogously – “plan”, because torchtext and torchaudio are yet to be created. 
+
+-  Right now, torchvision is all we need:
+
+- To install torchvision, you can type
+
+
+```{r, eval = FALSE, warning=FALSE, message = FALSE}
+
+devtools::install_github("mlverse/torchvision")
+
+```
+
+
+---
+class: middle
+
+##Data loading and pre-processing
+
+
+```{r, eval = FALSE }
+library(torch)
+library(torchvision)
+
+```
+
+
+
+-   The list of vision datasets bundled with PyTorch is long, and they’re continually being added to torchvision.
+
+-   The one we need right now is available already, and it’s – MNIST? … not quite: It’s my favorite “MNIST dropin”, [Kuzushiji-MNIST](https://github.com/rois-codh/kmnist) (Clanuwat et al. 2018). 
+
+-   Like other datasets explicitly created to replace MNIST, it has ten classes – characters, in this case, depicted as grayscale images of resolution 28x28.
+
+
+---
+class: middle
+
+##Data loading and pre-processing
+
+-   The following code will download the data separately for training and test sets.
+
+```{r, eval = FALSE, warning=FALSE, message = FALSE}
+
+train_ds <- kmnist_dataset(
+  ".",
+  download = TRUE,
+  train = TRUE,
+  transform = transform_to_tensor
+)
+
+test_ds <- kmnist_dataset(
+  ".",
+  download = TRUE,
+  train = FALSE,
+  transform = transform_to_tensor
+)
+
+
+
+
+```
+
+
+---
+class: middle
+
+##Data loading and pre-processing
+
+-   Note the transform argument. transform_to_tensor takes an image and applies two transformations. 
+-   First, it normalizes the pixels to the range between 0 and 1.Then, it adds another dimension in front.
+
+- This is the channels dimension that in torch, is found before the width and height dimensions by default.
+
+- Further information about pixels, image channels, and image raster you can see in these addresses:
+[link 1](https://en.wikipedia.org/wiki/Channel_(digital_image)) [link 2](https://en.wikipedia.org/wiki/Pixel) and [link 3](http://www.quoos.com.br/index.php/cursos/desenhista-de-topografia/cartografia/sensoriamento-remoto/fundamentos-da-imagem-digital/37-as-diferenca-entre-imagem-raster-e-imagem-vetor), and [link 4](https://en.wikipedia.org/wiki/Raster_graphics).
+
+
+```{r, eval = FALSE, message = FALSE, warning = FALSE }
+
+library(torch)
+library(torchvision)
+
+train_ds <- kmnist_dataset(
+  ".",
+  download = TRUE,
+  train = TRUE,
+  transform = transform_to_tensor
+)
+
+test_ds <- kmnist_dataset(
+  ".",
+  download = TRUE,
+  train = FALSE,
+  transform = transform_to_tensor
+)
+
+
+```
+
+
+
+---
+class: middle
+
+##Inspecting objects in torch
+
+The line command `train_ds[1]$size` 
+
+```{r, eval=FALSE}
+train_ds[1]$size
+```
+
+gives us the first element in the dataset, an R list of two tensors corresponding to input and target, respectively. 
+
+
+- [Layers used to build ConvNets  ](https://cs231n.github.io/convolutional-networks/)
+
+
+
+
+
+---
+class: middle
+
+##Inspecting objects in torch
+
+Let’s inspect the shape of the input tensor:
+
+
+```{r, eval = FALSE,  warning = FALSE}
+train_ds[1][[1]]$size()
+```
+
+
+-   Now that we have the data, we need someone to feed them to a deep learning model, nicely batched and all. In torch, this is the task of data loaders.
+
+---
+class: middle
+
+##Data Loader
+
+- Each of the training and test sets gets their own data loader:
+
+
+```{r, eval = FALSE, warning = FALSE, message = FALSE}
+
+train_dl <- dataloader(train_ds, batch_size = 32, shuffle = TRUE)
+test_dl <- dataloader(test_ds, batch_size = 32)
+
+
+```
+
+
+---
+class: middle
+
+##Network
+
+-   You use nn_module() to define an R6 class that will hold the network’s components. 
+
+-   Its layers are created in initialize(); forward() describes what happens during the network’s forward pass. One thing on terminology: 
+
+-   In torch, layers are called modules, as are networks. This makes sense: The design is truly modular in that any module can be used as a component in a larger one.
+
+
+---
+class: middle
+
+####Network
+
+```{r, eval = FALSE, warning= FALSE, message = FALSE}
+net <- nn_module(
+  
+  "KMNIST-CNN",
+  
+  initialize = function() {
+    # in_channels, out_channels, kernel_size, stride = 1, padding = 0
+    self$conv1 <- nn_conv2d(1, 32, 3)
+    self$conv2 <- nn_conv2d(32, 64, 3)
+    self$dropout1 <- nn_dropout2d(0.25)
+    self$dropout2 <- nn_dropout2d(0.5)
+    self$fc1 <- nn_linear(9216, 128)
+    self$fc2 <- nn_linear(128, 10)
+  },
+  
+```
+ 
+---
+class: middle
+
+####Network
+
+```{r, eval = FALSE, warning= FALSE, message = FALSE}
+ 
+  forward = function(x) {
+    x %>% 
+      self$conv1() %>%
+      nnf_relu() %>%
+      self$conv2() %>%
+      nnf_relu() %>%
+      nnf_max_pool2d(2) %>%
+      self$dropout1() %>%
+      torch_flatten(start_dim = 2) %>%
+      self$fc1() %>%
+      nnf_relu() %>%
+      self$dropout2() %>%
+      self$fc2()
+  }
+)
+
+```
+
+
+
+
+---
+class: middle
+
+####Network
+
+-   In torch, instead of the number of units in a layer, you specify input and output dimensionalities of the “data” that run through it. 
+
+-   Thus, `nn_linear(128, 10)` has 128 input connections and outputs 10 values – one for every class. 
+
+-   In some cases, such as this one, specifying dimensions is easy – we know how many input edges there are (namely, the same as the number of output edges from the previous layer), and we know how many output values we need. 
+
+-   But how about the previous module? How do we arrive at 9216 input connections?
+
+
+
+
+
+---
+class: middle
+
+##Network
+
+-   So, we start with input tensors of shape `batch_size \times 1 \times 28 \times 28`. Then,
+
+-   `nn_conv2d(1, 32, 3)` , or equivalently, `nn_conv2d(in_channels = 1, out_channels = 32, kernel_size = 3)`,applies a convolution with kernel size $3$, stride $1$ (the default), and no padding (the default). 
+
+-   We can consult the documentation to look up the resulting output size, or just intuitively reason that with a kernel of size $3$ and no padding, the image will shrink by one pixel in each direction, resulting in a spatial resolution of $26 \times 26$. Per channel, that is. Thus, the actual output shape is `batch_size` $\times 32 \times 26 \times 26$ . 
+
+-   Next, `nnf_relu()` applies ReLU activation, in no way touching the shape. 
+
+-   Next is `nn_conv2d(32, 64, 3)`, another convolution with zero padding and kernel size 3. Output size now is `batch_size \times 64 \times 24 \times 24`. 
+
+-   Now, the second `nnf_relu()` again does nothing to the output shape, but `nnf_max_pool2d(2)` (equivalently: `nnf_max_pool2d(kernel_size = 2)`) does: 
+
+-   It applies max pooling over regions of extension $2 \times 2$, thus downsizing the output to a format of `batch_size \times 64 \times 12 \times 12`. 
+
+
+---
+class: middle
+
+##Network
+
+
+-   Now, `nn_dropout2d(0.25)` is a no-op, shape-wise, but if we want to apply a linear layer later, we need to merge all of the channels, height and width axes into a single dimension. 
+
+
+-   This is done in `torch_flatten(start_dim = 2)`. Output shape is now `batch_size`  9216 , $since 64 \times 12 \times 12 = 9216$ . Thus here we have the 9216 input connections fed into the
+
+-   `nn_linear(9216, 128)` discussed above. Again,
+
+-   `nnf_relu()` and `nn_dropout2d(0.5)` leave dimensions as they are, and finally,
+
+-   `nn_linear(128, 10)` gives us the desired output scores, one for each of the ten classes.
+
+
+---
+class: middle
+
+##Training
+
+-   In torch, when creating an optimizer, we tell it what to operate on, namely, the model’s parameters:
+
+```{r, eval = FALSE}
+
+optimizer <- optim_adam(model$parameters)
+```
+
+
+-   What about the loss function? For classification with more than two classes, we use cross entropy, in torch: `nnf_cross_entropy(prediction, ground_truth)`:
+
+```{r, eval = FALSE}
+- # this will be called for every batch, see training loop below
+loss <- nnf_cross_entropy(output, b[[2]]$to(device = "cpu"))
+```
+
+-   Unlike categorical cross entropy in keras , which would expect prediction to contain probabilities, as obtained by applying a softmax activation, torch’s `nnf_cross_entropy()` works with the raw outputs (the logits). 
+
+-   This is why the network’s last linear layer was not followed by any activation.
+
+
+---
+class: middle
+
+##Training
+
+
+```{r, eval = FALSE}
+
+model <- net()
+model$to(device = "cpu")
+optimizer <- optim_adam(model$parameters)
+
+
+for (epoch in 1:2) {
+
+  l <- c()
+
+  for (b in enumerate(train_dl)) {
+    # make sure each batch's gradient updates are calculated from a fresh start
+    optimizer$zero_grad()
+    # get model predictions
+    output <- model(b[[1]]$to(device = "cpu"))
+    # calculate loss
+    loss <- nnf_cross_entropy(output, b[[2]]$to(device = "cpu"))
+    # calculate gradient
+    loss$backward()
+    # apply weight updates
+    optimizer$step()
+    # track losses
+    l <- c(l, loss$item())
+  }
+
+  cat(sprintf("Loss at epoch %d: %3f\n", epoch, mean(l)))
+}
+
+```
+
+
+
+---
+class: middle
+
+##Evaluation
+
+
+```{r, eval = FALSE }
+test_losses <- c()
+total <- 0
+correct <- 0
+
+for (b in enumerate(test_dl)) {
+  output <- model(b[[1]]$to(device = "cuda"))
+  labels <- b[[2]]$to(device = "cuda")
+  loss <- nnf_cross_entropy(output, labels)
+  test_losses <- c(test_losses, loss$item())
+  # torch_max returns a list, with position 1 containing the values 
+  # and position 2 containing the respective indices
+  predicted <- torch_max(output$data(), dim = 2)[[2]]
+  total <- total + labels$size(1)
+  # add number of correct classifications in this batch to the aggregate
+  correct <- correct + (predicted == labels)$sum()$item()
+}
+
+mean(test_losses)
+
+test_accuracy <-  correct/total
+test_accuracy
+
+```
+
+---
+class: middle
+
+##Results
+
+```{r}
+
+load("Resultados.RData")
+
+test_accuracy
+
+```

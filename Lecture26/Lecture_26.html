@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 26 - torch for R part II</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Material written by Sigrid Keydana. Presented by Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lecture 26 - torch for R part II
+### Material written by Sigrid Keydana. Presented by Renato Rodrigues Silva
+### Federal University of Goias.
+### (updated: 2020-12-14)
+
+---
+
+class: middle
+
+##Introduction
+
+- This lecture is based on material written by Sigrid Keydana entitled "Please allow me to introduce myself: Torch for R".Avaliable at this [link](https://blogs.rstudio.com/ai/posts/2020-09-29-introducing-torch-for-r/) 
+
+---
+class: middle
+
+##Tourchvision library
+
+
+-   Whereas torch is where tensors, network modules, and generic data loading functionality live, datatype-specific capabilities are – or will be – provided by dedicated packages.
+
+-   In general, these capabilities comprise three types of things: datasets, tools for pre-processing and data loading, and pre-trained models.
+
+-   As of this writing, PyTorch has dedicated libraries for three domain areas: vision, text, and audio. In R, we plan to proceed analogously – “plan”, because torchtext and torchaudio are yet to be created. 
+
+-  Right now, torchvision is all we need:
+
+- To install torchvision, you can type
+
+
+
+```r
+devtools::install_github("mlverse/torchvision")
+```
+
+
+---
+class: middle
+
+##Data loading and pre-processing
+
+
+
+```r
+library(torch)
+library(torchvision)
+```
+
+
+
+-   The list of vision datasets bundled with PyTorch is long, and they’re continually being added to torchvision.
+
+-   The one we need right now is available already, and it’s – MNIST? … not quite: It’s my favorite “MNIST dropin”, [Kuzushiji-MNIST](https://github.com/rois-codh/kmnist) (Clanuwat et al. 2018). 
+
+-   Like other datasets explicitly created to replace MNIST, it has ten classes – characters, in this case, depicted as grayscale images of resolution 28x28.
+
+
+---
+class: middle
+
+##Data loading and pre-processing
+
+-   The following code will download the data separately for training and test sets.
+
+
+```r
+train_ds &lt;- kmnist_dataset(
+  ".",
+  download = TRUE,
+  train = TRUE,
+  transform = transform_to_tensor
+)
+
+test_ds &lt;- kmnist_dataset(
+  ".",
+  download = TRUE,
+  train = FALSE,
+  transform = transform_to_tensor
+)
+```
+
+
+---
+class: middle
+
+##Data loading and pre-processing
+
+-   Note the transform argument. transform_to_tensor takes an image and applies two transformations. 
+-   First, it normalizes the pixels to the range between 0 and 1.Then, it adds another dimension in front.
+
+- This is the channels dimension that in torch, is found before the width and height dimensions by default.
+
+- Further information about pixels, image channels, and image raster you can see in these addresses:
+[link 1](https://en.wikipedia.org/wiki/Channel_(digital_image)) [link 2](https://en.wikipedia.org/wiki/Pixel) and [link 3](http://www.quoos.com.br/index.php/cursos/desenhista-de-topografia/cartografia/sensoriamento-remoto/fundamentos-da-imagem-digital/37-as-diferenca-entre-imagem-raster-e-imagem-vetor), and [link 4](https://en.wikipedia.org/wiki/Raster_graphics).
+
+
+
+```r
+library(torch)
+library(torchvision)
+
+train_ds &lt;- kmnist_dataset(
+  ".",
+  download = TRUE,
+  train = TRUE,
+  transform = transform_to_tensor
+)
+
+test_ds &lt;- kmnist_dataset(
+  ".",
+  download = TRUE,
+  train = FALSE,
+  transform = transform_to_tensor
+)
+```
+
+
+
+---
+class: middle
+
+##Inspecting objects in torch
+
+The line command `train_ds[1]$size` 
+
+
+```r
+train_ds[1]$size
+```
+
+gives us the first element in the dataset, an R list of two tensors corresponding to input and target, respectively. 
+
+
+- [Layers used to build ConvNets  ](https://cs231n.github.io/convolutional-networks/)
+
+
+
+
+
+---
+class: middle
+
+##Inspecting objects in torch
+
+Let’s inspect the shape of the input tensor:
+
+
+
+```r
+train_ds[1][[1]]$size()
+```
+
+
+-   Now that we have the data, we need someone to feed them to a deep learning model, nicely batched and all. In torch, this is the task of data loaders.
+
+---
+class: middle
+
+##Data Loader
+
+- Each of the training and test sets gets their own data loader:
+
+
+
+```r
+train_dl &lt;- dataloader(train_ds, batch_size = 32, shuffle = TRUE)
+test_dl &lt;- dataloader(test_ds, batch_size = 32)
+```
+
+
+---
+class: middle
+
+##Network
+
+-   You use nn_module() to define an R6 class that will hold the network’s components. 
+
+-   Its layers are created in initialize(); forward() describes what happens during the network’s forward pass. One thing on terminology: 
+
+-   In torch, layers are called modules, as are networks. This makes sense: The design is truly modular in that any module can be used as a component in a larger one.
+
+
+---
+class: middle
+
+####Network
+
+
+```r
+net &lt;- nn_module(
+  
+  "KMNIST-CNN",
+  
+  initialize = function() {
+    # in_channels, out_channels, kernel_size, stride = 1, padding = 0
+    self$conv1 &lt;- nn_conv2d(1, 32, 3)
+    self$conv2 &lt;- nn_conv2d(32, 64, 3)
+    self$dropout1 &lt;- nn_dropout2d(0.25)
+    self$dropout2 &lt;- nn_dropout2d(0.5)
+    self$fc1 &lt;- nn_linear(9216, 128)
+    self$fc2 &lt;- nn_linear(128, 10)
+  },
+```
+ 
+---
+class: middle
+
+####Network
+
+
+```r
+  forward = function(x) {
+    x %&gt;% 
+      self$conv1() %&gt;%
+      nnf_relu() %&gt;%
+      self$conv2() %&gt;%
+      nnf_relu() %&gt;%
+      nnf_max_pool2d(2) %&gt;%
+      self$dropout1() %&gt;%
+      torch_flatten(start_dim = 2) %&gt;%
+      self$fc1() %&gt;%
+      nnf_relu() %&gt;%
+      self$dropout2() %&gt;%
+      self$fc2()
+  }
+)
+```
+
+
+
+
+---
+class: middle
+
+####Network
+
+-   In torch, instead of the number of units in a layer, you specify input and output dimensionalities of the “data” that run through it. 
+
+-   Thus, `nn_linear(128, 10)` has 128 input connections and outputs 10 values – one for every class. 
+
+-   In some cases, such as this one, specifying dimensions is easy – we know how many input edges there are (namely, the same as the number of output edges from the previous layer), and we know how many output values we need. 
+
+-   But how about the previous module? How do we arrive at 9216 input connections?
+
+
+
+
+
+---
+class: middle
+
+##Network
+
+-   So, we start with input tensors of shape `batch_size \times 1 \times 28 \times 28`. Then,
+
+-   `nn_conv2d(1, 32, 3)` , or equivalently, `nn_conv2d(in_channels = 1, out_channels = 32, kernel_size = 3)`,applies a convolution with kernel size `\(3\)`, stride `\(1\)` (the default), and no padding (the default). 
+
+-   We can consult the documentation to look up the resulting output size, or just intuitively reason that with a kernel of size `\(3\)` and no padding, the image will shrink by one pixel in each direction, resulting in a spatial resolution of `\(26 \times 26\)`. Per channel, that is. Thus, the actual output shape is `batch_size` `\(\times 32 \times 26 \times 26\)` . 
+
+-   Next, `nnf_relu()` applies ReLU activation, in no way touching the shape. 
+
+-   Next is `nn_conv2d(32, 64, 3)`, another convolution with zero padding and kernel size 3. Output size now is `batch_size \times 64 \times 24 \times 24`. 
+
+-   Now, the second `nnf_relu()` again does nothing to the output shape, but `nnf_max_pool2d(2)` (equivalently: `nnf_max_pool2d(kernel_size = 2)`) does: 
+
+-   It applies max pooling over regions of extension `\(2 \times 2\)`, thus downsizing the output to a format of `batch_size \times 64 \times 12 \times 12`. 
+
+
+---
+class: middle
+
+##Network
+
+
+-   Now, `nn_dropout2d(0.25)` is a no-op, shape-wise, but if we want to apply a linear layer later, we need to merge all of the channels, height and width axes into a single dimension. 
+
+
+-   This is done in `torch_flatten(start_dim = 2)`. Output shape is now `batch_size`  9216 , `\(since 64 \times 12 \times 12 = 9216\)` . Thus here we have the 9216 input connections fed into the
+
+-   `nn_linear(9216, 128)` discussed above. Again,
+
+-   `nnf_relu()` and `nn_dropout2d(0.5)` leave dimensions as they are, and finally,
+
+-   `nn_linear(128, 10)` gives us the desired output scores, one for each of the ten classes.
+
+
+---
+class: middle
+
+##Training
+
+-   In torch, when creating an optimizer, we tell it what to operate on, namely, the model’s parameters:
+
+
+```r
+optimizer &lt;- optim_adam(model$parameters)
+```
+
+
+-   What about the loss function? For classification with more than two classes, we use cross entropy, in torch: `nnf_cross_entropy(prediction, ground_truth)`:
+
+
+```r
+- # this will be called for every batch, see training loop below
+loss &lt;- nnf_cross_entropy(output, b[[2]]$to(device = "cpu"))
+```
+
+-   Unlike categorical cross entropy in keras , which would expect prediction to contain probabilities, as obtained by applying a softmax activation, torch’s `nnf_cross_entropy()` works with the raw outputs (the logits). 
+
+-   This is why the network’s last linear layer was not followed by any activation.
+
+
+---
+class: middle
+
+##Training
+
+
+
+```r
+model &lt;- net()
+model$to(device = "cpu")
+optimizer &lt;- optim_adam(model$parameters)
+
+
+for (epoch in 1:2) {
+
+  l &lt;- c()
+
+  for (b in enumerate(train_dl)) {
+    # make sure each batch's gradient updates are calculated from a fresh start
+    optimizer$zero_grad()
+    # get model predictions
+    output &lt;- model(b[[1]]$to(device = "cpu"))
+    # calculate loss
+    loss &lt;- nnf_cross_entropy(output, b[[2]]$to(device = "cpu"))
+    # calculate gradient
+    loss$backward()
+    # apply weight updates
+    optimizer$step()
+    # track losses
+    l &lt;- c(l, loss$item())
+  }
+
+  cat(sprintf("Loss at epoch %d: %3f\n", epoch, mean(l)))
+}
+```
+
+
+
+---
+class: middle
+
+##Evaluation
+
+
+
+```r
+test_losses &lt;- c()
+total &lt;- 0
+correct &lt;- 0
+
+for (b in enumerate(test_dl)) {
+  output &lt;- model(b[[1]]$to(device = "cuda"))
+  labels &lt;- b[[2]]$to(device = "cuda")
+  loss &lt;- nnf_cross_entropy(output, labels)
+  test_losses &lt;- c(test_losses, loss$item())
+  # torch_max returns a list, with position 1 containing the values 
+  # and position 2 containing the respective indices
+  predicted &lt;- torch_max(output$data(), dim = 2)[[2]]
+  total &lt;- total + labels$size(1)
+  # add number of correct classifications in this batch to the aggregate
+  correct &lt;- correct + (predicted == labels)$sum()$item()
+}
+
+mean(test_losses)
+
+test_accuracy &lt;-  correct/total
+test_accuracy
+```
+
+---
+class: middle
+
+##Results
+
+
+```r
+load("Resultados.RData")
+
+test_accuracy
+```
+
+```
+## [1] 0.8968
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

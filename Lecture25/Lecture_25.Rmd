@@ -72,9 +72,7 @@ $$L = (\mathbf{y} - \hat{\mathbf{y}})^{'}(\mathbf{y} - \hat{\mathbf{y}}) = (  \h
 \end{align}
 
 \begin{align}
-\frac{\partial L}{\partial \mathbf{W}_1} =\frac{\partial L}{\partial \hat{\mathbf{y}}} \frac{\partial \hat{\mathbf{y}}}{\partial \mathbf{A}} \frac{\partial \mathbf{A}}{\partial \mathbf{Z}} \frac{\partial \mathbf{Z}}{\partial \mathbf{W}_1} =& 2\mathbf{X}^{'} \frac{\partial g^{'}(\mathbf{Z})}{\partial \mathbf{Z}} \left[\left(\hat{\mathbf{y}} - \mathbf{y}\right)\mathbf{W}_2^{'} \right]  \\
-=& 
-2\mathbf{X}^{'}\left[\left(\hat{\mathbf{y}} - \mathbf{y}\right)\mathbf{W}_2^{'} \right]. 
+\frac{\partial L}{\partial \mathbf{W}_1} =\frac{\partial L}{\partial \hat{\mathbf{y}}} \frac{\partial \hat{\mathbf{y}}}{\partial \mathbf{A}} \frac{\partial \mathbf{A}}{\partial \mathbf{Z}} \frac{\partial \mathbf{Z}}{\partial \mathbf{W}_1} =& 2\mathbf{X}^{'} \frac{\partial g^{'}(\mathbf{Z})}{\partial \mathbf{Z}} \left[\left(\hat{\mathbf{y}} - \mathbf{y}\right)\mathbf{W}_2^{'} \right]  
 \end{align}
 
 [Source:](https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf)
